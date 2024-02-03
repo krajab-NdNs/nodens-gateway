@@ -20,7 +20,7 @@ global CWD
 
 # Some information
 __title__ = "nodens-gateway"
-__version__ = "24.1.0"
+__version__ = "24.2.0"
 __author__ = "Khalid Z Rajab"
 __author_email__ = "khalid@nodens.eu"
 __copyright__ = "Copyright (c) 2024 " + __author__
@@ -97,6 +97,7 @@ class config_program:
         self.TB_HOST = "mqtt.thingsboard.cloud"
         self.TB_KEEPALIVE = 60
         self.TB_PUB_TOPIC = "v1/devices/me/telemetry"
+        self.TB_ATTRIBUTES_TOPIC = "v1/devices/me/attributes"
         self.TB_ACCESS_TOKEN_FOLDER = ""
         self.TB_ACCESS_TOKEN_FILENAME = "thingsboard_access.json"
 
@@ -149,6 +150,7 @@ class config_program:
                     "TB_HOST": self.TB_HOST,
                     "TB_KEEPALIVE": self.TB_KEEPALIVE,
                     "TB_PUB_TOPIC": self.TB_PUB_TOPIC,
+                    "TB_ATTRIBUTES_TOPIC": self.TB_ATTRIBUTES_TOPIC,
                     "TB_ACCESS_TOKEN_FOLDER": self.TB_ACCESS_TOKEN_FOLDER,
                     "TB_ACCESS_TOKEN_FILENAME": self.TB_ACCESS_TOKEN_FILENAME,
                 }
@@ -190,12 +192,14 @@ class config_program:
         else:
             self.ENABLE_SIEMENS_IH = 0
 
-        # THINGSBOARD config#
+        # THINGSBOARD config #
         self.ENABLE_THINGSBOARD = int(_cfg["THINGSBOARD"]["ENABLE_THINGSBOARD"])
         self.TB_PORT = int(_cfg["THINGSBOARD"]["TB_PORT"])
         self.TB_HOST = _cfg["THINGSBOARD"]["TB_HOST"]
         self.TB_KEEPALIVE = int(_cfg["THINGSBOARD"]["TB_KEEPALIVE"])
         self.TB_PUB_TOPIC = _cfg["THINGSBOARD"]["TB_PUB_TOPIC"]
+        if "TB_ATTRIBUTES_TOPIC" in _cfg["THINGSBOARD"]:
+            self.TB_ATTRIBUTES_TOPIC = _cfg["THINGSBOARD"]["TB_ATTRIBUTES_TOPIC"]
         if "TB_ACCESS_TOKEN_FOLDER" in _cfg["THINGSBOARD"]:
             self.TB_ACCESS_TOKEN_FOLDER = _cfg["THINGSBOARD"]["TB_ACCESS_TOKEN_FOLDER"]
         else:

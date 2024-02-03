@@ -2,7 +2,7 @@ import paho.mqtt.client as mqtt
 import time
 import json
 import logging
-from datetime import datetime as dt
+import datetime as dt
 import nodens.gateway as nodens
 
 global reconnect_backoff
@@ -16,12 +16,12 @@ def on_subscribe(unused_client, unused_userdata, mid, granted_qos):
 
 def on_connect(client, userdata, flags, rc):
     nodens.logger.debug('MESH: on_connect: {} userdata: {}. flags: {}. rc: {}. datetime: {}.'
-                  .format(mqtt.connack_string(rc), userdata, flags, rc, dt.utcnow()))
+                  .format(mqtt.connack_string(rc), userdata, flags, rc, dt.datetime.now(dt.timezone.utc)))
     client.connect_status = 1
 
 def on_disconnect(client, userdata, rc):
     nodens.logger.debug('MESH: on_disconnect: {} userdata: {}. rc: {}. datetime: {}.'
-                  .format(mqtt.connack_string(rc), userdata, rc, dt.utcnow()))
+                  .format(mqtt.connack_string(rc), userdata, rc, dt.datetime.now(dt.timezone.utc)))
     CONNECT_STATE_7 = 1
 
     if rc == 5:

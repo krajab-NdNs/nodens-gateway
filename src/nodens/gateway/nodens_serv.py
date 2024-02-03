@@ -8,7 +8,7 @@
 # TODO: Separate API script
 
 import os
-from datetime import datetime as dt
+import datetime as dt
 from os.path import dirname, join as pjoin
 import numpy as np
 import paho.mqtt.client as mqtt
@@ -47,7 +47,7 @@ heartbeat = ""
 
 idx_mqtt = 0
 idx_write = 0
-T0 = dt.utcnow()
+T0 = dt.datetime.now(dt.timezone.utc)
 
 if (nodens.cp.WRITE_FLAG == 1):
     file = 'data'
@@ -96,7 +96,7 @@ def on_message_sensorN(client, userdata, msg):
     mqttDataN = (msg.payload)
     mqttData = json.loads(mqttDataN)
     # Get time
-    T = dt.utcnow()
+    T = dt.datetime.now(dt.timezone.utc)
 
     
     # ---- Parse Data ---- #
@@ -129,19 +129,33 @@ def on_message_sensorN(client, userdata, msg):
             except:
                 data = mqttData['data']
             str_data = str(data[0])
+            data_int = [data[0]]
             if len(data) > 6:
                 for i in range(7):
                     str_data = str_data + str(data[i+1])
+                    data_int.append(data[i+1])
             else:
                 logging.warning("Data below length 8. Rx: {}".format(data))
             # Check if full data packet received
             if str_data == '21436587':
                 for i in range(len(data)-8):
                     str_data = str_data + str(data[i+8])
+                    data_int.append(data[i+8])
                 mqttDataFinal = mqttData
+
+                # Parse TLVs
+                ndns_fns.sd.update(3, data_int, 5)
+                ndns_fns.sts.update(ndns_fns.sd,1000)
+                ndns_fns.class_eng.framewise_calculation(ndns_fns.sd, 0)
+                ndns_fns.class_eng.classify()
+
+                # print("num_pnts:")
+                # print(ndns_fns.sd.pc_history.num_pnts)
+                # print(ndns_fns.sts.num_pnts)
+
                 heartbeat += "F"
                 heartbeat = "\r" + heartbeat
-                print(heartbeat, end='')
+                #print(heartbeat, end='')
                 ndns_fns.si.last_t[sen_idx] = T
                 mqttDataTemp = [T.strftime("%H:%M:%S")]
                 mqttDataTemp.append(mqttData['addr'])
@@ -351,7 +365,7 @@ def on_message_sensorN(client, userdata, msg):
             ##~~~~~~~~ Print info to screen process ~~~~~~~##
 
             if ((T-T0).total_seconds()  > nodens.cp.PRINT_FREQ):
-                T0 = dt.utcnow()
+                T0 = dt.datetime.now(dt.timezone.utc)
                 #print(heartbeat)
                 heartbeat = ""
                 nodens.logger.info("Connected: {}".format(ndns_fns.si.connected_sensors))

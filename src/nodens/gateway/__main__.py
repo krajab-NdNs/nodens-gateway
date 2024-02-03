@@ -1,7 +1,7 @@
 # __main__.py
 
 from pathlib import Path
-from datetime import datetime as dt
+import datetime as dt
 from time import sleep as sleep
 import threading
 from os import path as path
@@ -18,7 +18,7 @@ from nodens.gateway import nodens_fns as ndns_fns
 def sensor_thread(pipeline_thingsboard,pipeline_insight_hub):
     #def __init__(self):
     # Get time
-    T0 = dt.utcnow()
+    T0 = dt.datetime.now(dt.timezone.utc)
     
 
     #######################################
@@ -87,11 +87,10 @@ def thingsboard_thread(pipeline):
 
     thingsboard_handler = ThingsboardHandler()
     thingsboard_handler.setLevel(logging.INFO)
-    nodens.logger.addHandler(thingsboard_handler)
     mqtt_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
     thingsboard_handler.setFormatter(mqtt_format)
 
-    nodens.logger.addHandler(thingsboard_handler)
+    #nodens.logger.addHandler(thingsboard_handler)
 
     search_folders_certs = [user_config_dir(nodens.APPNAME, nodens.APPAUTHOR)+"/certs/",
                   user_config_dir(nodens.APPNAME, nodens.APPAUTHOR)+"/",
@@ -119,11 +118,28 @@ def thingsboard_thread(pipeline):
     if i > -1:
         nodens.logger.error("\n\nTHINGSBOARD: NO ACCESS TOKENS FOUND. Please locate file: thingsboard_access.json.\n\n")
 
+    #nodens_thingsboard.TB.subscribe_to_attributes(ndns_fns.si.connected_sensors)
     while 1:
         message = pipeline.get_message("Consumer")
     #sleep(0.1)
+        nodens_thingsboard.TB.subscribe_to_attributes(ndns_fns.si.connected_sensors)
         nodens_thingsboard.TB.prepare_data(message)
         nodens_thingsboard.TB.multiline_payload(message['addr'])
+
+        for i in range(len(nodens_thingsboard.TB.client_sub)):
+            if nodens_thingsboard.TB.client_sub[i]._userdata != []:
+                print(nodens_thingsboard.TB.client_sub[i]._userdata)
+                nodens_thingsboard.TB.client_sub[i]._userdata = []
+
+def thingsboard_subscribe_thread(pipeline):
+    """Function to trigger publish to Thingsboard Cloud service"""
+    nodens.logger.info("Pipeline to Thingsboard subscribe connected")
+
+    while 1:
+        #message = pipeline.get_message("Consumer")
+        
+        nodens_thingsboard.TB.subscribe_to_attributes(ndns_fns.si.connected_sensors)
+        sleep(5)
 
 def insights_hub_thread(pipeline):
     """Function to trigger publish to Thingsboard Cloud service"""
@@ -170,15 +186,18 @@ if __name__ == "__main__":
     
 
     pipeline_thingsboard = Pipeline()
+    #pipeline_thingsboard_sub = Pipeline()
     pipeline_insight_hub = Pipeline()
     
     thread_sensors = threading.Thread(target=sensor_thread, args=(pipeline_thingsboard,pipeline_insight_hub,), daemon=True)
     thread_thingsboard = threading.Thread(target=thingsboard_thread, args=(pipeline_thingsboard,), daemon=True)
+    #thread_thingsboard_sub = threading.Thread(target=thingsboard_subscribe_thread, args=(pipeline_thingsboard_sub,), daemon=True)
     thread_insights_hub = threading.Thread(target=insights_hub_thread, args=(pipeline_insight_hub,), daemon=True)
 
     thread_sensors.start()
     if nodens.cp.ENABLE_THINGSBOARD:
         thread_thingsboard.start()
+        #thread_thingsboard_sub.start()
     if nodens.cp.ENABLE_SIEMENS_IH:
         
         thread_insights_hub.start()

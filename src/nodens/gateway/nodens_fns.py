@@ -4,7 +4,7 @@ import json
 import logging
 import time
 import configparser
-from datetime import datetime as dt
+import datetime as dt
 import numpy as np
 from pprint import pprint
 import base64
@@ -489,7 +489,7 @@ class SensorInfo:
         if isinstance(addr, list):
             addr = addr[0]
         if (addr not in self.connected_sensors):
-            T = dt.utcnow()
+            T = dt.datetime.now(dt.timezone.utc)
             self.connected_sensors.append(addr)
             self.num_occ.append(0)
             self.max_occ.append(0)
@@ -650,7 +650,7 @@ class OccupantHist:
             self.tot_dist[ind_s].append(0)
             self.max_dist[ind_s].append(0)
             self.flag_active[ind_s].append(1)   # By default mark them as active
-            self.time_inactive_start[ind_s].append(dt.utcnow())
+            self.time_inactive_start[ind_s].append(dt.datetime.now(dt.timezone.utc))
 
         else:
             self.id.append([track_id])
@@ -663,7 +663,7 @@ class OccupantHist:
             self.tot_dist.append([0])
             self.max_dist.append([0])
             self.flag_active.append([1])    # By default mark them as active
-            self.time_inactive_start.append([dt.utcnow()])
+            self.time_inactive_start.append([dt.datetime.now(dt.timezone.utc)])
         
         ind_t = self.id[ind_s].index(track_id)
         if ind_t > self.xh.shape[1]-1:
@@ -751,7 +751,7 @@ class OccupantHist:
                 #print("Active!)")
             else:
                 if (self.flag_active[ind_s][ind_t] == 1):
-                    self.time_inactive_start[ind_s][ind_t] = dt.utcnow()
+                    self.time_inactive_start[ind_s][ind_t] = dt.datetime.now(dt.timezone.utc)
                 self.flag_active[ind_s][ind_t] = 0
 
         except:
@@ -768,7 +768,7 @@ class OccupantHist:
         else:
             inactive_idx = min(range(len(inactive_tracks)), key=inactive_tracks.__getitem__)
             self.most_inactive_track[ind_s] = self.id[ind_s][inactive_idx]
-            self.most_inactive_time[ind_s] = dt.utcnow() - self.time_inactive_start[ind_s][inactive_idx]
+            self.most_inactive_time[ind_s] = dt.datetime.now(dt.timezone.utc) - self.time_inactive_start[ind_s][inactive_idx]
 
 
         
@@ -859,7 +859,7 @@ class point_cloud_3D_new:
     
 
 class PointCloudHistory:
-    """This class stores the point cloud history over the last 3 frames.
+    """This class stores the point cloud history over the last num_hist_frames frames.
     Each frame is composed of arrays of X,Y,Z spatial coordinates, and an array of Doppler values."""
 
     # TODO: define number of frames to store (currently set as 3)
@@ -869,6 +869,7 @@ class PointCloudHistory:
         self.Y = np.array(np.empty((num_hist_frames,),dtype=object), ndmin=1)
         self.Z = np.array(np.empty((num_hist_frames,),dtype=object), ndmin=1)
         self.dopp = np.array(np.empty((num_hist_frames,),dtype=object), ndmin=1)
+        self.num_pnts = np.array(np.empty((num_hist_frames,),dtype=object), ndmin=1)
 
     def update_history(self,pc):
         """Updates the point cloud history with the latest point cloud measurements."""
@@ -877,12 +878,14 @@ class PointCloudHistory:
         self.Y = np.roll(self.Y, 1)
         self.Z = np.roll(self.Z, 1)
         self.dopp = np.roll(self.dopp, 1)
+        self.num_pnts = np.roll(self.num_pnts, 1)
 
         # Update most recent frame
         self.X[0] = pc.X
         self.Y[0] = pc.Y
         self.Z[0] = pc.Z
         self.dopp[0] = pc.dopp
+        self.num_pnts[0] = pc.num_obj
         
 class track:
     """Track data. Tracks are typically room occupants."""
@@ -910,7 +913,33 @@ class track:
                 self.Y.append(np.array(raw[(16+tlv_len*i):(20+tlv_len*i)], dtype='uint8').view('<f4')[0])
                 if np.floor(version) == 3:
                     self.Z.append(np.uint8(raw[(20+tlv_len*i):(24+tlv_len*i)]).view('<f4')[0])
-    
+
+
+class sensorTimeSeries:
+    def __init__(self):
+        self.frame = []
+        self.packet_len = []
+        self.num_tlv = []
+        self.num_pnts = []
+        self.num_tracks = []
+
+    def update(self, sensor_data, max_time_samples = 0):
+        self.frame.append(sensor_data.frame)
+        self.packet_len.append(sensor_data.packet_len)
+        self.num_tlv.append(sensor_data.num_tlv)
+        self.num_pnts.append(sensor_data.pc.num_obj)
+        self.num_tracks.append(sensor_data.track.num_tracks)
+
+        if max_time_samples < 0:
+            print("WARNING: max_time_samples (= {}) must be greater than 0. Setting to 0.")
+        elif max_time_samples > 0:
+            if len(self.frame) > max_time_samples:
+                self.frame = self.frame[1:]
+                self.packet_len = self.packet_len[1:]
+                self.num_tlv = self.num_tlv[1:]
+                self.num_pnts = self.num_pnts[1:]
+                self.num_tracks = self.num_tracks[1:]
+
 
 class VitalSigns:
     """Storage of vital signs data."""
@@ -1543,3 +1572,5 @@ message_pipeline = MessagePipeline()
 rcp = radar_config_params()
 sv = sensor_version()
 class_eng = classifierEngine(11,5,100,3200)
+sd = parseTLV(3)
+sts = sensorTimeSeries()
