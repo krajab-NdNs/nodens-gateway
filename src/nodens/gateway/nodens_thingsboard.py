@@ -108,43 +108,70 @@ class tb:
     def prepare_data(self, input_data):
         # Initialize payload
         self.payload = {}
+
+        # ~~~~~~~~~~~ BEHAVIOUR ~~~~~~~~~~~~~ #
         
         # Determine occupancy
-        if input_data['Number of Occupants'] > 0:
-            self.payload["occupancy"] = "true"
-        else:
-            self.payload["occupancy"] = "false"
-        self.payload["num_occupants"] = input_data['Number of Occupants']
-        self.payload["avg_occupants"] = input_data['Average period occupancy']
-        self.payload["max_occupants"] = input_data['Maximum period occupancy']
+        # if input_data['Number of Occupants'] > 0:
+        #     self.payload["occupancy"] = "true"
+        # else:
+        #     self.payload["occupancy"] = "false"
+        #self.payload["num_occupants"] = input_data['Number of Occupants']
+
+        #self.payload["min_occupants"] = input_data['Minimum period occupancy']
+        self.payload["max_occupancy"] = input_data['Maximum period occupancy']
+        self.payload["avg_occupancy"] = input_data['Average period occupancy']
+
+        # Track ID - select tid with highest energy.
         
         # Occupant positions
-        if self.payload["num_occupants"] > 0:
+        if self.payload["avg_occupancy"] > 0:
             try:
-                temp = input_data['Occupancy Info'][0]
-                self.payload["occ_1_X"] = temp['X']
-                self.payload["occ_1_Y"] = temp['Y']
+                # ~~~~~~~~~~~ Occupancy ~~~~~~~~~~~~~ #
+                #temp = input_data['Occupancy Info'][0]
+                self.payload["occupant_id"] = f"{input_data['Track id']}"
+                self.payload["X"] = f"{input_data['X']:.2f}"
+                self.payload["Y"] = f"{input_data['Y']:.2f}"
 
-                # Activity statistics
-                self.payload["most_inactive_track"] = input_data['Most inactive track']
-                self.payload["most_inactive_time"] = input_data['Most inactive time']
+                # ~~~~~~~~~~~ ACTIVITY ~~~~~~~~~~~~~ #
+                self.payload["dist_moved"] = f"{input_data['Distance moved']:.2f}"
+                self.payload["was_active_this_period"] = input_data['Was active']
+                self.payload["track_ud_energy"] = f"{input_data['UD energy']:.2f}"
+                self.payload["pc_energy"] = f"{input_data['PC energy']:.2f}"
+                # self.payload["most_inactive_track"] = input_data['Most inactive track']
+                # self.payload["most_inactive_time"] = input_data['Most inactive time']
 
-            except:
-                nodens.logger.debug("THINGSBOARD: occupant error")
-                self.payload["occ_1_X"] = "-"
-                self.payload["occ_1_Y"] = "-"
-                self.payload["most_inactive_track"] = "-"
-                self.payload["most_inactive_time"] = "-"
-        else:
-            self.payload["occ_1_X"] = "-"
-            self.payload["occ_1_Y"] = "-"
-            self.payload["most_inactive_track"] = "-"
-            self.payload["most_inactive_time"] = "-"
+                # ~~~~~~~~~~~ SLEEP ~~~~~~~~~~~~~ #
+                self.payload["rest_zone_presence"] = f"{input_data['Presence detected']}"
 
-        
+            except Exception as e:
+                nodens.logger.debug(f"THINGSBOARD: occupant error: {e.args}")
+                # self.payload["occ_1_X"] = "-"
+                # self.payload["occ_1_Y"] = "-"
+                # self.payload["most_inactive_track"] = "-"
+                # self.payload["most_inactive_time"] = "-"
+        # Don't send anything if no occupants.
+        # else:
+
+        #     self.payload["occ_1_X"] = "-"
+        #     self.payload["occ_1_Y"] = "-"
+        #     self.payload["most_inactive_track"] = "-"
+        #     self.payload["most_inactive_time"] = "-"
+
+        # ~~~~~~~~~~~ ACTIVITY ~~~~~~~~~~~~~ #
+            
+        # ~~~~~~~~~~~ VITAL SIGNS ~~~~~~~~~~~~~ #
+            
+        # ~~~~~~~~~~~ SLEEP ~~~~~~~~~~~~~ #
+            
+        # ~~~~~~~~~~~ DIAGNOSTICS ~~~~~~~~~~~~~ #
 
         # Full data
-        self.payload["data_diagnostics"] = input_data['data']      
+        if input_data['Full data flag'] == 0:
+            self.payload["data_diagnostics"] = input_data['data'] 
+        else:
+            self.payload["data_diagnostics"] = input_data['data'] 
+            #self.payload["data_diagnostics"] = input_data['data']      
         
     def prepare_log(self, log_msg):
         # Initialize payload
@@ -176,7 +203,10 @@ class tb:
         #     else:
         #         time.sleep(1)
 
-        json_message = json.dumps(self.payload)
+        try:
+            json_message = json.dumps(self.payload)
+        except Exception as e:
+            logging.error(f"ERROR {e.args}. Payload:{self.payload}")
         self.client.publish(nodens.cp.TB_PUB_TOPIC, json_message, qos=1)
         self.end()
 

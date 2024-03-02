@@ -193,24 +193,24 @@ class radar_config_params:
             temp = raw[len("boundaryBox")+1:]
             temp = temp.split(" ")
 
-            self.ROOM_X_MIN = temp[0]
-            self.ROOM_X_MAX = (temp[1])
-            self.ROOM_Y_MIN = (temp[2])
-            self.ROOM_Y_MAX = (temp[3])
-            self.ROOM_Z_MIN = (temp[4])
-            self.ROOM_Z_MAX = (temp[5])
+            self.ROOM_X_MIN = temp[0].strip()
+            self.ROOM_X_MAX = (temp[1]).strip()
+            self.ROOM_Y_MIN = (temp[2]).strip()
+            self.ROOM_Y_MAX = (temp[3]).strip()
+            self.ROOM_Z_MIN = (temp[4]).strip()
+            self.ROOM_Z_MAX = (temp[5]).strip()
 
         if "staticBoundaryBox" in raw:
             temp = raw[len("staticBoundaryBox")+1:]
             temp = temp.split(" ")
 
-            self.MONITOR_X = temp[0] + "," + temp[1]
-            self.MONITOR_Y = temp[2] + "," + temp[3]
-            self.MONITOR_Z = temp[4] + "," + temp[5]
+            self.MONITOR_X = temp[0].strip() + "," + temp[1].strip()
+            self.MONITOR_Y = temp[2].strip() + "," + temp[3].strip()
+            self.MONITOR_Z = temp[4].strip() + "," + temp[5].strip()
 
 
 # Parse updated sensor configuration file #
-def parse_config(config_file, EntryWays, rcp, cp, client):
+def parse_config(config_file, EntryWays, rcp, cp, rate_unit = 0.5):
     ## ~~~~~~~ UPDATE CONFIGURATION ~~~~~~~ ##
     #rcp = ndns_fns.radar_config_params()
     #ndns_fns.rcp = ndns_fns.radar_config_params()
@@ -272,7 +272,7 @@ def parse_config(config_file, EntryWays, rcp, cp, client):
         rcp.config_dim(sv.radar_dim)
     
     # Parse Publish rates to payload #
-    rate_unit = 2 # Baseline data transmission rate
+    # rate_unit = Baseline data transmission rate
     config_pub_rate = "CMD: PUBLISH RATE: " + str(round(rcp.SCAN_TIME/rate_unit))
     payload_msg = [{ "addr" : [rcp.SENSOR_TARGET],
                         "type" : "json",
@@ -280,9 +280,11 @@ def parse_config(config_file, EntryWays, rcp, cp, client):
 
     if rcp.FULL_DATA_FLAG:
         config_full_data = "CMD: FULL DATA ON. RATE: " + str(max(1,rcp.FULL_DATA_TIME/rcp.SCAN_TIME))
+        print(f"\nrate_unit: {rate_unit}s. SCAN TIME: {rcp.SCAN_TIME}s. PUBLISH RATE: {str(round(rcp.SCAN_TIME/rate_unit))}. FULL DATA RATE: {str(max(1,rcp.FULL_DATA_TIME/rcp.SCAN_TIME))}.\n")
     else:
         config_full_data = "CMD: FULL DATA OFF."
-
+        print(f"\nrate_unit: {rate_unit}s. SCAN TIME: {rcp.SCAN_TIME}s. PUBLISH RATE: {str(round(rcp.SCAN_TIME/rate_unit))}. FULL DATA OFF.\n")
+        
     payload_msg.append({ "addr" : [rcp.SENSOR_TARGET],
                     "type" : "json",
                     "data" : config_full_data + "\n"})
@@ -472,17 +474,17 @@ def ota_esp(config_params):
 class SensorInfo:
     """Information on the connected sensors."""
     def __init__(self):
-        self.connected_sensors = []
-        self.num_occ = []
-        self.max_occ = []
-        self.last_occ = []
-        self.last_t = []
-        self.period_t = []
-        self.period_N = []
-        self.period_sum_occ = []
-        self.period_max_occ = []
-        self.ew_period_sum_occ = []
-        self.ew_period_max_occ = []
+        self.connected_sensors = []     # List of all connected sensors
+        self.num_occ = []               # Number of occupants per sensor
+        self.max_occ = []               # Max occ per sensor
+        self.last_occ = []              # Not used?
+        self.last_t = []                # Time of last payload received
+        self.period_t = []              # Time of last payload to Cloud
+        self.period_N = []              # Num of frames received since last sent to Cloud
+        self.period_sum_occ = []        # Sum of occupancies since last sent to Cloud
+        self.period_max_occ = []        # Max occ since last sent to Cloud
+        self.ew_period_sum_occ = []     # As above for entryways
+        self.ew_period_max_occ = []     # As above for entryways
 
     def check(self, mqttData):
         addr = mqttData['addr']
@@ -505,7 +507,46 @@ class SensorInfo:
         sen_idx = self.connected_sensors.index(addr)
 
         return(sen_idx)
+    
+    def update_short(self, sen_idx, T, mqttData):
+        self.last_t[sen_idx] = T
 
+        if ('Number of Occupants' in mqttData):
+            self.num_occ[sen_idx] = mqttData['Number of Occupants']
+
+             # Update max number of occupants
+            if (self.num_occ[sen_idx] > self.max_occ[sen_idx]):
+                self.max_occ[sen_idx] = self.num_occ[sen_idx]
+
+    def update_full(self, sen_idx, T, sensor_data):
+        self.last_t[sen_idx] = T
+
+        self.num_occ[sen_idx] = sensor_data.track.num_tracks
+
+        # Update max number of occupants
+        if (self.num_occ[sen_idx] > self.max_occ[sen_idx]):
+            self.max_occ[sen_idx] = self.num_occ[sen_idx]
+
+    def update_refresh(self, sen_idx, send_idx_e, T, entryway):
+        self.period_N[sen_idx] += 1
+        self.period_sum_occ[sen_idx] += self.num_occ[sen_idx]
+        self.ew_period_sum_occ[sen_idx] += entryway.count[send_idx_e]
+        if (self.num_occ[sen_idx] > self.period_max_occ[sen_idx]):
+            self.period_max_occ[sen_idx] = self.num_occ[sen_idx]
+        if (entryway.count[send_idx_e] > self.ew_period_max_occ[sen_idx]):
+            self.ew_period_max_occ[sen_idx] = entryway.count[send_idx_e]
+
+    def cloud_send_refresh(self, sen_idx, send_idx_e, T, entryway):
+        self.update_refresh(sen_idx, send_idx_e, T, entryway)
+
+        self.period_t[sen_idx] = T
+        self.period_N[sen_idx] = 1
+        self.period_sum_occ[sen_idx] = self.num_occ[sen_idx]
+        self.period_max_occ[sen_idx] = self.num_occ[sen_idx]
+        self.ew_period_sum_occ[sen_idx] = entryway.count[send_idx_e]
+        self.ew_period_max_occ[sen_idx] = entryway.count[send_idx_e]
+
+    
 
 # Sensor version #
 class sensor_version:
@@ -579,7 +620,7 @@ class EntryWays:
 # Occupant track history #
 class OccupantHist:
     """Historical positions (X,Y) of occupants (tracks)."""
-    def __init__(self, num_hist_frames=10):
+    def __init__(self, num_hist_frames=10, flag_time_based_record=0):
         """Initialises track histories"""
         self.sens_idx = []
         self.id = [] # track id
@@ -588,9 +629,17 @@ class OccupantHist:
         self.x1 = [] # current
         self.y1 = []
 
+        # Save inputs internally
+        self.num_hist_frames = num_hist_frames
+        self.flag_time_based_record = flag_time_based_record
+
         # History over last num_hist_frames
-        self.xh = np.array(np.empty((num_hist_frames,),dtype=object), ndmin=3) # record of last num_hist_frames values
-        self.yh = np.array(np.empty((num_hist_frames,),dtype=object), ndmin=3)
+        self.xh = np.array(np.empty((self.num_hist_frames,),dtype=object), ndmin=3) # record of last num_hist_frames values
+        self.yh = np.array(np.empty((self.num_hist_frames,),dtype=object), ndmin=3)
+
+        # Energy statistics
+        self.e_ud_h = np.array(np.empty((self.num_hist_frames,),dtype=object), ndmin=2) # sd.ud.signature_energy
+        self.e_pc_h = np.array(np.empty((self.num_hist_frames,),dtype=object), ndmin=2) # sd.pc.energy
 
         # Activity statistics
         self.tot_dist = []  # Total distance moved over num_hist_frames
@@ -601,14 +650,37 @@ class OccupantHist:
         # General inactivity stats per sensor
         self.most_inactive_track = []
         self.most_inactive_time = []
+
+        # Prepare outputs
+        self.outputs = self.Outputs()
         
+    # Use this to refresh the histories
+    def refresh(self, sensor_id):
+        # Check for this specific sensor
+        ind_s = self.sens_idx.index(sensor_id)
+
+        self.id[ind_s] = [] 
+
+        self.xh[ind_s] = np.empty([self.xh.shape[1],self.xh.shape[2]], dtype=object)
+        self.yh[ind_s] = np.empty([self.yh.shape[1],self.yh.shape[2]], dtype=object)
+
+        self.e_ud_h[ind_s] = np.empty([self.e_ud_h.shape[1]], dtype=object)
+        self.e_pc_h[ind_s] = np.empty([self.e_pc_h.shape[1]], dtype=object)
+
+        self.tot_dist[ind_s] = []
+        self.max_dist[ind_s] = [] 
+        self.flag_active[ind_s] = []
+        self.time_inactive_start[ind_s] = [] 
+    
     # Use this to update a track location everytime one is detected.
-    def update(self, sensor_id, track_id, X, Y, num_hist_frames=10):
+    def update(self, sensor_id, track_id=[], X=[], Y=[], sensor_data=[]):
         if (sensor_id in self.sens_idx):
             # Check for this specific sensor
             ind_s = self.sens_idx.index(sensor_id)
 
-            if (track_id in self.id[ind_s]):
+            if (track_id == []):
+                pass
+            elif (track_id in self.id[ind_s]):
                 # Check for this specific track
                 ind_t = self.id[ind_s].index(track_id)
 
@@ -618,74 +690,100 @@ class OccupantHist:
                 self.x1[ind_s][ind_t] = X
                 self.y1[ind_s][ind_t] = Y
 
-                # Update histories
+                # Update location histories
                 self.xh[ind_s][ind_t] = np.roll(self.xh[ind_s][ind_t],1)
                 self.xh[ind_s][ind_t][0] = X
                 self.yh[ind_s][ind_t] = np.roll(self.yh[ind_s][ind_t],1)
                 self.yh[ind_s][ind_t][0] = Y
 
+                # Update energy  - UD currently only has one sig. TODO: check tid and then find other sigs + don't forget to add to new_track
+                if sensor_data != []:       # Process only if receiving full data packet.
+                    self.e_ud_h[ind_s] = np.roll(self.e_ud_h[ind_s],1)
+                    self.e_ud_h[ind_s][0] = sensor_data.ud.signature_energy
+                    self.e_pc_h[ind_s] = np.roll(self.e_pc_h[ind_s],1)
+                    self.e_pc_h[ind_s][0] = sensor_data.pc.energy[0]
+
+
                 # Update activity statistics
-                self.activity_detection(sensor_id, track_id, num_hist_frames)
+                self.activity_detection(sensor_id, track_id)
 
             else:
                 # Record new values if track did not previously exist
-                
-                self.new_track(sensor_id,track_id,X,Y,num_hist_frames=num_hist_frames,new_sensor_flag=0)
+                #if track_id != []:
+                self.new_track(sensor_id,track_id,X,Y,new_sensor_flag=0)
         else:
-            self.new_sensor(sensor_id, num_hist_frames)
-            self.new_track(sensor_id,track_id,X,Y,num_hist_frames=num_hist_frames,new_sensor_flag=1)
+            self.new_sensor(sensor_id)
+            if track_id != []:
+                self.new_track(sensor_id,track_id,X,Y,new_sensor_flag=1)
 
 
     # Procedure to when a new track is detected
-    def new_track(self,sensor_id,track_id,X,Y,new_sensor_flag,num_hist_frames=10):
+    def new_track(self,sensor_id,track_id,X,Y,new_sensor_flag):
         ind_s = self.sens_idx.index(sensor_id)
-        if new_sensor_flag == 0:
-            self.id[ind_s].append(track_id)
+        # if new_sensor_flag == 0:
+        self.id[ind_s].append(track_id)
 
-            self.x0[ind_s].append(X)
-            self.y0[ind_s].append(Y)
-            self.x1[ind_s].append(X)
-            self.y1[ind_s].append(Y)
+        self.x0[ind_s].append(X)
+        self.y0[ind_s].append(Y)
+        self.x1[ind_s].append(X)
+        self.y1[ind_s].append(Y)
 
-            self.tot_dist[ind_s].append(0)
-            self.max_dist[ind_s].append(0)
-            self.flag_active[ind_s].append(1)   # By default mark them as active
-            self.time_inactive_start[ind_s].append(dt.datetime.now(dt.timezone.utc))
+        self.tot_dist[ind_s].append(0)
+        self.max_dist[ind_s].append(0)
+        self.flag_active[ind_s].append(1)   # By default mark them as active
+        self.time_inactive_start[ind_s].append(dt.datetime.now(dt.timezone.utc))
 
-        else:
-            self.id.append([track_id])
+        # else:
+        #     # self.id.append([track_id])
+        #     self.id[ind_s].append(track_id)
 
-            self.x0.append([X])
-            self.y0.append([Y])
-            self.x1.append([X])
-            self.y1.append([Y])
+        #     self.x0.append([X])
+        #     self.y0.append([Y])
+        #     self.x1.append([X])
+        #     self.y1.append([Y])
 
-            self.tot_dist.append([0])
-            self.max_dist.append([0])
-            self.flag_active.append([1])    # By default mark them as active
-            self.time_inactive_start.append([dt.datetime.now(dt.timezone.utc)])
+        #     self.tot_dist.append([0])
+        #     self.max_dist.append([0])
+        #     self.flag_active.append([1])    # By default mark them as active
+        #     self.time_inactive_start.append([dt.datetime.now(dt.timezone.utc)])
         
         ind_t = self.id[ind_s].index(track_id)
         if ind_t > self.xh.shape[1]-1:
-            new_track = np.empty((self.xh.shape[0],self.xh.shape[1],num_hist_frames),dtype=object)
+            new_track = np.empty((self.xh.shape[0],self.xh.shape[1],self.num_hist_frames),dtype=object)
             self.xh = np.concatenate((self.xh,new_track),axis=1)
             self.yh = np.concatenate((self.yh,new_track),axis=1)
         self.xh[ind_s][ind_t][0] = X
         self.yh[ind_s][ind_t][0] = Y
         
     # Proedure when a new sensor is detected
-    def new_sensor(self,sensor_id, num_hist_frames=10):
+    def new_sensor(self,sensor_id):
         #self.max_tracks.append(0)
         self.sens_idx.append(sensor_id)
         self.most_inactive_track.append(None)
         self.most_inactive_time.append(None)
         if len(self.sens_idx) == 1:
-            self.xh = np.array(np.empty((num_hist_frames,),dtype=object), ndmin=3)
-            self.yh = np.array(np.empty((num_hist_frames,),dtype=object), ndmin=3)
+            self.xh = np.array(np.empty((self.num_hist_frames,),dtype=object), ndmin=3)
+            self.yh = np.array(np.empty((self.num_hist_frames,),dtype=object), ndmin=3)
+            self.e_ud_h = np.array(np.empty((self.num_hist_frames,),dtype=object), ndmin=2)
+            self.e_pc_h = np.array(np.empty((self.num_hist_frames,),dtype=object), ndmin=2)
         else:
             new_sensor = np.empty((1,self.xh.shape[1],self.xh.shape[2]),dtype=object)
             self.xh = np.concatenate((self.xh,new_sensor),axis=0)
             self.yh = np.concatenate((self.yh,new_sensor),axis=0)
+            new_sensor = np.empty((1,self.e_ud_h.shape[1]),dtype=object)
+            self.e_ud_h = np.concatenate((self.e_ud_h,new_sensor),axis=0)
+            self.e_pc_h = np.concatenate((self.e_pc_h,new_sensor),axis=0)
+
+        self.id.append([])
+        self.x0.append([])
+        self.y0.append([])
+        self.x1.append([])
+        self.y1.append([])
+
+        self.tot_dist.append([])
+        self.max_dist.append([])
+        self.flag_active.append([])    # By default mark them as active
+        self.time_inactive_start.append([])
     
     # Use this to check entryways and see if anyone has entered/left the room
     def entryway(self, sensor_id, track_id, ew):
@@ -754,9 +852,15 @@ class OccupantHist:
                     self.time_inactive_start[ind_s][ind_t] = dt.datetime.now(dt.timezone.utc)
                 self.flag_active[ind_s][ind_t] = 0
 
-        except:
-            nodens.logger.error("len(xd) != len(yd). xh={}. yh={}.".format(self.xh, self.yh))
+        except Exception as e:
+            nodens.logger.error(f"""Error {e.args}.""")
             #print("Inactive since {} for track: {} with dist: {}".format(self.time_inactive_start[ind_s][ind_t], track_id, self.tot_dist[ind_s][ind_t], self.max_dist[ind_s][ind_t]))
+
+        # Calculate total energies for each frame
+        # try:
+        #     ud_e = [val for val in self.e_ud_h[ind_s][ind_t] if val is not None]
+        #     print(f"ud: {ud_e}")
+
 
     # Calculate general activity statistics
     def sensor_activity(self, sensor_id):
@@ -770,7 +874,54 @@ class OccupantHist:
             self.most_inactive_track[ind_s] = self.id[ind_s][inactive_idx]
             self.most_inactive_time[ind_s] = dt.datetime.now(dt.timezone.utc) - self.time_inactive_start[ind_s][inactive_idx]
 
+    # Calculate outputs
+    def calculate_outputs(self, thresh_distance = 0, energy_threshold = 0):
+        # Re-initialise outputs
+        self.outputs.__init__()
 
+        for idx, sensor in enumerate(self.sens_idx):    # For each sensor
+            if len(self.id[idx]) > 0:
+                # Determine track to send
+                if max(self.tot_dist[idx]) >= thresh_distance: # Distance threshold at 0 for now, until UD sig tid is found.
+                    tid = self.tot_dist[idx].index(max(self.tot_dist[idx]))
+
+                    self.outputs.track_id = self.id[idx][tid]
+
+                    # Record parameters
+                    self.outputs.track_X = self.x1[idx][tid]
+                    self.outputs.track_Y = self.y1[idx][tid]
+                    self.outputs.distance_moved = self.tot_dist[idx][tid]
+
+                    # Energy statistics (for scene not track)
+                    ud_e = [val for val in self.e_ud_h[idx] if val is not None]
+                    self.outputs.ud_energy = sum(ud_e)
+                    if self.outputs.ud_energy > energy_threshold:
+                        self.outputs.was_active = 1
+                    else:
+                        self.outputs.was_active = 0
+                    pc_e = [val for val in self.e_pc_h[idx] if val is not None]
+                    self.outputs.pc_energy = sum(pc_e)
+                else:
+                    pass
+                    #tid = self.ud_energy[idx].index(max(self.ud_energy[idx]))
+                    
+
+
+    
+    # Class to define outputs
+    class Outputs:
+        def __init__(self) -> None:
+            self.track_id = []  # tid with highest distance walked, or if under threshold then highest energy
+            self.track_X = []   # corresponding location for tid
+            self.track_Y = []
+            self.distance_moved = []   # total distance moved
+            self.was_active = []        # check if ud_energy over threshold
+            self.ud_energy = []
+            self.pc_energy = []
+
+        
+                    
+                
         
 
 
@@ -855,6 +1006,8 @@ class point_cloud_3D_new:
         self.Y = self.rng * np.cos((self.azim)) * np.cos((self.elev))
         self.Z = self.rng * np.sin((self.elev))
 
+        self.energy = np.sqrt(sum([val**2 for val in self.dopp]))
+
         
     
 
@@ -914,6 +1067,15 @@ class track:
                 if np.floor(version) == 3:
                     self.Z.append(np.uint8(raw[(20+tlv_len*i):(24+tlv_len*i)]).view('<f4')[0])
 
+class PresenceDetect:
+    """Processes radar TLV related to presence detction"""
+    def __init__(self) -> None:
+        self.present = 0
+        self.tlv_len = []
+
+    def process(self, raw):
+        self.tlv_len = np.uint8(raw[4:8]).view(np.uint32)[0]
+        self.present = raw[8]
 
 class sensorTimeSeries:
     def __init__(self):
@@ -923,12 +1085,43 @@ class sensorTimeSeries:
         self.num_pnts = []
         self.num_tracks = []
 
+        # Some stats
+        self.count = 0
+        self.total_frame_drop = 0
+        self.min_frame_drop = 100000
+        self.max_frame_drop = 0
+        self.avg_frame_drop = 0
+
     def update(self, sensor_data, max_time_samples = 0):
         self.frame.append(sensor_data.frame)
         self.packet_len.append(sensor_data.packet_len)
         self.num_tlv.append(sensor_data.num_tlv)
         self.num_pnts.append(sensor_data.pc.num_obj)
         self.num_tracks.append(sensor_data.track.num_tracks)
+
+        self.count += 1
+        if self.count > 1:
+            try:
+                if isinstance(self.frame[-1], (float, int)) and isinstance(self.frame[-2], (float, int)):
+                    if self.frame[-1] > self.frame[-2]:
+                        frame_drop = self.frame[-1] - self.frame[-2]
+                        self.total_frame_drop += frame_drop
+
+                        if frame_drop > self.max_frame_drop:
+                            self.max_frame_drop = frame_drop
+                        
+                        if frame_drop < self.min_frame_drop:
+                            self.min_frame_drop = frame_drop
+
+                        self.avg_frame_drop = self.total_frame_drop / self.count
+
+                    else:
+                        print(f"Frames no sequential. frame -1: {self.frame[-1]}. frame -2: {self.frame[-2]}")
+                else:
+                    print(f"Frames not a number. frame -1: {self.frame[-1]}. frame -2: {self.frame[-2]}")
+            except:
+                print(f"Frame count error {self.frame[-1]} {self.frame[-2]} {isinstance(self.frame[-1], (float, int))}")
+
 
         if max_time_samples < 0:
             print("WARNING: max_time_samples (= {}) must be greater than 0. Setting to 0.")
@@ -1021,7 +1214,7 @@ class VitalSigns:
             self.breathing_msg = "No breathing rate detected"
 
 
-class ud:
+class MicroDoppler:
     """Micro-Doppler (UD) parameters and signatures."""
     def __init__(self):
         self.tid = []
@@ -1033,7 +1226,7 @@ class ud:
         self.z = self.udFrameParam()
         self.signature_energy = 0
 
-    def signature(raw, Nud, spec_length, Nchirps):
+    def signature(self, raw, Nud, spec_length, Nchirps):
         #TODO: add number of targets
         # check number of chirps compared to fft length
         if Nchirps > spec_length:
@@ -1340,8 +1533,9 @@ class parseTLV:
         self.pc_history = PointCloudHistory()
         self.track = track([],3.112)
         self.ud_sig = np.zeros([64,40])
-        self.ud = ud()
+        self.ud = MicroDoppler()
         self.vs = VitalSigns()
+        self.presence = PresenceDetect()
 
     def update(self, version, data, Nud):
         if (version == 3):
@@ -1371,15 +1565,20 @@ class parseTLV:
                     self.track = track(self.data7,3.112)
             elif (data[j:j+4] == [10,0,0,0]):
                 j,self.len10,self.data10 = self.tlvN(data,j)
+                print(f"TLV10. len:{self.len10}. data:{self.data10[0:12]} ")
                 if (j <= self.packet_len):
                     self.vs.update(self.data10)
                     nodens.logger.debug("(X,Y): ({:.1f},{:.1f}). HR:{:.1f}. BR: {:.1f}.".format(self.vs.X, self.vs.Y,  self.vs.heart_rate, self.vs.breathing_rate))
                     nodens.logger.debug(" B dev: {}".format(self.vs.breathing_deviation[0:3]))
                     nodens.logger.debug(" B vote: {}".format(self.vs.breathing_vote[0:3]))
+            elif (data[j:j+4] == [11,0,0,0]):
+                j,self.len11,self.data11 = self.tlvN(data,j)
+                self.presence.process(self.data11)
             elif (data[j:j+4] == [12,0,0,0]):   # UD signature 12
                 j,self.len12,self.data12 = self.tlvN(data,j)
+                print(f"TLV12. len:{self.len12}. data:{self.data12[0:12]} ")
                 if (j <= self.packet_len):
-                    ud_sig_out = ud.signature(self.data12, Nud, 128, 64)
+                    ud_sig_out = self.ud.signature(self.data12, Nud, 128, 64)
                     self.ud.calculate_sig_energy(ud_sig_out)
                     self.ud_sig = np.roll(self.ud_sig, -Nud, axis=1)
                     for i in range(64):
@@ -1387,6 +1586,7 @@ class parseTLV:
                             self.ud_sig[i,k+40-Nud] = ud_sig_out[i,k]
             elif (data[j:j+4] == [13,0,0,0]):   # UD parameters 13
                 j,self.len13,self.data13 = self.tlvN(data,j)
+                print(f"TLV13. len:{self.len13}. data:{self.data13[0:12]} ")
                 if (j <= self.packet_len):
                     #UD = ud()
                     self.ud.parameters(self.data13)
@@ -1565,7 +1765,7 @@ class MessagePipeline:
 ## ~~~~~~~~~~ INITIALISE FUNCTIONS ~~~~~~~~~~~~~~ ## 
 si = SensorInfo()               # Sensor info
 ew = EntryWays()         # Entryway monitors
-oh = OccupantHist()      # Occupant history
+oh = OccupantHist(num_hist_frames=250)      # Occupant history
 sm = SensorMesh()        # Sensor Mesh state
 message_pipeline = MessagePipeline()
 #cp = nodens.cp

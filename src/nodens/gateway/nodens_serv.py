@@ -130,6 +130,7 @@ def on_message_sensorN(client, userdata, msg):
                 data = mqttData['data']
             str_data = str(data[0])
             data_int = [data[0]]
+
             if len(data) > 6:
                 for i in range(7):
                     str_data = str_data + str(data[i+1])
@@ -149,6 +150,11 @@ def on_message_sensorN(client, userdata, msg):
                 ndns_fns.class_eng.framewise_calculation(ndns_fns.sd, 0)
                 ndns_fns.class_eng.classify()
 
+                ndns_fns.si.update_full(sen_idx, T, ndns_fns.sd)
+
+                # Print frame count stats
+                #print(f"FRAME STATS \n\tFrame: {ndns_fns.sts.frame[-1]} \n\tAverage frame skip: {ndns_fns.sts.avg_frame_drop} \n\tMin frame skip: {ndns_fns.sts.min_frame_drop} \tMax frame skip: {ndns_fns.sts.max_frame_drop}")
+
                 # print("num_pnts:")
                 # print(ndns_fns.sd.pc_history.num_pnts)
                 # print(ndns_fns.sts.num_pnts)
@@ -156,11 +162,84 @@ def on_message_sensorN(client, userdata, msg):
                 heartbeat += "F"
                 heartbeat = "\r" + heartbeat
                 #print(heartbeat, end='')
-                ndns_fns.si.last_t[sen_idx] = T
                 mqttDataTemp = [T.strftime("%H:%M:%S")]
                 mqttDataTemp.append(mqttData['addr'])
                 mqttDataTemp.append(mqttData['data'])
                 mqttData_SAVEFull.append(mqttDataTemp)
+
+                try:
+                    if ndns_fns.sd.track.num_tracks > 0:
+                        for idx, track in enumerate(ndns_fns.sd.track.tid):
+                            ndns_fns.oh.update(mqttData['addr'],track,ndns_fns.sd.track.X[idx],ndns_fns.sd.track.Y[idx],ndns_fns.sd)
+                    ndns_fns.oh.sensor_activity(mqttData['addr'])
+                except Exception as e:
+                    pass
+
+                # Update time period occupancy data
+                if mqttData['addr'] not in ndns_fns.ew.id:
+                    ndns_fns.ew.update(mqttData['addr'])
+                send_idx_e = ndns_fns.ew.id.index(mqttData['addr'])
+
+                ndns_fns.si.update_refresh(sen_idx, send_idx_e, T, ndns_fns.ew)
+
+                #TODO: check cloud update
+                if ((T - ndns_fns.si.period_t[sen_idx]).total_seconds() > nodens.cp.CLOUD_WRITE_TIME):
+                    # Calculate occupant history outputs
+                    ndns_fns.oh.calculate_outputs()
+
+                    mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
+                    mqttClass = json.loads("{\"Activity detected\": \"" + str(int(ndns_fns.class_eng.activity_alert))
+                                        + "\", \"Activity type\": \"" + str(int(ndns_fns.class_eng.classification))
+                                        + "\"}")
+                    mqttDataFinal = {**mqttData, #'addr' : mqttData['addr'],
+                                    'Average period occupancy' : ndns_fns.si.period_sum_occ[sen_idx]/ndns_fns.si.period_N[sen_idx], 
+                                    'Maximum period occupancy' : ndns_fns.si.period_max_occ[sen_idx],
+                                    'Average entryway occupancy' : ndns_fns.si.ew_period_sum_occ[sen_idx]/ndns_fns.si.period_N[sen_idx], 
+                                    'Maximum entryway occupancy' : ndns_fns.si.ew_period_max_occ[sen_idx],
+                                    'Full data flag' : 1,
+                                    'Track id' : ndns_fns.oh.outputs.track_id,
+                                    'X' : ndns_fns.oh.outputs.track_X,
+                                    'Y' : ndns_fns.oh.outputs.track_Y,
+                                    'Distance moved' : ndns_fns.oh.outputs.distance_moved,
+                                    'Was active' : ndns_fns.oh.outputs.was_active,
+                                    'UD energy' : ndns_fns.oh.outputs.ud_energy,
+                                    'PC energy' : ndns_fns.oh.outputs.pc_energy,
+                                    'Presence detected' : ndns_fns.sd.presence.present,
+                                    }
+
+                    ndns_fns.class_eng.activity_alert = 0
+                    try:
+                        send_idx_o = ndns_fns.oh.sens_idx.index(mqttData['addr'])
+                        mqttDataFinal = {**mqttDataFinal, 
+                                    'Most inactive track' : ndns_fns.oh.most_inactive_track[send_idx_o],
+                                    'Most inactive time' : str(ndns_fns.oh.most_inactive_time[send_idx_o]),
+                                    'Distance walked' : ndns_fns.oh.tot_dist[send_idx_o],
+                                    'Distance walked' : ndns_fns.oh.tot_dist[send_idx_o],
+                                    }
+                    except:
+                        send_idx_o = None
+                        mqttDataFinal = {**mqttDataFinal, 
+                                    'Most inactive track' : "-",
+                                    'Most inactive time' : "-",
+                                    }
+
+                    # Log some occupancy statistics
+                    print_text = ('Occupancy at timestamp: {} \n'.format(T) +
+                                '\t Current : {}\n'.format(ndns_fns.si.num_occ) +
+                                '\t Average.\tDirect: {},\tEntryway: {}\n'.format(mqttDataFinal['Average period occupancy'], mqttDataFinal['Average entryway occupancy']) +
+                                '\t Max.\t\tDirect: {},\tEntryway: {}\n'.format(mqttDataFinal['Maximum period occupancy'], mqttDataFinal['Maximum entryway occupancy']))
+
+                    # Record message to send, if requested by ud service
+                    ndns_fns.message_pipeline.update(mqttDataFinal)
+
+                    # if nodens.cp.ENABLE_THINGSBOARD:
+                    #     ndns_tb.TB.prepare_data(mqttDataFinal)
+                    #     ndns_tb.TB.multiline_payload(mqttData['addr'])
+
+
+                    ndns_fns.si.cloud_send_refresh(sen_idx, send_idx_e, T, ndns_fns.ew)
+                    heartbeat = ""
+
             elif (mqttData['type'] == 'json'):
                 print("JSON type: {}".format(mqttData))
             # Otherwise process occupancy info
@@ -169,13 +248,15 @@ def on_message_sensorN(client, userdata, msg):
                 mqttOcc = json.loads(data)
                 mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
                 mqttDataFinal = {**mqttTime, **mqttData, **mqttOcc}
-                ndns_fns.si.last_t[sen_idx] = T
+                #ndns_fns.si.last_t[sen_idx] = T
                 #mqttData_SAVE.append(mqttOcc)
+
+                ndns_fns.si.update_short(sen_idx, T, mqttDataFinal)
                 
                 if ('Number of Occupants' in mqttDataFinal):
                     mqttDataTemp = [T.strftime("%H:%M:%S")]
                     mqttDataTemp.append(mqttData['addr'])
-                    ndns_fns.si.num_occ[sen_idx] = mqttDataFinal['Number of Occupants']
+                    #ndns_fns.si.num_occ[sen_idx] = mqttDataFinal['Number of Occupants']
                     mqttDataTemp.append(mqttDataFinal['Number of Occupants'])
 
                     if ('Occupancy Info' in mqttDataFinal):
@@ -208,9 +289,9 @@ def on_message_sensorN(client, userdata, msg):
                     mqttData_SAVE.append(mqttDataTemp)
                     
 
-                    # Update max number of occupants
-                    if (ndns_fns.si.num_occ[sen_idx] > ndns_fns.si.max_occ[sen_idx]):
-                        ndns_fns.si.max_occ[sen_idx] = ndns_fns.si.num_occ[sen_idx]
+                    # # Update max number of occupants
+                    # if (ndns_fns.si.num_occ[sen_idx] > ndns_fns.si.max_occ[sen_idx]):
+                    #     ndns_fns.si.max_occ[sen_idx] = ndns_fns.si.num_occ[sen_idx]
 
                     # If there are occupants, what are their locations?
                     if (ndns_fns.si.num_occ[sen_idx] > 0):        # NodeNs KZR FIX : need to update so oh processes when num_occ=0
@@ -230,11 +311,16 @@ def on_message_sensorN(client, userdata, msg):
 
                         # Look at general activity stats
                         ndns_fns.oh.sensor_activity(mqttData['addr'])
+                    else:
+                        ndns_fns.oh.update(mqttData['addr'])
+                        ndns_fns.oh.sensor_activity(mqttData['addr'])
 
                     # Update time period occupancy data
                     if mqttData['addr'] not in ndns_fns.ew.id:
                         ndns_fns.ew.update(mqttData['addr'])
                     send_idx_e = ndns_fns.ew.id.index(mqttData['addr'])
+
+                    ndns_fns.si.update_refresh(sen_idx, send_idx_e, T, ndns_fns.ew)
 
                     ## ~~~~~~~~~~~ ALERT: ACTIVITY DETECTED ~~~~~~~~~ ##
                     # if nodens.cp.ENABLE_SIEMENS_IH and ndns_fns.class_eng.activity_alert == 1:
@@ -260,6 +346,9 @@ def on_message_sensorN(client, userdata, msg):
 
                     ## ~~~~~~~~~~~ SEND TO CLOUD ~~~~~~~~~ ##
                     if ((T - ndns_fns.si.period_t[sen_idx]).total_seconds() > nodens.cp.CLOUD_WRITE_TIME):
+                        # Calculate occupant history outputs
+                        ndns_fns.oh.calculate_outputs()
+
                         mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
                         mqttClass = json.loads("{\"Activity detected\": \"" + str(int(ndns_fns.class_eng.activity_alert))
                                             + "\", \"Activity type\": \"" + str(int(ndns_fns.class_eng.classification))
@@ -269,7 +358,17 @@ def on_message_sensorN(client, userdata, msg):
                                         'Maximum period occupancy' : ndns_fns.si.period_max_occ[sen_idx],
                                         'Average entryway occupancy' : ndns_fns.si.ew_period_sum_occ[sen_idx]/ndns_fns.si.period_N[sen_idx], 
                                         'Maximum entryway occupancy' : ndns_fns.si.ew_period_max_occ[sen_idx],
+                                        'Full data flag' : 0,
+                                        'Track id' : ndns_fns.oh.outputs.track_id,
+                                        'X' : ndns_fns.oh.outputs.track_X,
+                                        'Y' : ndns_fns.oh.outputs.track_Y,
+                                        'Distance moved' : ndns_fns.oh.outputs.distance_moved,
+                                        'Was active' : ndns_fns.oh.outputs.was_active,
+                                        'UD energy' : ndns_fns.oh.outputs.ud_energy,
+                                        'PC energy' : ndns_fns.oh.outputs.pc_energy,
+                                        'Presence detected' : ndns_fns.sd.presence.present,
                                         }
+                        
                         ndns_fns.class_eng.activity_alert = 0
                         try:
                             send_idx_o = ndns_fns.oh.sens_idx.index(mqttData['addr'])
@@ -298,23 +397,15 @@ def on_message_sensorN(client, userdata, msg):
                         #     ndns_tb.TB.multiline_payload(mqttData['addr'])
 
 
-                        ndns_fns.si.period_t[sen_idx] = T
-                        ndns_fns.si.period_N[sen_idx] = 1
-                        ndns_fns.si.period_sum_occ[sen_idx] = ndns_fns.si.num_occ[sen_idx]
-                        ndns_fns.si.period_max_occ[sen_idx] = ndns_fns.si.num_occ[sen_idx]
-                        ndns_fns.si.ew_period_sum_occ[sen_idx] = ndns_fns.ew.count[send_idx_e]
-                        ndns_fns.si.ew_period_max_occ[sen_idx] = ndns_fns.ew.count[send_idx_e]
+                        ndns_fns.si.cloud_send_refresh(sen_idx, send_idx_e, T, ndns_fns.ew)
                         heartbeat = ""
-                    else:
-                        ndns_fns.si.period_N[sen_idx] += 1
-                        ndns_fns.si.period_sum_occ[sen_idx] += ndns_fns.si.num_occ[sen_idx]
-                        ndns_fns.si.ew_period_sum_occ[sen_idx] += ndns_fns.ew.count[send_idx_e]
-                        if (ndns_fns.si.num_occ[sen_idx] > ndns_fns.si.period_max_occ[sen_idx]):
-                            ndns_fns.si.period_max_occ[sen_idx] = ndns_fns.si.num_occ[sen_idx]
-                        if (ndns_fns.ew.count[send_idx_e] > ndns_fns.si.ew_period_max_occ[sen_idx]):
-                            ndns_fns.si.ew_period_max_occ[sen_idx] = ndns_fns.ew.count[send_idx_e]
+
+                        # Refresh occupancy histories for next Cloud transmission frame
+                        ndns_fns.oh.refresh(mqttData['addr'])
+                    
                 else:
-                    ndns_fns.si.num_occ[sen_idx] = 0
+                    #ndns_fns.si.num_occ[sen_idx] = 0
+                    pass
         
                 if mqttDataFinal['type'] == 'bytes':
                     ndns_fns.si.last_t[sen_idx] = T
@@ -373,8 +464,8 @@ def on_message_sensorN(client, userdata, msg):
                     nodens.logger.info("Previously connected: {}".format(str(ndns_fns.si.last_t)))
                     
                     nodens.logger.info(print_text)
-                except:
-                    nodens.logger.info("Step 2 didn't work")
+                except Exception as e:
+                    nodens.logger.info(f"Step 2 didn't work: {e.args}")
                 
                 
 

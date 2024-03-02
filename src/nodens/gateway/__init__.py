@@ -20,7 +20,7 @@ global CWD
 
 # Some information
 __title__ = "nodens-gateway"
-__version__ = "24.2.0"
+__version__ = "24.3.1"
 __author__ = "Khalid Z Rajab"
 __author_email__ = "khalid@nodens.eu"
 __copyright__ = "Copyright (c) 2024 " + __author__
@@ -42,7 +42,7 @@ c_handler = logging.StreamHandler()
 f_handler = logging.FileHandler(log_file)
 
 c_handler.setLevel(logging.INFO)
-f_handler.setLevel(logging.DEBUG)
+f_handler.setLevel(logging.INFO)
 
 # Create formatters and add it to handlers
 c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
