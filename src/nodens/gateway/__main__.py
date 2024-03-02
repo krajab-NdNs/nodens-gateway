@@ -120,16 +120,19 @@ def thingsboard_thread(pipeline):
 
     #nodens_thingsboard.TB.subscribe_to_attributes(ndns_fns.si.connected_sensors)
     while 1:
-        message = pipeline.get_message("Consumer")
-    #sleep(0.1)
-        nodens_thingsboard.TB.subscribe_to_attributes(ndns_fns.si.connected_sensors)
-        nodens_thingsboard.TB.prepare_data(message)
-        nodens_thingsboard.TB.multiline_payload(message['addr'])
+        try:
+            message = pipeline.get_message("Consumer")
+        #sleep(0.1)
+            nodens_thingsboard.TB.subscribe_to_attributes(ndns_fns.si.connected_sensors)
+            nodens_thingsboard.TB.prepare_data(message)
+            nodens_thingsboard.TB.multiline_payload(message['addr'])
 
-        for i in range(len(nodens_thingsboard.TB.client_sub)):
-            if nodens_thingsboard.TB.client_sub[i]._userdata != []:
-                print(nodens_thingsboard.TB.client_sub[i]._userdata)
-                nodens_thingsboard.TB.client_sub[i]._userdata = []
+            for i in range(len(nodens_thingsboard.TB.client_sub)):
+                if nodens_thingsboard.TB.client_sub[i]._userdata != []:
+                    print(nodens_thingsboard.TB.client_sub[i]._userdata)
+                    nodens_thingsboard.TB.client_sub[i]._userdata = []
+        except Exception as e:
+            nodens.logger.error(f"THINGSBOARD: thread error: {e.args}")
 
 def thingsboard_subscribe_thread(pipeline):
     """Function to trigger publish to Thingsboard Cloud service"""

@@ -191,42 +191,45 @@ class tb:
         global TB_CONNECT
         global FLAG_TX_IN_PROGRESS
 
-        while FLAG_TX_IN_PROGRESS == 1:
-            sleep(0.1)
-        FLAG_TX_IN_PROGRESS = 1
-        for i in range(len(self.subscribed_sensors)):
-            print(i)
-            self.client_sub[i].loop_stop()
-            self.client_sub[i].disconnect()
-            self.client_sub[i].unsubscribe('#')
-        s_idx = self.sensor_id.index(sensor_id)
-        username = self.access_token[s_idx]
-        self.client.username_pw_set(username)
-        TB_CONNECT = 0
-        T_temp = dt.datetime.now(dt.timezone.utc)
-        self.connect()
-        # while TB_CONNECT == 0:
-        #     if (dt.datetime.now(dt.timezone.utc) - T_temp).seconds > 60:
-        #         self.end()
-        #         print("Wait 60s [T_temp: {}. T: {}]...".format(T_temp, dt.datetime.now(dt.timezone.utc)), end='')
-        #         time.sleep(5)
-        #         self.connect()
-        #         print("TB_CONNECT: {}".format(TB_CONNECT))
-        #     else:
-        #         time.sleep(1)
-
         try:
-            json_message = json.dumps(self.payload)
-        except Exception as e:
-            logging.error(f"ERROR {e.args}. Payload:{self.payload}")
-        self.client.publish(nodens.cp.TB_PUB_TOPIC, json_message, qos=1)
-        self.end()
+            while FLAG_TX_IN_PROGRESS == 1:
+                sleep(0.1)
+            FLAG_TX_IN_PROGRESS = 1
+            for i in range(len(self.subscribed_sensors)):
+                print(i)
+                self.client_sub[i].loop_stop()
+                self.client_sub[i].disconnect()
+                self.client_sub[i].unsubscribe('#')
+            s_idx = self.sensor_id.index(sensor_id)
+            username = self.access_token[s_idx]
+            self.client.username_pw_set(username)
+            TB_CONNECT = 0
+            T_temp = dt.datetime.now(dt.timezone.utc)
+            self.connect()
+            # while TB_CONNECT == 0:
+            #     if (dt.datetime.now(dt.timezone.utc) - T_temp).seconds > 60:
+            #         self.end()
+            #         print("Wait 60s [T_temp: {}. T: {}]...".format(T_temp, dt.datetime.now(dt.timezone.utc)), end='')
+            #         time.sleep(5)
+            #         self.connect()
+            #         print("TB_CONNECT: {}".format(TB_CONNECT))
+            #     else:
+            #         time.sleep(1)
 
-        for i in range(len(self.subscribed_sensors)):
-            self.client_sub[i].connect(nodens.cp.TB_HOST,nodens.cp.TB_PORT,nodens.cp.TB_KEEPALIVE)
-            self.client_sub[i].loop_start()
-            self.client_sub[i].subscribe(nodens.cp.TB_ATTRIBUTES_TOPIC, qos=1)
-        FLAG_TX_IN_PROGRESS = 0
+            try:
+                json_message = json.dumps(self.payload)
+            except Exception as e:
+                logging.error(f"ERROR {e.args}. Payload:{self.payload}")
+            self.client.publish(nodens.cp.TB_PUB_TOPIC, json_message, qos=1)
+            self.end()
+
+            for i in range(len(self.subscribed_sensors)):
+                self.client_sub[i].connect(nodens.cp.TB_HOST,nodens.cp.TB_PORT,nodens.cp.TB_KEEPALIVE)
+                self.client_sub[i].loop_start()
+                self.client_sub[i].subscribe(nodens.cp.TB_ATTRIBUTES_TOPIC, qos=1)
+            FLAG_TX_IN_PROGRESS = 0
+        except Exception as e:
+            nodens.logger.error(f"THINGSBOARD: multiline payload error: {e.args}")
 
 TB = tb()
 
