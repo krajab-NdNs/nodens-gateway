@@ -5,8 +5,10 @@ import logging
 import datetime as dt
 import nodens.gateway as nodens
 from nodens.gateway import nodens_fns as ndns_fns
+from time import sleep as sleep
 
 global TB_CONNECT
+global FLAG_TX_IN_PROGRESS
 
 def on_subscribe_tb(unused_client, unused_userdata, mid, granted_qos):
     nodens.logger.debug('THINGSBOARD: on_subscribe: mid {}, qos {}'.format(mid, granted_qos))
@@ -41,6 +43,8 @@ def on_message_tb(client, userdata, msg):
 
 class tb:
     def __init__(self):
+        global FLAG_TX_IN_PROGRESS
+
         self.client = mqtt.Client()
 
         self.client.on_connect = on_connect_tb
@@ -55,6 +59,8 @@ class tb:
         self.client_sub = []
 
         self.message = []
+
+        FLAG_TX_IN_PROGRESS = 0
 
     def get_sensors(self, file):
         with open(file) as f:
@@ -183,7 +189,13 @@ class tb:
 
     def multiline_payload(self, sensor_id):
         global TB_CONNECT
+        global FLAG_TX_IN_PROGRESS
+
+        while FLAG_TX_IN_PROGRESS == 1:
+            sleep(0.1)
+        FLAG_TX_IN_PROGRESS = 1
         for i in range(len(self.subscribed_sensors)):
+            print(i)
             self.client_sub[i].loop_stop()
             self.client_sub[i].disconnect()
             self.client_sub[i].unsubscribe('#')
@@ -214,6 +226,7 @@ class tb:
             self.client_sub[i].connect(nodens.cp.TB_HOST,nodens.cp.TB_PORT,nodens.cp.TB_KEEPALIVE)
             self.client_sub[i].loop_start()
             self.client_sub[i].subscribe(nodens.cp.TB_ATTRIBUTES_TOPIC, qos=1)
+        FLAG_TX_IN_PROGRESS = 0
 
 TB = tb()
 
