@@ -1116,7 +1116,7 @@ class sensorTimeSeries:
                         self.avg_frame_drop = self.total_frame_drop / self.count
 
                     else:
-                        print(f"Frames no sequential. frame -1: {self.frame[-1]}. frame -2: {self.frame[-2]}")
+                        print(f"Frames not sequential. frame -1: {self.frame[-1]}. frame -2: {self.frame[-2]}")
                 else:
                     print(f"Frames not a number. frame -1: {self.frame[-1]}. frame -2: {self.frame[-2]}")
             except:
@@ -1773,4 +1773,4 @@ rcp = radar_config_params()
 sv = sensor_version()
 class_eng = classifierEngine(11,5,100,3200)
 sd = parseTLV(3)
-sts = sensorTimeSeries()
+#sts = sensorTimeSeries()

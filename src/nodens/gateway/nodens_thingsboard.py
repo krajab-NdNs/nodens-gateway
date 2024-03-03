@@ -71,12 +71,23 @@ class tb:
             self.access_token.append(json_data[i]["access_token"])
     
     def end(self):
-        self.client.loop_stop()
-        self.client.disconnect()
+        flag = 0
+        while flag == 0:
+            try:
+                self.client.loop_stop()
+                self.client.disconnect()
+            except Exception as e:
+                nodens.logger.error(f"THINGSBOARD: end error: {e.args}")
 
     def connect(self):
-        self.client.connect(nodens.cp.TB_HOST,nodens.cp.TB_PORT,nodens.cp.TB_KEEPALIVE)
-        self.client.loop_start()
+        flag = 0
+        while flag == 0:
+            try:
+                self.client.connect(nodens.cp.TB_HOST,nodens.cp.TB_PORT,nodens.cp.TB_KEEPALIVE)
+                self.client.loop_start()
+                flag = 1
+            except Exception as e:
+                nodens.logger.error(f"THINGSBOARD: connect error: {e.args}")
 
     def subscribe_to_attributes(self, connected_sensors):
         for sensors in connected_sensors:
@@ -205,7 +216,11 @@ class tb:
             self.client.username_pw_set(username)
             TB_CONNECT = 0
             T_temp = dt.datetime.now(dt.timezone.utc)
-            self.connect()
+        except Exception as e:
+            nodens.logger.error(f"THINGSBOARD: multiline payload initialise error: {e.args}")
+
+           
+        self.connect()
             # while TB_CONNECT == 0:
             #     if (dt.datetime.now(dt.timezone.utc) - T_temp).seconds > 60:
             #         self.end()
@@ -216,20 +231,29 @@ class tb:
             #     else:
             #         time.sleep(1)
 
-            try:
-                json_message = json.dumps(self.payload)
-            except Exception as e:
-                logging.error(f"ERROR {e.args}. Payload:{self.payload}")
-            self.client.publish(nodens.cp.TB_PUB_TOPIC, json_message, qos=1)
-            self.end()
+        try:
+            json_message = json.dumps(self.payload)
+        except Exception as e:
+            logging.error(f"ERROR {e.args}. Payload:{self.payload}")
 
+        flag = 0
+        while flag == 0:
+            try:
+                self.client.publish(nodens.cp.TB_PUB_TOPIC, json_message, qos=1)
+                flag = 1
+            except Exception as e:
+                nodens.logger.error(f"THINGSBOARD: multiline payload publish error: {e.args}")
+
+        self.end()
+
+        try:
             for i in range(len(self.subscribed_sensors)):
                 self.client_sub[i].connect(nodens.cp.TB_HOST,nodens.cp.TB_PORT,nodens.cp.TB_KEEPALIVE)
                 self.client_sub[i].loop_start()
                 self.client_sub[i].subscribe(nodens.cp.TB_ATTRIBUTES_TOPIC, qos=1)
             FLAG_TX_IN_PROGRESS = 0
         except Exception as e:
-            nodens.logger.error(f"THINGSBOARD: multiline payload error: {e.args}")
+            nodens.logger.error(f"THINGSBOARD: multiline payload finalise error: {e.args}")
 
 TB = tb()
 
