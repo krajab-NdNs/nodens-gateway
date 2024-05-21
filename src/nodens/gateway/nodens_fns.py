@@ -1110,7 +1110,7 @@ class OccupantHist:
 
                 # Gait parameters
                 self.gait_params[idx].calculate_gait_parameters()
-                self.outputs[idx].gait_string = self.gait_params[idx].gait_string
+                self.outputs[idx].gait_string = self.gait_params[idx].gait_str
 
             # Energy statistics (for scene not track)
             ud_e = [val for val in self.e_ud_h[idx] if val is not None]
