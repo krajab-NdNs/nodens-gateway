@@ -1089,6 +1089,7 @@ class OccupantHist:
         self.outputs = []
         #self.outputs.__init__()
 
+        nodens.logger.info(f"{self.sensor_id}")
         for idx, sensor in enumerate(self.sensor_id):    # For each sensor
             self.outputs.append(self.Outputs)
             self.outputs[idx].sensor_id = sensor
