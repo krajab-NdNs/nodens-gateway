@@ -362,20 +362,22 @@ def on_message_sensorN(client, userdata, msg):
                                             + "\", \"Activity type\": \"" + str(int(ndns_fns.class_eng.classification))
                                             + "\"}")
                         mqttDataFinal = {**mqttTime, **mqttData, **mqttClass, **mqttDataFinal, 
+                                         'Sensor timestamp' : T,
                                         'Average period occupancy' : ndns_fns.si.period_sum_occ[sen_idx]/ndns_fns.si.period_N[sen_idx], 
                                         'Maximum period occupancy' : ndns_fns.si.period_max_occ[sen_idx],
                                         'Average entryway occupancy' : ndns_fns.si.ew_period_sum_occ[sen_idx]/ndns_fns.si.period_N[sen_idx], 
                                         'Maximum entryway occupancy' : ndns_fns.si.ew_period_max_occ[sen_idx],
                                         'Full data flag' : 0,
-                                        'Track id' : ndns_fns.oh.outputs.track_id,
-                                        'X' : ndns_fns.oh.outputs.track_X,
-                                        'Y' : ndns_fns.oh.outputs.track_Y,
-                                        'Distance moved' : ndns_fns.oh.outputs.distance_moved,
-                                        'Was active' : ndns_fns.oh.outputs.was_active,
-                                        'UD energy' : ndns_fns.oh.outputs.ud_energy,
-                                        'PC energy' : ndns_fns.oh.outputs.pc_energy,
+                                        'Track id' : ndns_fns.oh.outputs[sen_idx].track_id,
+                                        'X' : ndns_fns.oh.outputs[sen_idx].track_X,
+                                        'Y' : ndns_fns.oh.outputs[sen_idx].track_Y,
+                                        'Distance moved' : ndns_fns.oh.outputs[sen_idx].distance_moved,
+                                        'Was active' : ndns_fns.oh.outputs[sen_idx].was_active,
+                                        'UD energy' : ndns_fns.oh.outputs[sen_idx].ud_energy,
+                                        'PC energy' : ndns_fns.oh.outputs[sen_idx].pc_energy,
                                         'Presence detected' : ndns_fns.sd.presence.present,
-                                        'Occupancy heatmap' : ndns_fns.oh.outputs.heatmap_string
+                                        'Occupancy heatmap' : ndns_fns.oh.outputs[sen_idx].heatmap_string,
+                                        'Gait distribution' : ndns_fns.oh.outputs[sen_idx].gait_string
                                         }
                         
                         ndns_fns.class_eng.activity_alert = 0
