@@ -632,9 +632,9 @@ class OccupantHeatmap:
         self.Xrange = Xrange
         self.Yrange = Yrange
 
-        Xn = np.ceil(Xrange[1]/Xres)-np.floor(Xrange[0]/Xres)
-        Yn = np.ceil(Yrange[1]/Yres)-np.floor(Yrange[0]/Yres)
-        self.heatmap = np.zeros((int(Xn),int(Yn)))
+        Xn = int(np.ceil(Xrange[1]/Xres)-np.floor(Xrange[0]/Xres))
+        Yn = int(np.ceil(Yrange[1]/Yres)-np.floor(Yrange[0]/Yres))
+        self.heatmap = np.zeros((Xn,Yn))
         self.heatmap_string = ""
 
     def reset_heatmap(self):
@@ -645,9 +645,9 @@ class OccupantHeatmap:
         #for i in range(track.num_tracks):
         try:
             # X index of track
-            Xi = np.floor((X - self.Xrange[0])/self.Xres)
+            Xi = int(np.floor((X - self.Xrange[0])/self.Xres))
             # Y index of track
-            Yi = np.floor((Y - self.Yrange[0])/self.Yres)
+            Yi = int(np.floor((Y - self.Yrange[0])/self.Yres))
             # Iterate heatmap
             if (Xi>=0) & (Xi<np.size(self.heatmap,0)):
                 if (Yi>=0) & (Yi<np.size(self.heatmap,1)):
@@ -759,7 +759,7 @@ class GaitParameters:
         if sensor_id == self.sensor_id:
             ind_t = self.track_id.index(track_id)
 
-            self.track_gait_params[ind_t].update(track_id)
+            self.track_gait_params[ind_t].update(track_id, Xh, Yh)
         else:
             nodens.logger.warning(f"GaitParameters.update_track. Sensor id: {sensor_id} does not match {self.sensor_id}")
 
@@ -1089,7 +1089,6 @@ class OccupantHist:
         self.outputs = []
         #self.outputs.__init__()
 
-        nodens.logger.info(f"{self.sensor_id}")
         for idx, sensor in enumerate(self.sensor_id):    # For each sensor
             self.outputs.append(self.Outputs())
             self.outputs[idx].sensor_id = sensor
@@ -1288,7 +1287,7 @@ class track:
                 self.tid.append(np.uint8(raw[(8+tlv_len*i):(12+tlv_len*i)]).view(np.uint32)[0])
                 self.X.append(np.uint8(raw[(12+tlv_len*i):(16+tlv_len*i)]).view('<f4')[0])
                 self.Y.append(np.array(raw[(16+tlv_len*i):(20+tlv_len*i)], dtype='uint8').view('<f4')[0])
-                if np.floor(version) == 3:
+                if int(np.floor(version)) == 3:
                     self.Z.append(np.uint8(raw[(20+tlv_len*i):(24+tlv_len*i)]).view('<f4')[0])
 
 class PresenceDetect:
