@@ -1091,18 +1091,18 @@ class OccupantHist:
 
         for idx, sensor in enumerate(self.sensor_id):    # For each sensor
             self.outputs.append(self.Outputs)
-            self.outputs.sensor_id = sensor
+            self.outputs[idx].sensor_id = sensor
             if len(self.id[idx]) > 0:
                 # Determine track to send
                 if max(self.tot_dist[idx]) >= thresh_distance: # Distance threshold at 0 for now, until UD sig tid is found.
                     tid = self.tot_dist[idx].index(max(self.tot_dist[idx]))
 
-                    self.outputs.track_id = self.id[idx][tid]
+                    self.outputs[idx].track_id = self.id[idx][tid]
 
                     # Record parameters
-                    self.outputs.track_X = self.x1[idx][tid]
-                    self.outputs.track_Y = self.y1[idx][tid]
-                    self.outputs.distance_moved = self.tot_dist[idx][tid]
+                    self.outputs[idx].track_X = self.x1[idx][tid]
+                    self.outputs[idx].track_Y = self.y1[idx][tid]
+                    self.outputs[idx].distance_moved = self.tot_dist[idx][tid]
                     
                 else:
                     pass
@@ -1110,21 +1110,21 @@ class OccupantHist:
 
                 # Gait parameters
                 self.gait_params[idx].calculate_gait_parameters()
-                self.outputs.gait_string = self.gait_params[idx].gait_string
+                self.outputs[idx].gait_string = self.gait_params[idx].gait_string
 
             # Energy statistics (for scene not track)
             ud_e = [val for val in self.e_ud_h[idx] if val is not None]
-            self.outputs.ud_energy = sum(ud_e)
-            if self.outputs.ud_energy > energy_threshold:
-                self.outputs.was_active = 1
+            self.outputs[idx].ud_energy = sum(ud_e)
+            if self.outputs[idx].ud_energy > energy_threshold:
+                self.outputs[idx].was_active = 1
             else:
-                self.outputs.was_active = 0
+                self.outputs[idx].was_active = 0
             pc_e = [val for val in self.e_pc_h[idx] if val is not None]
-            self.outputs.pc_energy = sum(pc_e)
+            self.outputs[idx].pc_energy = sum(pc_e)
             
             # Room heatmaps
             self.room_heatmap[idx].prepare_heatmap_string()
-            self.outputs.heatmap_string = self.room_heatmap[idx].heatmap_string
+            self.outputs[idx].heatmap_string = self.room_heatmap[idx].heatmap_string
 
 
     
