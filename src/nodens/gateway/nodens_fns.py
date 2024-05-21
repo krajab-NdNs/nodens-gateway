@@ -687,7 +687,7 @@ class GaitParameters:
     class TrackGait:
         """This subclass records gait parameters for a single track"""
         def __init__(self, sensor_id, track_id, num_hist_frames=250, num_window_frames=4, 
-                     gait_bins = [[20,0.1], [2,0.25]]):
+                     gait_bins = [[19,0.1], [2,0.25]]):
             self.sensor_id = sensor_id
             self.track_id = track_id
             self.n_window = 0
@@ -794,6 +794,7 @@ class GaitParameters:
                 nodens.logger.info(f"GAIT. speed: {track_gaits.speed}")
                 nodens.logger.info(f"GAIT. bins: {track_gaits.gait_bins}")
                 track_gaits.gait = np.bincount(np.digitize(track_gaits.speed, track_gaits.gait_bins))
+                nodens.logger.info(f"GAIT. gait: {track_gaits.gait}")
                 if len(self.gait_str) > 0:
                     self.gait_str += ";"
                 self.gait_str += ','.join(map(str, track_gaits.gait))
@@ -847,6 +848,9 @@ class OccupantHist:
 
         # Prepare outputs
         self.outputs = []
+
+        # List of tracks to delete
+        self.track_del_flag = []
         
     # Use this to refresh the histories
     def refresh(self, sensor_id):
@@ -938,20 +942,6 @@ class OccupantHist:
         self.max_dist[ind_s].append(0)
         self.flag_active[ind_s].append(1)   # By default mark them as active
         self.time_inactive_start[ind_s].append(dt.datetime.now(dt.timezone.utc))
-
-        # else:
-        #     # self.id.append([track_id])
-        #     self.id[ind_s].append(track_id)
-
-        #     self.x0.append([X])
-        #     self.y0.append([Y])
-        #     self.x1.append([X])
-        #     self.y1.append([Y])
-
-        #     self.tot_dist.append([0])
-        #     self.max_dist.append([0])
-        #     self.flag_active.append([1])    # By default mark them as active
-        #     self.time_inactive_start.append([dt.datetime.now(dt.timezone.utc)])
         
         ind_t = self.id[ind_s].index(track_id)
         if ind_t > self.xh.shape[1]-1:
@@ -994,12 +984,47 @@ class OccupantHist:
         self.flag_active.append([])    # By default mark them as active
         self.time_inactive_start.append([])
 
+        self.track_del_flag.append([])
+
         # Room heatmap
         self.room_heatmap.append(OccupantHeatmap(sensor_id, Xres=0.25, Yres=0.25, Xrange=[-4.5,4.5], Yrange=[0,5]))
 
         # Gait parameters
         self.gait_params.append(GaitParameters(sensor_id, num_hist_frames=self.num_hist_frames))
 
+    # Procedure to delete a track when it has left
+    def delete_track(self,sensor_id,track_id, mark_to_delete=1):
+        """This function can be used to specific tracks, or to mark them for deletion
+        mark_to_delete=1. track_id is all *safe* tracks (i.e. tracks to keep); typically done by inputting an array of current tracks.
+        mark_to_delete=0. track_id is the track to delete."""
+
+        ind_s = self.sensor_id.index(sensor_id)
+
+        if mark_to_delete == 1:
+            for track in self.id[ind_s]:
+                if track not in track_id:
+                    self.track_del_flag[ind_s].append(track)
+        else:
+            ind_t = self.id[ind_s].index(track_id)
+
+            self.x0[ind_s].pop(ind_t)
+            self.y0[ind_s].pop(ind_t)
+            self.x1[ind_s].pop(ind_t)
+            self.y1[ind_s].pop(ind_t)
+
+            self.tot_dist[ind_s].pop(ind_t)
+            self.max_dist[ind_s].pop(ind_t)
+            self.flag_active[ind_s].pop(ind_t)   # By default mark them as active
+            self.time_inactive_start[ind_s].pop(ind_t)
+            
+            self.xh = np.delete(self.xh, ind_t, axis=1)
+            self.yh = np.delete(self.yh, ind_t, axis=1)
+
+            self.track_del_flag[ind_s].pop(track_id)
+            self.id[ind_s].pop(track_id)
+
+            # Delete gait params
+            self.gait_params[ind_s].delete_track(sensor_id, track_id)
     
     # Use this to check entryways and see if anyone has entered/left the room
     def entryway(self, sensor_id, track_id, ew):
@@ -1129,6 +1154,10 @@ class OccupantHist:
             self.room_heatmap[idx].prepare_heatmap_string()
             self.outputs[idx].heatmap_string = self.room_heatmap[idx].heatmap_string
 
+            # Delete tracks which have left
+            for ind_t, track in enumerate(self.id[idx]):
+                if track in self.track_del_flag[idx]:
+                    self.delete_track(sensor,track,mark_to_delete=0)
 
 
     

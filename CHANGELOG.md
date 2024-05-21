@@ -1,5 +1,8 @@
 ## Changelog
 
+### Version 24.5.2 (2024-05-21)
+- Various bug fixes
+
 ### Version 24.5.1.a (2024-05-21)
 - Very minor bug fix
 
