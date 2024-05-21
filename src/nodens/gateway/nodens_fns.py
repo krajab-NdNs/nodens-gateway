@@ -617,12 +617,197 @@ class EntryWays:
         self.y.append([])
         self.count.append(0)
 
+# Heatmap class #
+class OccupantHeatmap:
+    # TODO: Set heatmap extent from radar config (requires scanning sensor config)
+    def __init__(self, sensor_id, Xres=1, Yres=[], Xrange=[-3,3], Yrange=[0,5]):
+        self.sensor_id = sensor_id
+        self.Xres = Xres
+
+        if Yres == []:
+            Yres = Xres
+        
+        self.Yres = Yres
+
+        self.Xrange = Xrange
+        self.Yrange = Yrange
+
+        Xn = np.ceil(Xrange[1]/Xres)-np.floor(Xrange[0]/Xres)
+        Yn = np.ceil(Yrange[1]/Yres)-np.floor(Yrange[0]/Yres)
+        self.heatmap = np.zero((Xn,Yn))
+        self.heatmap_string = ""
+
+    def reset_heatmap(self):
+        self.heatmap = 0*self.heatmap
+        self.heatmap_string = ""
+    
+    def update_heatmap(self, X, Y):
+        #for i in range(track.num_tracks):
+        try:
+            # X index of track
+            Xi = np.floor((X - self.Xrange[0])/self.Xres)
+            # Y index of track
+            Yi = np.floor((Y - self.Yrange[0])/self.Yres)
+            # Iterate heatmap
+            if (Xi>=0) & (Xi<np.size(self.heatmap,0)):
+                if (Yi>=0) & (Yi<np.size(self.heatmap,1)):
+                    self.heatmap[Xi,Yi] += 1
+        except Exception as e:
+            nodens.logger.warning(f"OccupantHeatmap.update_heatmap: {e}")
+
+    def prepare_heatmap_string(self):
+        string = ""
+        try:
+            for x in self.heatmap:
+                for y in x:
+                    string += chr(int(y))
+        except Exception as e:
+            nodens.logger.warning(f"OccupantHeatmap.heatmap_string: {e}")
+
+        # Base64 encoding. Could compress this by storing multiple pixels per character
+        try:
+            bytes_value = string.encode()
+            self.heatmap_string = base64.b64encode(bytes_value).decode()
+        except Exception as e:
+            nodens.logger.warning(f"OccupantHeatmap.heatmap_string: {e}")
+
+# Gait calculation #
+class GaitParameters:
+    def __init__(self, sensor_id, num_hist_frames=250, num_window_frames=4):
+        """This class records gait parameters for all tracks under a single sensor"""
+        self.sensor_id = sensor_id
+        self.track_id = []      # Record of all track ids for this sensor
+
+        self.track_gait_params = []
+        self.gait_str = ""
+
+        self.num_hist_frames = num_hist_frames
+        self.num_window_frames = num_window_frames
+
+    class TrackGait:
+        """This subclass records gait parameters for a single track"""
+        def __init__(self, sensor_id, track_id, num_hist_frames=250, num_window_frames=4, 
+                     gait_bins = [[20,0.1], [2,0.25]]):
+            self.sensor_id = sensor_id
+            self.track_id = track_id
+            self.n_window = 0
+            self.num_hist_frames = num_hist_frames
+            self.num_window_frames = num_window_frames
+
+            self.x0 = []    # previous
+            self.y0 = []
+            self.x1 = []    # current
+            self.y1 = []
+
+            self.speed = []
+            num_gait_bins = 2   # 0 and above max
+            self.gait_bins = gait_bins[0][1]
+            for vals in gait_bins:
+                if len(vals) == 2:
+                    num_gait_bins += vals[0]
+                    for i in range(vals[0]):
+                        self.gait_bins.append(self.gait_bins[-1] + vals[1])
+                else:
+                    nodens.logger.warning(f"gait bin value {vals} should be a 2-pul, [num_bins, bin_size]")
+
+            self.gait = [] # np.zeros((num_gait_bins))
+
+        def update(self, track_id, Xh, Yh):
+            if track_id == self.track_id:
+                self.n_window += 1
+                
+                if self.n_window >= self.num_window_frames:
+                    self.x0 = self.x1
+                    self.y0 = self.y1
+
+                    self.x1 = np.mean(Xh[0:self.num_window_frames])
+                    self.y1 = np.mean(Yh[0:self.num_window_frames])
+
+                    if (self.x0 != []) & (self.y0 != []):
+                        self.speed.append(np.sqrt((self.x1-self.x0)**2 + (self.y1-self.y0)**2))
+                    self.n_window = 0
+            else:
+                nodens.logger.warning(f"TrackGait.update. Track id: {track_id} does not match {self.track_id} for sensor: {self.sensor_id}")
+
+        def reset(self):
+            self.__init__(self.sensor_id, self.track_id, self.num_hist_frames, self.num_window_frames)
+            # self.n_window = 0
+
+            # self.x0 = []    # previous
+            # self.y0 = []
+            # self.x1 = []    # current
+            # self.y1 = []
+
+            # self.speed = []
+            # self.num_values = 0
+
+    def add_new_sensor(self, sensor_id):
+        self.sensor_id = sensor_id
+        self.track_id = [] 
+        self.track_gait_params = []
+
+    def add_new_track(self, sensor_id, track_id, Xh, Yh):
+        if sensor_id == self.sensor_id:
+            self.track_id.append(track_id)
+            self.track_gait_params.append(self.TrackGait(self.sensor_id, track_id, num_hist_frames=self.num_hist_frames, num_window_frames=self.num_window_frames))
+
+            self.track_gait_params[-1].update(track_id, Xh, Yh)
+        else:
+            nodens.logger.warning(f"GaitParameters.add_new_track. Sensor id: {sensor_id} does not match {self.sensor_id}")
+
+    def update_track(self, sensor_id, track_id, Xh, Yh):
+        if sensor_id == self.sensor_id:
+            ind_t = self.track_id.index(track_id)
+
+            self.track_gait_params[ind_t].update(track_id)
+        else:
+            nodens.logger.warning(f"GaitParameters.update_track. Sensor id: {sensor_id} does not match {self.sensor_id}")
+
+    def delete_track(self, sensor_id, track_id):
+        if sensor_id == self.sensor_id:
+            ind_t = self.track_id.index(track_id)
+
+            self.track_id.pop(ind_t)
+            self.track_gait_params.pop(ind_t)
+        else:
+            nodens.logger.warning(f"GaitParameters.delete_track. Sensor id: {sensor_id} does not match {self.sensor_id}")
+
+    def reset_tracks(self, sensor_id, track_id=[]):
+        if sensor_id == self.sensor_id:
+            if track_id == []:
+                for track_gaits in self.track_gait_params:
+                    track_gaits.reset()
+
+            else:
+                ind_t = self.track_id.index(track_id)
+                self.track_gait_params[ind_t].reset()
+        else:
+            nodens.logger.warning(f"GaitParameters.reset_tracks. Sensor id: {sensor_id} does not match {self.sensor_id}")
+
+
+    def calculate_gait_parameters(self, track_id=[]):
+        """This function calculates gait parameters for all tracks recorded with this sensor, over num_hist_frames."""
+        """To calculate parameters for a specific track, specify the track_id."""
+
+        if (track_id == []):
+            for track_gaits in self.track_gait_params:
+                track_gaits.gait = np.bincount(np.digitize(track_gaits.speed, track_gaits.gait_bins))
+                if len(self.gait_str) > 0:
+                    self.gait_str += ";"
+                self.gait_str += ','.join(map(str, track_gaits.gait))
+
+        else:
+            ind_t = self.track_id.index(track_id)
+            self.track_gait_params[ind_t].gait = np.bincount(np.digitize(self.track_gait_params[ind_t].speed, self.track_gait_params[ind_t].gait_bins))
+
+
+
 # Occupant track history #
 class OccupantHist:
     """Historical positions (X,Y) of occupants (tracks)."""
     def __init__(self, num_hist_frames=10, flag_time_based_record=0):
         """Initialises track histories"""
-        self.sens_idx = []
+        self.sensor_id = []
         self.id = [] # track id
         self.x0 = [] # previous
         self.y0 = []
@@ -651,13 +836,19 @@ class OccupantHist:
         self.most_inactive_track = []
         self.most_inactive_time = []
 
+        # Room heatmaps per sensor
+        self.room_heatmap = [] # Room heatmap showing occupancy positions
+
+        # Gait parameters
+        self.gait_params = []
+
         # Prepare outputs
-        self.outputs = self.Outputs()
+        self.outputs = []
         
     # Use this to refresh the histories
     def refresh(self, sensor_id):
         # Check for this specific sensor
-        ind_s = self.sens_idx.index(sensor_id)
+        ind_s = self.sensor_id.index(sensor_id)
 
         self.id[ind_s] = [] 
 
@@ -671,12 +862,18 @@ class OccupantHist:
         self.max_dist[ind_s] = [] 
         self.flag_active[ind_s] = []
         self.time_inactive_start[ind_s] = [] 
+
+        # Reset room heatmap
+        self.room_heatmap[ind_s].reset_heatmap()
+
+        # Reset gait parameters
+        self.gait_params[ind_s].reset_tracks(sensor_id)
     
     # Use this to update a track location everytime one is detected.
     def update(self, sensor_id, track_id=[], X=[], Y=[], sensor_data=[]):
-        if (sensor_id in self.sens_idx):
+        if (sensor_id in self.sensor_id):
             # Check for this specific sensor
-            ind_s = self.sens_idx.index(sensor_id)
+            ind_s = self.sensor_id.index(sensor_id)
 
             if (track_id == []):
                 pass
@@ -707,6 +904,12 @@ class OccupantHist:
                 # Update activity statistics
                 self.activity_detection(sensor_id, track_id)
 
+                # Update heatmap
+                self.room_heatmap[ind_s].update_heatmap(X,Y)
+
+                # Update gait parameters
+                self.gait_params[ind_s].update_track(sensor_id, track_id, self.xh[ind_s][ind_t], self.yh[ind_s][ind_t])
+
             else:
                 # Record new values if track did not previously exist
                 #if track_id != []:
@@ -717,9 +920,9 @@ class OccupantHist:
                 self.new_track(sensor_id,track_id,X,Y,new_sensor_flag=1)
 
 
-    # Procedure to when a new track is detected
+    # Procedure when a new track is detected
     def new_track(self,sensor_id,track_id,X,Y,new_sensor_flag):
-        ind_s = self.sens_idx.index(sensor_id)
+        ind_s = self.sensor_id.index(sensor_id)
         # if new_sensor_flag == 0:
         self.id[ind_s].append(track_id)
 
@@ -754,14 +957,18 @@ class OccupantHist:
             self.yh = np.concatenate((self.yh,new_track),axis=1)
         self.xh[ind_s][ind_t][0] = X
         self.yh[ind_s][ind_t][0] = Y
+
+        # Gait paramaters sensor_id, track_id, Xh, Yh
+        self.gait_params[ind_s].add_new_track(sensor_id, track_id, self.xh[ind_s][ind_t], self.yh[ind_s][ind_t])
         
-    # Proedure when a new sensor is detected
+    # Procedure when a new sensor is detected
     def new_sensor(self,sensor_id):
         #self.max_tracks.append(0)
-        self.sens_idx.append(sensor_id)
+        self.sensor_id.append(sensor_id)
+        self.sensor_id.append(sensor_id)
         self.most_inactive_track.append(None)
         self.most_inactive_time.append(None)
-        if len(self.sens_idx) == 1:
+        if len(self.sensor_id) == 1:
             self.xh = np.array(np.empty((self.num_hist_frames,),dtype=object), ndmin=3)
             self.yh = np.array(np.empty((self.num_hist_frames,),dtype=object), ndmin=3)
             self.e_ud_h = np.array(np.empty((self.num_hist_frames,),dtype=object), ndmin=2)
@@ -784,11 +991,18 @@ class OccupantHist:
         self.max_dist.append([])
         self.flag_active.append([])    # By default mark them as active
         self.time_inactive_start.append([])
+
+        # Room heatmap
+        self.room_heatmap.append(OccupantHeatmap(sensor_id, Xres=0.25, Yres=0.25, Xrange=[-4.5,4.5], Yrange=[0,5]))
+
+        # Gait parameters
+        self.gait_params.append(GaitParameters(sensor_id, num_hist_frames=self.num_hist_frames))
+
     
     # Use this to check entryways and see if anyone has entered/left the room
     def entryway(self, sensor_id, track_id, ew):
         if (sensor_id in ew.id):
-            ind_s = self.sens_idx.index(sensor_id)
+            ind_s = self.sensor_id.index(sensor_id)
             ind_e = ew.id.index(sensor_id)
             ind_t = self.id[ind_s].index(track_id)
             [sx0,sx1] = [self.x0[ind_s][ind_t],self.x1[ind_s][ind_t]]
@@ -819,16 +1033,12 @@ class OccupantHist:
     
     # Track activity/inactivity statistics
     def activity_detection(self, sensor_id, track_id, tot_dist_thresh=1, max_dist_thresh=1):
-        ind_s = self.sens_idx.index(sensor_id)
+        ind_s = self.sensor_id.index(sensor_id)
         ind_t = self.id[ind_s].index(track_id)
         
         # Non-None values from history
         xh =  [val for i,val in enumerate(self.xh[ind_s][ind_t]) if val is not None]
         yh =  [val for i,val in enumerate(self.yh[ind_s][ind_t]) if val is not None]
-
-        # Take oldest values
-        xi = xh[-1]
-        yi = yh[-1]
 
         # Calculate distances for each frame
         try:
@@ -864,7 +1074,7 @@ class OccupantHist:
 
     # Calculate general activity statistics
     def sensor_activity(self, sensor_id):
-        ind_s = self.sens_idx.index(sensor_id)
+        ind_s = self.sensor_id.index(sensor_id)
         inactive_tracks = [self.time_inactive_start[ind_s][i] for i,val in enumerate(self.flag_active[ind_s]) if val==0]
         if len(inactive_tracks) == 0:
             self.most_inactive_track[ind_s] = None
@@ -877,9 +1087,12 @@ class OccupantHist:
     # Calculate outputs
     def calculate_outputs(self, thresh_distance = 0, energy_threshold = 0):
         # Re-initialise outputs
-        self.outputs.__init__()
+        self.outputs = []
+        #self.outputs.__init__()
 
-        for idx, sensor in enumerate(self.sens_idx):    # For each sensor
+        for idx, sensor in enumerate(self.sensor_id):    # For each sensor
+            self.outputs.append(self.Outputs)
+            self.outputs.sensor_id = sensor
             if len(self.id[idx]) > 0:
                 # Determine track to send
                 if max(self.tot_dist[idx]) >= thresh_distance: # Distance threshold at 0 for now, until UD sig tid is found.
@@ -891,26 +1104,35 @@ class OccupantHist:
                     self.outputs.track_X = self.x1[idx][tid]
                     self.outputs.track_Y = self.y1[idx][tid]
                     self.outputs.distance_moved = self.tot_dist[idx][tid]
-
-                    # Energy statistics (for scene not track)
-                    ud_e = [val for val in self.e_ud_h[idx] if val is not None]
-                    self.outputs.ud_energy = sum(ud_e)
-                    if self.outputs.ud_energy > energy_threshold:
-                        self.outputs.was_active = 1
-                    else:
-                        self.outputs.was_active = 0
-                    pc_e = [val for val in self.e_pc_h[idx] if val is not None]
-                    self.outputs.pc_energy = sum(pc_e)
+                    
                 else:
                     pass
                     #tid = self.ud_energy[idx].index(max(self.ud_energy[idx]))
-                    
+
+                # Gait parameters
+                self.gait_params[idx].calculate_gait_parameters()
+                self.outputs.gait_string = self.gait_params[idx].gait_string
+
+            # Energy statistics (for scene not track)
+            ud_e = [val for val in self.e_ud_h[idx] if val is not None]
+            self.outputs.ud_energy = sum(ud_e)
+            if self.outputs.ud_energy > energy_threshold:
+                self.outputs.was_active = 1
+            else:
+                self.outputs.was_active = 0
+            pc_e = [val for val in self.e_pc_h[idx] if val is not None]
+            self.outputs.pc_energy = sum(pc_e)
+            
+            # Room heatmaps
+            self.room_heatmap[idx].prepare_heatmap_string()
+            self.outputs.heatmap_string = self.room_heatmap[idx].heatmap_string
 
 
     
     # Class to define outputs
     class Outputs:
         def __init__(self) -> None:
+            self.sensor_id = []
             self.track_id = []  # tid with highest distance walked, or if under threshold then highest energy
             self.track_X = []   # corresponding location for tid
             self.track_Y = []
@@ -918,7 +1140,8 @@ class OccupantHist:
             self.was_active = []        # check if ud_energy over threshold
             self.ud_energy = []
             self.pc_energy = []
-
+            self.heatmap_string = []    # Array composed of heatmap strings
+            self.gait_string = []       # Array composed of gait speed distribution
         
                     
                 
@@ -1074,8 +1297,12 @@ class PresenceDetect:
         self.tlv_len = []
 
     def process(self, raw):
-        self.tlv_len = np.uint8(raw[4:8]).view(np.uint32)[0]
-        self.present = raw[8]
+        try:
+            self.tlv_len = np.uint8(raw[4:8]).view(np.uint32)[0]
+            self.present = raw[8]
+        except Exception as e:
+            nodens.logger.warning(f"PresenceDetect.process: {e}. raw: {raw}")
+            self.tlv_len = 0
 
 class sensorTimeSeries:
     def __init__(self):
@@ -1576,7 +1803,7 @@ class parseTLV:
                 self.presence.process(self.data11)
             elif (data[j:j+4] == [12,0,0,0]):   # UD signature 12
                 j,self.len12,self.data12 = self.tlvN(data,j)
-                print(f"TLV12. len:{self.len12}. data:{self.data12[0:12]} ")
+                #print(f"TLV12. len:{self.len12}. data:{self.data12[0:12]} ")
                 if (j <= self.packet_len):
                     ud_sig_out = self.ud.signature(self.data12, Nud, 128, 64)
                     self.ud.calculate_sig_energy(ud_sig_out)
@@ -1586,7 +1813,7 @@ class parseTLV:
                             self.ud_sig[i,k+40-Nud] = ud_sig_out[i,k]
             elif (data[j:j+4] == [13,0,0,0]):   # UD parameters 13
                 j,self.len13,self.data13 = self.tlvN(data,j)
-                print(f"TLV13. len:{self.len13}. data:{self.data13[0:12]} ")
+                #print(f"TLV13. len:{self.len13}. data:{self.data13[0:12]} ")
                 if (j <= self.packet_len):
                     #UD = ud()
                     self.ud.parameters(self.data13)

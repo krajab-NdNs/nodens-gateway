@@ -136,7 +136,7 @@ def on_message_sensorN(client, userdata, msg):
                     str_data = str_data + str(data[i+1])
                     data_int.append(data[i+1])
             else:
-                logging.warning("Data below length 8. Rx: {}".format(data))
+                nodens.logger.warning("Data below length 8. Rx: {}".format(data))
             # Check if full data packet received
             if str_data == '21436587':
                 for i in range(len(data)-8):
@@ -192,19 +192,22 @@ def on_message_sensorN(client, userdata, msg):
                                         + "\", \"Activity type\": \"" + str(int(ndns_fns.class_eng.classification))
                                         + "\"}")
                     mqttDataFinal = {**mqttData, #'addr' : mqttData['addr'],
+                                    'Sensor timestamp' : T,
                                     'Average period occupancy' : ndns_fns.si.period_sum_occ[sen_idx]/ndns_fns.si.period_N[sen_idx], 
                                     'Maximum period occupancy' : ndns_fns.si.period_max_occ[sen_idx],
                                     'Average entryway occupancy' : ndns_fns.si.ew_period_sum_occ[sen_idx]/ndns_fns.si.period_N[sen_idx], 
                                     'Maximum entryway occupancy' : ndns_fns.si.ew_period_max_occ[sen_idx],
                                     'Full data flag' : 1,
-                                    'Track id' : ndns_fns.oh.outputs.track_id,
-                                    'X' : ndns_fns.oh.outputs.track_X,
-                                    'Y' : ndns_fns.oh.outputs.track_Y,
-                                    'Distance moved' : ndns_fns.oh.outputs.distance_moved,
-                                    'Was active' : ndns_fns.oh.outputs.was_active,
-                                    'UD energy' : ndns_fns.oh.outputs.ud_energy,
-                                    'PC energy' : ndns_fns.oh.outputs.pc_energy,
+                                    'Track id' : ndns_fns.oh.outputs[sen_idx].track_id,
+                                    'X' : ndns_fns.oh.outputs[sen_idx].track_X,
+                                    'Y' : ndns_fns.oh.outputs[sen_idx].track_Y,
+                                    'Distance moved' : ndns_fns.oh.outputs[sen_idx].distance_moved,
+                                    'Was active' : ndns_fns.oh.outputs[sen_idx].was_active,
+                                    'UD energy' : ndns_fns.oh.outputs[sen_idx].ud_energy,
+                                    'PC energy' : ndns_fns.oh.outputs[sen_idx].pc_energy,
                                     'Presence detected' : ndns_fns.sd.presence.present,
+                                    'Occupancy heatmap' : ndns_fns.oh.outputs[sen_idx].heatmap_string,
+                                    'Gait distribution' : ndns_fns.oh.outputs[sen_idx].gait_string
                                     }
 
                     ndns_fns.class_eng.activity_alert = 0
@@ -240,6 +243,9 @@ def on_message_sensorN(client, userdata, msg):
                     ndns_fns.si.cloud_send_refresh(sen_idx, send_idx_e, T, ndns_fns.ew)
                     heartbeat = ""
 
+                    # Refresh occupancy histories for next Cloud transmission frame
+                    ndns_fns.oh.refresh(mqttData['addr'])
+
             elif (mqttData['type'] == 'json'):
                 print("JSON type: {}".format(mqttData))
             # Otherwise process occupancy info
@@ -273,13 +279,15 @@ def on_message_sensorN(client, userdata, msg):
                                 i += 1
                             else:
                                 break
-
-                        if 'Heatmap energy' in mqttOccInfo[-1]:
-                            mqttDataTemp.append(mqttOccInfo[-1]['Heatmap energy'])
-                            mqttDataTemp.append(mqttOccInfo[-1]['Heatmap'])
-                        else:
-                            mqttDataTemp.append(0)
-                            mqttDataTemp.append('')
+                        try:
+                            if 'Heatmap energy' in mqttOccInfo[-1]:
+                                mqttDataTemp.append(mqttOccInfo[-1]['Heatmap energy'])
+                                mqttDataTemp.append(mqttOccInfo[-1]['Heatmap'])
+                            else:
+                                mqttDataTemp.append(0)
+                                mqttDataTemp.append('')
+                        except Exception as e:
+                            nodens.logger.warning(f"{e}")
                     else:
                         for i in range(8):
                             mqttDataTemp.append('')
@@ -367,6 +375,7 @@ def on_message_sensorN(client, userdata, msg):
                                         'UD energy' : ndns_fns.oh.outputs.ud_energy,
                                         'PC energy' : ndns_fns.oh.outputs.pc_energy,
                                         'Presence detected' : ndns_fns.sd.presence.present,
+                                        'Occupancy heatmap' : ndns_fns.oh.outputs.heatmap_string
                                         }
                         
                         ndns_fns.class_eng.activity_alert = 0

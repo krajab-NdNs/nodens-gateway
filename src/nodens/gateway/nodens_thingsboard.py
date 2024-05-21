@@ -76,8 +76,10 @@ class tb:
             try:
                 self.client.loop_stop()
                 self.client.disconnect()
+                flag = 1
             except Exception as e:
                 nodens.logger.error(f"THINGSBOARD: end error: {e.args}")
+                sleep(1)
 
     def connect(self):
         flag = 0
@@ -88,6 +90,7 @@ class tb:
                 flag = 1
             except Exception as e:
                 nodens.logger.error(f"THINGSBOARD: connect error: {e.args}")
+                sleep(1)
 
     def subscribe_to_attributes(self, connected_sensors):
         for sensors in connected_sensors:
@@ -144,6 +147,8 @@ class tb:
         # Occupant positions
         if self.payload["avg_occupancy"] > 0:
             try:
+                self.payload["sensor_timestamp"] = f"{input_data['Sensor timestamp']}"
+
                 # ~~~~~~~~~~~ Occupancy ~~~~~~~~~~~~~ #
                 #temp = input_data['Occupancy Info'][0]
                 self.payload["occupant_id"] = f"{input_data['Track id']}"
@@ -160,6 +165,12 @@ class tb:
 
                 # ~~~~~~~~~~~ SLEEP ~~~~~~~~~~~~~ #
                 self.payload["rest_zone_presence"] = f"{input_data['Presence detected']}"
+
+                # ~~~~~~~~~~~ HEATMAP ~~~~~~~~~~~~~ #
+                self.payload["room_occ_heatmap"] = f"{input_data['Occupancy heatmap']}"
+
+                # ~~~~~~~~~~~ GAIT ~~~~~~~~~~~~~ #
+                self.payload["gait_distribution"] = f"{input_data['Gait distribution']}"
 
             except Exception as e:
                 nodens.logger.debug(f"THINGSBOARD: occupant error: {e.args}")
@@ -243,17 +254,22 @@ class tb:
                 flag = 1
             except Exception as e:
                 nodens.logger.error(f"THINGSBOARD: multiline payload publish error: {e.args}")
+                sleep(1)
 
         self.end()
 
-        try:
-            for i in range(len(self.subscribed_sensors)):
-                self.client_sub[i].connect(nodens.cp.TB_HOST,nodens.cp.TB_PORT,nodens.cp.TB_KEEPALIVE)
-                self.client_sub[i].loop_start()
-                self.client_sub[i].subscribe(nodens.cp.TB_ATTRIBUTES_TOPIC, qos=1)
-            FLAG_TX_IN_PROGRESS = 0
-        except Exception as e:
-            nodens.logger.error(f"THINGSBOARD: multiline payload finalise error: {e.args}")
+        flag = 0
+        while flag == 0:
+            try:
+                for i in range(len(self.subscribed_sensors)):
+                    self.client_sub[i].connect(nodens.cp.TB_HOST,nodens.cp.TB_PORT,nodens.cp.TB_KEEPALIVE)
+                    self.client_sub[i].loop_start()
+                    self.client_sub[i].subscribe(nodens.cp.TB_ATTRIBUTES_TOPIC, qos=1)
+                flag = 1
+                FLAG_TX_IN_PROGRESS = 0
+            except Exception as e:
+                nodens.logger.error(f"THINGSBOARD: multiline payload finalise error: {e.args}")
+                sleep(1)
 
 TB = tb()
 
