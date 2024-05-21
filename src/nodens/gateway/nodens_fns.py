@@ -701,7 +701,7 @@ class GaitParameters:
 
             self.speed = []
             num_gait_bins = 2   # 0 and above max
-            self.gait_bins = gait_bins[0][1]
+            self.gait_bins = [gait_bins[0][1]]
             for vals in gait_bins:
                 if len(vals) == 2:
                     num_gait_bins += vals[0]
