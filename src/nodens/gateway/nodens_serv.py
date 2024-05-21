@@ -175,7 +175,7 @@ def on_message_sensorN(client, userdata, msg):
                             ndns_fns.oh.update(mqttData['addr'],track,ndns_fns.sd.track.X[idx],ndns_fns.sd.track.Y[idx],ndns_fns.sd)
                     ndns_fns.oh.sensor_activity(mqttData['addr'])
                 except Exception as e:
-                    pass
+                    nodens.logger.warning(f"{e}")
 
                 # Update time period occupancy data
                 if mqttData['addr'] not in ndns_fns.ew.id:
@@ -184,11 +184,12 @@ def on_message_sensorN(client, userdata, msg):
 
                 ndns_fns.si.update_refresh(sen_idx, send_idx_e, T, ndns_fns.ew)
 
-                # Mark for deletion tracks which have left
-                ndns_fns.oh.delete_track(mqttData['addr'], temp_current_occupants, mark_to_delete=1)
 
                 #TODO: check cloud update
                 if ((T - ndns_fns.si.period_t[sen_idx]).total_seconds() > nodens.cp.CLOUD_WRITE_TIME):
+                    # Mark for deletion tracks which have left
+                    ndns_fns.oh.delete_track(mqttData['addr'], temp_current_occupants, mark_to_delete=1)
+
                     # Calculate occupant history outputs
                     ndns_fns.oh.calculate_outputs()
 
@@ -330,8 +331,6 @@ def on_message_sensorN(client, userdata, msg):
                         ndns_fns.oh.update(mqttData['addr'])
                         ndns_fns.oh.sensor_activity(mqttData['addr'])
 
-                    # Mark for deletion tracks which have left
-                    ndns_fns.oh.delete_track(mqttData['addr'], temp_current_occupants, mark_to_delete=1)
 
                     # Update time period occupancy data
                     if mqttData['addr'] not in ndns_fns.ew.id:
@@ -364,6 +363,9 @@ def on_message_sensorN(client, userdata, msg):
 
                     ## ~~~~~~~~~~~ SEND TO CLOUD ~~~~~~~~~ ##
                     if ((T - ndns_fns.si.period_t[sen_idx]).total_seconds() > nodens.cp.CLOUD_WRITE_TIME):
+                        # Mark for deletion tracks which have left
+                        ndns_fns.oh.delete_track(mqttData['addr'], temp_current_occupants, mark_to_delete=1)
+
                         # Calculate occupant history outputs
                         ndns_fns.oh.calculate_outputs()
 

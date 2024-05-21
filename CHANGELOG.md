@@ -1,5 +1,9 @@
 ## Changelog
 
+### Version 24.5.3 (2024-05-21)
+- Various bug fixes
+- Added feature: delete tracks from occupant history when track has left scene
+
 ### Version 24.5.2 (2024-05-21)
 - Various bug fixes
 
