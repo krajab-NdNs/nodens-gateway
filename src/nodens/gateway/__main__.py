@@ -185,9 +185,7 @@ class Pipeline:
 
 
 if __name__ == "__main__":
-    nodens.logger.info('Starting NodeNs gateway. Version = {}'.format(nodens.__version__))
     
-
     pipeline_thingsboard = Pipeline()
     #pipeline_thingsboard_sub = Pipeline()
     pipeline_insight_hub = Pipeline()

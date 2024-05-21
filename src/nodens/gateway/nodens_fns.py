@@ -965,7 +965,6 @@ class OccupantHist:
     def new_sensor(self,sensor_id):
         #self.max_tracks.append(0)
         self.sensor_id.append(sensor_id)
-        self.sensor_id.append(sensor_id)
         self.most_inactive_track.append(None)
         self.most_inactive_time.append(None)
         if len(self.sensor_id) == 1:

@@ -13,6 +13,7 @@ import os
 from platformdirs import user_config_dir, user_documents_dir, user_log_dir
 from pathlib import Path
 import logging
+import datetime as dt
 
 global APPNAME
 global APPAUTHOR
@@ -54,6 +55,8 @@ f_handler.setFormatter(f_format)
 logger.addHandler(c_handler)
 logger.addHandler(f_handler)
 
+logger.info('Starting NodeNs gateway. Version = {}'.format(__version__))
+logger.info(f"App started at UTC time: {dt.datetime.now(dt.timezone.utc)}")
 logger.info("Log location: {}".format(os.path.realpath(log_file)))
 
 # Read parameters from the config file
