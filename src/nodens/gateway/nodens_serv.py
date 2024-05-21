@@ -356,8 +356,6 @@ def on_message_sensorN(client, userdata, msg):
                     if ((T - ndns_fns.si.period_t[sen_idx]).total_seconds() > nodens.cp.CLOUD_WRITE_TIME):
                         # Calculate occupant history outputs
                         ndns_fns.oh.calculate_outputs()
-                        nodens.logger.info(f"{sen_idx}")
-                        nodens.logger.info(f"{ndns_fns.oh.outputs[sen_idx]}")
 
                         mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
                         mqttClass = json.loads("{\"Activity detected\": \"" + str(int(ndns_fns.class_eng.activity_alert))

@@ -1091,9 +1091,8 @@ class OccupantHist:
 
         nodens.logger.info(f"{self.sensor_id}")
         for idx, sensor in enumerate(self.sensor_id):    # For each sensor
-            self.outputs.append(self.Outputs)
+            self.outputs.append(self.Outputs())
             self.outputs[idx].sensor_id = sensor
-            nodens.logger.info(f"{idx}: {self.outputs[idx].sensor_id}")
             if len(self.id[idx]) > 0:
                 # Determine track to send
                 if max(self.tot_dist[idx]) >= thresh_distance: # Distance threshold at 0 for now, until UD sig tid is found.
@@ -1128,7 +1127,6 @@ class OccupantHist:
             self.room_heatmap[idx].prepare_heatmap_string()
             self.outputs[idx].heatmap_string = self.room_heatmap[idx].heatmap_string
 
-            nodens.logger.info(f"track_id: {self.outputs[idx].track_id}")
 
 
     
