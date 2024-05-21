@@ -791,14 +791,10 @@ class GaitParameters:
 
         if (track_id == []):
             for track_gaits in self.track_gait_params:
-                nodens.logger.info(f"GAIT. speed: {track_gaits.speed}")
-                nodens.logger.info(f"GAIT. bins: {track_gaits.gait_bins}")
                 track_gaits.gait = np.bincount(np.digitize(track_gaits.speed, track_gaits.gait_bins))
-                nodens.logger.info(f"GAIT. gait: {track_gaits.gait}")
                 if len(self.gait_str) > 0:
                     self.gait_str += ";"
                 self.gait_str += ','.join(map(str, track_gaits.gait))
-            nodens.logger.info(f"GAIT. string: {self.gait_str}")
 
         else:
             ind_t = self.track_id.index(track_id)
@@ -1801,7 +1797,7 @@ class parseTLV:
             hl = 48
         self.packet_len = data[12] + 256*data[13]
         if len(data) < self.packet_len:
-            print("WARNING: Rx data size is smaller than expected. Expected: {}. Received: {}.".format(self.packet_len, len(data)))
+            nodens.logger.debug("Rx data size is smaller than expected. Expected: {}. Received: {}.".format(self.packet_len, len(data)))
             self.packet_len = len(data)
         self.num_tlv = data[44]
         self.frame = convert_4_to_1(data[20:24])

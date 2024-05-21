@@ -167,9 +167,11 @@ def on_message_sensorN(client, userdata, msg):
                 mqttDataTemp.append(mqttData['data'])
                 mqttData_SAVEFull.append(mqttDataTemp)
 
+                temp_current_occupants = []
                 try:
                     if ndns_fns.sd.track.num_tracks > 0:
                         for idx, track in enumerate(ndns_fns.sd.track.tid):
+                            temp_current_occupants.append(track)
                             ndns_fns.oh.update(mqttData['addr'],track,ndns_fns.sd.track.X[idx],ndns_fns.sd.track.Y[idx],ndns_fns.sd)
                     ndns_fns.oh.sensor_activity(mqttData['addr'])
                 except Exception as e:
@@ -181,6 +183,9 @@ def on_message_sensorN(client, userdata, msg):
                 send_idx_e = ndns_fns.ew.id.index(mqttData['addr'])
 
                 ndns_fns.si.update_refresh(sen_idx, send_idx_e, T, ndns_fns.ew)
+
+                # Mark for deletion tracks which have left
+                ndns_fns.oh.delete_track(mqttData['addr'], temp_current_occupants, mark_to_delete=1)
 
                 #TODO: check cloud update
                 if ((T - ndns_fns.si.period_t[sen_idx]).total_seconds() > nodens.cp.CLOUD_WRITE_TIME):
@@ -302,6 +307,7 @@ def on_message_sensorN(client, userdata, msg):
                     #     ndns_fns.si.max_occ[sen_idx] = ndns_fns.si.num_occ[sen_idx]
 
                     # If there are occupants, what are their locations?
+                    temp_current_occupants = []
                     if (ndns_fns.si.num_occ[sen_idx] > 0):        # NodeNs KZR FIX : need to update so oh processes when num_occ=0
                         try:
                             occ_info = mqttDataFinal['Occupancy Info']
@@ -312,6 +318,7 @@ def on_message_sensorN(client, userdata, msg):
                         # Update occupancy history and entryways for each occupant
                         for i in range(len(occ_info)):      # NodeNs KZR FIX: update ESP to create new payload
                             temp = occ_info[i]
+                            temp_current_occupants.append(temp['Occupant ID'])
                             ndns_fns.oh.update(mqttData['addr'],temp['Occupant ID'],temp['X'],temp['Y'])
                             # Check if occupant has crossed entryway
                             ndns_fns.oh.entryway(mqttData['addr'],temp['Occupant ID'], ndns_fns.ew)
@@ -322,6 +329,9 @@ def on_message_sensorN(client, userdata, msg):
                     else:
                         ndns_fns.oh.update(mqttData['addr'])
                         ndns_fns.oh.sensor_activity(mqttData['addr'])
+
+                    # Mark for deletion tracks which have left
+                    ndns_fns.oh.delete_track(mqttData['addr'], temp_current_occupants, mark_to_delete=1)
 
                     # Update time period occupancy data
                     if mqttData['addr'] not in ndns_fns.ew.id:

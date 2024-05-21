@@ -224,7 +224,6 @@ class tb:
                 sleep(0.1)
             FLAG_TX_IN_PROGRESS = 1
             for i in range(len(self.subscribed_sensors)):
-                print(i)
                 self.client_sub[i].loop_stop()
                 self.client_sub[i].disconnect()
                 self.client_sub[i].unsubscribe('#')
