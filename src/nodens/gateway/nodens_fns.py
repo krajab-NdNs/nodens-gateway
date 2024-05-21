@@ -1016,7 +1016,6 @@ class OccupantHist:
             self.xh = np.delete(self.xh, ind_t, axis=1)
             self.yh = np.delete(self.yh, ind_t, axis=1)
 
-            self.track_del_flag[ind_s].pop(track_id)
             self.id[ind_s].pop(track_id)
 
             # Delete gait params
@@ -1154,6 +1153,7 @@ class OccupantHist:
             for ind_t, track in enumerate(self.id[idx]):
                 if track in self.track_del_flag[idx]:
                     self.delete_track(sensor,track,mark_to_delete=0)
+            self.track_del_flag[idx] = []
 
 
     
