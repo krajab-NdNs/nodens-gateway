@@ -1013,8 +1013,8 @@ class OccupantHist:
             self.flag_active[ind_s].pop(ind_t)   # By default mark them as active
             self.time_inactive_start[ind_s].pop(ind_t)
             
-            self.xh = np.delete(self.xh, ind_t, axis=1)
-            self.yh = np.delete(self.yh, ind_t, axis=1)
+            self.xh[ind_s][ind_t] = np.empty((self.num_hist_frames),dtype=object)
+            self.yh[ind_s][ind_t] = np.empty((self.num_hist_frames),dtype=object)
 
             self.id[ind_s].pop(ind_t)
 
