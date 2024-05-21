@@ -634,7 +634,7 @@ class OccupantHeatmap:
 
         Xn = np.ceil(Xrange[1]/Xres)-np.floor(Xrange[0]/Xres)
         Yn = np.ceil(Yrange[1]/Yres)-np.floor(Yrange[0]/Yres)
-        self.heatmap = np.zero((Xn,Yn))
+        self.heatmap = np.zeros((int(Xn),int(Yn)))
         self.heatmap_string = ""
 
     def reset_heatmap(self):

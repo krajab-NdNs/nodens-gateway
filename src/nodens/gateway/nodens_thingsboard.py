@@ -166,14 +166,20 @@ class tb:
                 # ~~~~~~~~~~~ SLEEP ~~~~~~~~~~~~~ #
                 self.payload["rest_zone_presence"] = f"{input_data['Presence detected']}"
 
-                # ~~~~~~~~~~~ HEATMAP ~~~~~~~~~~~~~ #
-                self.payload["room_occ_heatmap"] = f"{input_data['Occupancy heatmap']}"
-
                 # ~~~~~~~~~~~ GAIT ~~~~~~~~~~~~~ #
                 self.payload["gait_distribution"] = f"{input_data['Gait distribution']}"
 
             except Exception as e:
                 nodens.logger.debug(f"THINGSBOARD: occupant error: {e.args}")
+
+        # ~~~~~~~~~~~ ENERGY ~~~~~~~~~~~~~ #
+        self.payload["track_ud_energy"] = f"{input_data['UD energy']:.2f}"
+        self.payload["pc_energy"] = f"{input_data['PC energy']:.2f}"
+        
+        # ~~~~~~~~~~~ HEATMAP ~~~~~~~~~~~~~ #
+        self.payload["room_occ_heatmap"] = f"{input_data['Occupancy heatmap']}"
+
+
                 # self.payload["occ_1_X"] = "-"
                 # self.payload["occ_1_Y"] = "-"
                 # self.payload["most_inactive_track"] = "-"
