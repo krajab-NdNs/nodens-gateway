@@ -900,14 +900,23 @@ class OccupantHist:
                     nodens.logger.error(f"OH.update. ind_s: {ind_s}. ind_t: {ind_t}. xh: {self.xh}. e: {e}")
 
                 # Update energy  - UD currently only has one sig. TODO: check tid and then find other sigs + don't forget to add to new_track
-                try:
-                    if sensor_data != []:       # Process only if receiving full data packet.
+                if sensor_data != []:       # Process only if receiving full data packet.
+                    try:
                         self.e_ud_h[ind_s] = np.roll(self.e_ud_h[ind_s],1)
+                    except Exception as e:
+                        nodens.logger.error(f"OH.update 1. e: {e}")
+                    try:
                         self.e_ud_h[ind_s][0] = sensor_data.ud.signature_energy
+                    except Exception as e:
+                        nodens.logger.error(f"OH.update 2. e: {e}")
+                    try:
                         self.e_pc_h[ind_s] = np.roll(self.e_pc_h[ind_s],1)
+                    except Exception as e:
+                        nodens.logger.error(f"OH.update 3. e: {e}")
+                    try:                        
                         self.e_pc_h[ind_s][0] = sensor_data.pc.energy[0]
-                except Exception as e:
-                    nodens.logger.error(f"OH.update. e_ud_h: {self.e_ud_h} e: {e}")
+                    except Exception as e:
+                        nodens.logger.error(f"OH.update 4. e: {e}")
 
 
                 # Update activity statistics
