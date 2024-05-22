@@ -897,33 +897,54 @@ class OccupantHist:
                     self.yh[ind_s][ind_t] = np.roll(self.yh[ind_s][ind_t],1)
                     self.yh[ind_s][ind_t][0] = Y
                 except Exception as e:
-                    nodens.logger.error(f"ind_s: {ind_s}. ind_t: {ind_t}. xh: {self.xh}. e: {e}")
+                    nodens.logger.error(f"OH.update. ind_s: {ind_s}. ind_t: {ind_t}. xh: {self.xh}. e: {e}")
 
                 # Update energy  - UD currently only has one sig. TODO: check tid and then find other sigs + don't forget to add to new_track
-                if sensor_data != []:       # Process only if receiving full data packet.
-                    self.e_ud_h[ind_s] = np.roll(self.e_ud_h[ind_s],1)
-                    self.e_ud_h[ind_s][0] = sensor_data.ud.signature_energy
-                    self.e_pc_h[ind_s] = np.roll(self.e_pc_h[ind_s],1)
-                    self.e_pc_h[ind_s][0] = sensor_data.pc.energy[0]
+                try:
+                    if sensor_data != []:       # Process only if receiving full data packet.
+                        self.e_ud_h[ind_s] = np.roll(self.e_ud_h[ind_s],1)
+                        self.e_ud_h[ind_s][0] = sensor_data.ud.signature_energy
+                        self.e_pc_h[ind_s] = np.roll(self.e_pc_h[ind_s],1)
+                        self.e_pc_h[ind_s][0] = sensor_data.pc.energy[0]
+                except Exception as e:
+                    nodens.logger.error(f"OH.update. e_ud_h: {self.e_ud_h} e: {e}")
 
 
                 # Update activity statistics
-                self.activity_detection(sensor_id, track_id)
+                try:
+                    self.activity_detection(sensor_id, track_id)
+                except Exception as e:
+                    nodens.logger.error(f"OH.update activity_detection. e: {e}")
 
                 # Update heatmap
-                self.room_heatmap[ind_s].update_heatmap(X,Y)
+                try:
+                    self.room_heatmap[ind_s].update_heatmap(X,Y)
+                except Exception as e:
+                    nodens.logger.error(f"OH.update room_heatmap. e: {e}")
 
                 # Update gait parameters
-                self.gait_params[ind_s].update_track(sensor_id, track_id, self.xh[ind_s][ind_t], self.yh[ind_s][ind_t])
+                try:
+                    self.gait_params[ind_s].update_track(sensor_id, track_id, self.xh[ind_s][ind_t], self.yh[ind_s][ind_t])
+                except Exception as e:
+                    nodens.logger.error(f"OH.update gait_params. e: {e}")
 
             else:
                 # Record new values if track did not previously exist
                 #if track_id != []:
-                self.new_track(sensor_id,track_id,X,Y,new_sensor_flag=0)
+                try:
+                    self.new_track(sensor_id,track_id,X,Y,new_sensor_flag=0)
+                except Exception as e:
+                    nodens.logger.error(f"OH.update new_track 1. e: {e}")
         else:
-            self.new_sensor(sensor_id)
+            try:
+                self.new_sensor(sensor_id)
+            except Exception as e:
+                    nodens.logger.error(f"OH.update new_sensor. e: {e}")
             if track_id != []:
-                self.new_track(sensor_id,track_id,X,Y,new_sensor_flag=1)
+                try:
+                    self.new_track(sensor_id,track_id,X,Y,new_sensor_flag=1)
+                except Exception as e:
+                    nodens.logger.error(f"OH.update new_track 2. e: {e}")
 
 
     # Procedure when a new track is detected
