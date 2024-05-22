@@ -176,7 +176,8 @@ def on_message_sensorN(client, userdata, msg):
                             ndns_fns.oh.update(mqttData['addr'],track,ndns_fns.sd.track.X[idx],ndns_fns.sd.track.Y[idx],ndns_fns.sd)
                         except Exception as e:
                             nodens.logger.warning(f"SERV update. {e}. sensor_id: {mqttData['addr']}. num_tracks: {ndns_fns.sd.track.num_tracks}. tid: {ndns_fns.sd.track.tid}.",
-                                                  f"idx: {idx}. track: {track}. X: {ndns_fns.sd.track.X}. Y: {ndns_fns.sd.track.Y}. ids: {ndns_fns.oh.id}")
+                                                  f"idx: {idx}. track: {track}. X: {ndns_fns.sd.track.X}. Y: {ndns_fns.sd.track.Y}. ids: {ndns_fns.oh.id}",
+                                                  f"ind_s: {ndns_fns.oh.sensor_id.index(mqttData['addr'])}. ind_t: {ndns_fns.oh.id[ndns_fns.oh.sensor_id.index(mqttData['addr'])].index(track)}")
                             
                     try:
                         ndns_fns.oh.sensor_activity(mqttData['addr'])
