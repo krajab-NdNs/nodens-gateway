@@ -250,7 +250,7 @@ class tb:
         try:
             json_message = json.dumps(self.payload)
         except Exception as e:
-            logging.error(f"ERROR {e.args}. Payload:{self.payload}")
+            nodens.logger.error(f"THINGSBOARD: {e.args}. Payload:{self.payload}")
 
         flag = 0
         while flag == 0:

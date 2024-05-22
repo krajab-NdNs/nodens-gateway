@@ -897,7 +897,7 @@ class OccupantHist:
                     self.yh[ind_s][ind_t] = np.roll(self.yh[ind_s][ind_t],1)
                     self.yh[ind_s][ind_t][0] = Y
                 except Exception as e:
-                    nodens.logging.error(f"ind_s: {ind_s}. ind_t: {ind_t}. xh: {self.xh}. e: {e}")
+                    nodens.logger.error(f"ind_s: {ind_s}. ind_t: {ind_t}. xh: {self.xh}. e: {e}")
 
                 # Update energy  - UD currently only has one sig. TODO: check tid and then find other sigs + don't forget to add to new_track
                 if sensor_data != []:       # Process only if receiving full data packet.
