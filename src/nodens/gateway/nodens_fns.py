@@ -916,7 +916,7 @@ class OccupantHist:
                     try:                        
                         self.e_pc_h[ind_s][0] = sensor_data.pc.energy[0]
                     except Exception as e:
-                        nodens.logger.error(f"OH.update 4. pc_energy: {sensor_data.pc.energy}. e: {e}")
+                        self.e_pc_h[ind_s][0] = sensor_data.pc.energy
 
 
                 # Update activity statistics
