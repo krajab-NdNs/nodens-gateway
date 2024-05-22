@@ -168,14 +168,21 @@ def on_message_sensorN(client, userdata, msg):
                 mqttData_SAVEFull.append(mqttDataTemp)
 
                 temp_current_occupants = []
-                try:
-                    if ndns_fns.sd.track.num_tracks > 0:
-                        for idx, track in enumerate(ndns_fns.sd.track.tid):
+                
+                if ndns_fns.sd.track.num_tracks > 0:
+                    for idx, track in enumerate(ndns_fns.sd.track.tid):
+                        try:
                             temp_current_occupants.append(track)
                             ndns_fns.oh.update(mqttData['addr'],track,ndns_fns.sd.track.X[idx],ndns_fns.sd.track.Y[idx],ndns_fns.sd)
-                    ndns_fns.oh.sensor_activity(mqttData['addr'])
-                except Exception as e:
-                    nodens.logger.warning(f"SERV. {e}. num_tracks: {ndns_fns.sd.track.num_tracks}. tid: {ndns_fns.sd.track.tid}")
+                        except Exception as e:
+                            nodens.logger.warning(f"SERV update. {e}. sensor_id: {mqttData['addr']}. num_tracks: {ndns_fns.sd.track.num_tracks}. tid: {ndns_fns.sd.track.tid}.",
+                                                  "idx: {idx}. track: {track}")
+                            
+                    try:
+                        ndns_fns.oh.sensor_activity(mqttData['addr'])
+                    except Exception as e:
+                            nodens.logger.warning(f"SERV sensor_activity. {e}. sensor_id: {mqttData['addr']}.")   
+                
 
                 # Update time period occupancy data
                 if mqttData['addr'] not in ndns_fns.ew.id:
