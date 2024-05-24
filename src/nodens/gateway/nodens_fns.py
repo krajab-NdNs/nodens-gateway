@@ -790,12 +790,15 @@ class GaitParameters:
         """To calculate parameters for a specific track, specify the track_id."""
 
         self.gait_str = ""
+        print("\n")
         if (track_id == []):
             for track_gaits in self.track_gait_params:
                 track_gaits.gait = np.bincount(np.digitize(track_gaits.speed, track_gaits.gait_bins))
+                print(f"GAIT.calculate_gait_parameters. track_gaits.gait: {track_gaits.gait}")
                 if len(self.gait_str) > 0:
                     self.gait_str += ";"
                 self.gait_str += ','.join(map(str, track_gaits.gait))
+                print(f"GAIT.calculate_gait_parameters. self.gait_str: {self.gait_str}")
 
         else:
             ind_t = self.track_id.index(track_id)
@@ -1890,11 +1893,15 @@ class parseTLV:
             self.pc_history.update_history(self.pc)
 
     def tlvN(self, data, j):
-        lenN = convert_4_to_1(data[j+4:j+8])
-        if (lenN == 65536):
-            nodens.logger.warning("Data packet TLV length error. j: {}. len: {}.".format(j,len(data)))
-        dataN = data[j:j+lenN]
-        j += lenN
+        if len(data) > j+8:
+            lenN = convert_4_to_1(data[j+4:j+8])
+            if (lenN == 65536):
+                nodens.logger.warning("Data packet TLV length error. j: {}. len: {}.".format(j,len(data)))
+            dataN = data[j:j+lenN]
+            j += lenN
+        else:
+            nodens.logger.warning(f"End of data packet with remaining data: {data[j:]}")
+            j = 65535
         
         return j,lenN,dataN
 
