@@ -789,6 +789,7 @@ class GaitParameters:
         """This function calculates gait parameters for all tracks recorded with this sensor, over num_hist_frames."""
         """To calculate parameters for a specific track, specify the track_id."""
 
+        self.gait_str = ""
         if (track_id == []):
             for track_gaits in self.track_gait_params:
                 track_gaits.gait = np.bincount(np.digitize(track_gaits.speed, track_gaits.gait_bins))
