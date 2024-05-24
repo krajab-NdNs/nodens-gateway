@@ -1715,15 +1715,17 @@ class classifierEngine:
 
         # Calculations
         self.ud_sig_energy = np.sum(self.ud_sig_buffer)
-        try:
-            self.zt_bw = np.nanmax(self.z_track_buffer) - np.nanmin(self.z_track_buffer)
-        except:
-            self.zt_bw = 0
+        if (np.isnan(self.z_track_buffer).all() == False):
+            try:
+                self.zt_bw = np.nanmax(self.z_track_buffer) - np.nanmin(self.z_track_buffer)
+            except:
+                self.zt_bw = 0
         self.zt_grad_mean = (self.z_track_buffer[-1] - self.z_track_buffer[0])/len(self.z_track_buffer)
-        try:
-            self.z_lf = np.nanmin(self.z_lf_buffer)
-        except: 
-            self.z_lf = 0
+        if (np.isnan(self.z_lf_buffer).all() == False):
+            try:
+                self.z_lf = np.nanmin(self.z_lf_buffer)
+            except: 
+                self.z_lf = 0
         self.frames_since_activity += 1
 
     def activity_check(self):
