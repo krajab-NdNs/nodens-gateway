@@ -1101,7 +1101,7 @@ class OccupantHist:
 
         xh_check = self.xh[ind_s][ind_t][1:]
 
-        if np.isnan(xh_check).all() == False :
+        if all( x is None for x in xh_check) == False :
             
             
             # Non-None values from history
