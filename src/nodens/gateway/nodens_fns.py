@@ -1102,7 +1102,7 @@ class OccupantHist:
         # Non-None values from history
         xh =  [val for i,val in enumerate(self.xh[ind_s][ind_t]) if val is not None]
         yh =  [val for i,val in enumerate(self.yh[ind_s][ind_t]) if val is not None]
-        nodens.logger.info(f"""OH.activity_detection. {e.args}. sensor_id: {sensor_id}. track_id: {track_id}. self.xh: {self.xh}. xh: {xh}. self.yh: {self.yh}. yh: {yh}""")
+        nodens.logger.info(f"""OH.activity_detection. sensor_id: {sensor_id}. track_id: {track_id}. self.xh: {self.xh}. xh: {xh}. self.yh: {self.yh}. yh: {yh}""")
 
         # Calculate distances for each frame
         try:
