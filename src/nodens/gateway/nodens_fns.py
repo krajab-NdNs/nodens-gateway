@@ -857,8 +857,6 @@ class OccupantHist:
         # Check for this specific sensor
         ind_s = self.sensor_id.index(sensor_id)
 
-        self.id[ind_s] = [] 
-
         self.xh[ind_s] = np.empty([self.xh.shape[1],self.xh.shape[2]], dtype=object)
         self.yh[ind_s] = np.empty([self.yh.shape[1],self.yh.shape[2]], dtype=object)
 
