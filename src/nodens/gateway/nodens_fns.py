@@ -881,6 +881,7 @@ class OccupantHist:
         if (sensor_id in self.sensor_id):
             # Check for this specific sensor
             ind_s = self.sensor_id.index(sensor_id)
+            nodens.logger.info(f"OH.update. sensor_id: {sensor_id}. ind_s: {ind_s}. track_id: {track_id}. self.id[ind_s]: {self.id[ind_s]}. LOGIC: track exists: {track_id in self.id[ind_s]}")
 
             if (track_id == []):
                 pass
