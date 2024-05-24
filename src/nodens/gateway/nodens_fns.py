@@ -866,7 +866,8 @@ class OccupantHist:
         # self.tot_dist[ind_s] = 0*self.tot_dist[ind_s]
         # self.max_dist[ind_s] = 0*self.max_dist[ind_s] 
         # self.flag_active[ind_s] = 1*self.flag_active[ind_s]
-        self.time_inactive_start[ind_s] = dt.datetime.now(dt.timezone.utc)
+        for time in self.time_inactive_start[ind_s]:
+            time = dt.datetime.now(dt.timezone.utc)
 
         # Reset room heatmap
         self.room_heatmap[ind_s].reset_heatmap()
