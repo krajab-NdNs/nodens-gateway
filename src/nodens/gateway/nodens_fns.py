@@ -1098,36 +1098,41 @@ class OccupantHist:
     def activity_detection(self, sensor_id, track_id, tot_dist_thresh=1, max_dist_thresh=1):
         ind_s = self.sensor_id.index(sensor_id)
         ind_t = self.id[ind_s].index(track_id)
-        
-        # Non-None values from history
-        xh =  [val for i,val in enumerate(self.xh[ind_s][ind_t]) if val is not None]
-        yh =  [val for i,val in enumerate(self.yh[ind_s][ind_t]) if val is not None]
-        nodens.logger.info(f"""OH.activity_detection. sensor_id: {sensor_id}. track_id: {track_id}. self.xh: {self.xh}. xh: {xh}. self.yh: {self.yh}. yh: {yh}""")
 
-        # Calculate distances for each frame
-        try:
-            xd = np.subtract(xh[1:],xh[0:-1])
-            yd = np.subtract(yh[1:],yh[0:-1])
-            rd = (xd**2 + yd**2)**0.5
+        xh_check = self.xh[ind_s][ind_t][1:]
 
-            # Find statistics
-            self.tot_dist[ind_s][ind_t] =  np.sum(rd)
-            self.max_dist[ind_s][ind_t] = np.max(rd)
+        if np.isnan(xh_check).all() == False :
+            
+            
+            # Non-None values from history
+            xh =  [val for i,val in enumerate(self.xh[ind_s][ind_t]) if val is not None]
+            yh =  [val for i,val in enumerate(self.yh[ind_s][ind_t]) if val is not None]
+            nodens.logger.info(f"""OH.activity_detection. sensor_id: {sensor_id}. track_id: {track_id}. self.xh: {self.xh}. xh: {xh}. self.yh: {self.yh}. yh: {yh}""")
 
-            # Check if active
-            if self.tot_dist[ind_s][ind_t] > tot_dist_thresh:
-                self.flag_active[ind_s][ind_t] = 1
-                #print("Active!)")
-            elif self.max_dist[ind_s][ind_t] > max_dist_thresh:
-                self.flag_active[ind_s][ind_t] = 1
-                #print("Active!)")
-            else:
-                if (self.flag_active[ind_s][ind_t] == 1):
-                    self.time_inactive_start[ind_s][ind_t] = dt.datetime.now(dt.timezone.utc)
-                self.flag_active[ind_s][ind_t] = 0
+            # Calculate distances for each frame
+            try:
+                xd = np.subtract(xh[1:],xh[0:-1])
+                yd = np.subtract(yh[1:],yh[0:-1])
+                rd = (xd**2 + yd**2)**0.5
 
-        except Exception as e:
-            nodens.logger.error(f"""OH.activity_detection. {e.args}. sensor_id: {sensor_id}. track_id: {track_id}. self.xh: {self.xh}. xh: {xh}. self.yh: {self.yh}. yh: {yh}""")
+                # Find statistics
+                self.tot_dist[ind_s][ind_t] =  np.sum(rd)
+                self.max_dist[ind_s][ind_t] = np.max(rd)
+
+                # Check if active
+                if self.tot_dist[ind_s][ind_t] > tot_dist_thresh:
+                    self.flag_active[ind_s][ind_t] = 1
+                    #print("Active!)")
+                elif self.max_dist[ind_s][ind_t] > max_dist_thresh:
+                    self.flag_active[ind_s][ind_t] = 1
+                    #print("Active!)")
+                else:
+                    if (self.flag_active[ind_s][ind_t] == 1):
+                        self.time_inactive_start[ind_s][ind_t] = dt.datetime.now(dt.timezone.utc)
+                    self.flag_active[ind_s][ind_t] = 0
+
+            except Exception as e:
+                nodens.logger.error(f"""OH.activity_detection. {e.args}. sensor_id: {sensor_id}. track_id: {track_id}.""")
             #print("Inactive since {} for track: {} with dist: {}".format(self.time_inactive_start[ind_s][ind_t], track_id, self.tot_dist[ind_s][ind_t], self.max_dist[ind_s][ind_t]))
 
         # Calculate total energies for each frame
