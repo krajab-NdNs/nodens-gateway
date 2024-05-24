@@ -749,6 +749,7 @@ class GaitParameters:
     def add_new_track(self, sensor_id, track_id, Xh, Yh):
         if sensor_id == self.sensor_id:
             self.track_id.append(track_id)
+            nodens.logger.info(f"GAIT.add_new_track. track_id: {self.track_id}")
             self.track_gait_params.append(self.TrackGait(self.sensor_id, track_id, num_hist_frames=self.num_hist_frames, num_window_frames=self.num_window_frames))
 
             self.track_gait_params[-1].update(track_id, Xh, Yh)
@@ -768,6 +769,7 @@ class GaitParameters:
             ind_t = self.track_id.index(track_id)
 
             self.track_id.pop(ind_t)
+            nodens.logger.info(f"GAIT.delete_track. track_id: {self.track_id}")
             self.track_gait_params.pop(ind_t)
         else:
             nodens.logger.warning(f"GaitParameters.delete_track. Sensor id: {sensor_id} does not match {self.sensor_id}")
@@ -793,11 +795,9 @@ class GaitParameters:
         if (track_id == []):
             for track_gaits in self.track_gait_params:
                 track_gaits.gait = np.bincount(np.digitize(track_gaits.speed, track_gaits.gait_bins))
-                nodens.logger.info(f"GAIT.calculate_gait_parameters. track_gaits.gait: {track_gaits.gait}")
                 if len(self.gait_str) > 0:
                     self.gait_str += ";"
                 self.gait_str += ','.join(map(str, track_gaits.gait))
-                nodens.logger.debug(f"GAIT.calculate_gait_parameters. self.gait_str: {self.gait_str}")
 
         else:
             ind_t = self.track_id.index(track_id)
