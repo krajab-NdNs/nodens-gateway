@@ -1126,7 +1126,7 @@ class OccupantHist:
                 self.flag_active[ind_s][ind_t] = 0
 
         except Exception as e:
-            nodens.logger.error(f"""OH.activity_detection. {e.args}. sensor_id: {sensor_id}. track_id: {track_id}. xh: {xh}. yh: {yh}""")
+            nodens.logger.error(f"""OH.activity_detection. {e.args}. sensor_id: {sensor_id}. track_id: {track_id}. self.xh: {self.xh}. xh: {xh}. self.yh: {self.yh}. yh: {yh}""")
             #print("Inactive since {} for track: {} with dist: {}".format(self.time_inactive_start[ind_s][ind_t], track_id, self.tot_dist[ind_s][ind_t], self.max_dist[ind_s][ind_t]))
 
         # Calculate total energies for each frame
