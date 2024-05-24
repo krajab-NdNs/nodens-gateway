@@ -331,10 +331,10 @@ def on_message_sensorN(client, userdata, msg):
                         # Update occupancy history and entryways for each occupant
                         for i in range(len(occ_info)):      # NodeNs KZR FIX: update ESP to create new payload
                             temp = occ_info[i]
-                            temp_current_occupants.append(temp['Occupant ID'])
-                            ndns_fns.oh.update(mqttData['addr'],temp['Occupant ID'],temp['X'],temp['Y'])
+                            temp_current_occupants.append(int(temp['Occupant ID']))
+                            ndns_fns.oh.update(mqttData['addr'],int(temp['Occupant ID']),temp['X'],temp['Y'])
                             # Check if occupant has crossed entryway
-                            ndns_fns.oh.entryway(mqttData['addr'],temp['Occupant ID'], ndns_fns.ew)
+                            ndns_fns.oh.entryway(mqttData['addr'],int(temp['Occupant ID']), ndns_fns.ew)
                             # nodens.logger.debug('Occupant no.: {}. X: {}. Y = {}.'.format(temp['Occupant ID'],temp['X'],temp['Y']))
 
                         # Look at general activity stats

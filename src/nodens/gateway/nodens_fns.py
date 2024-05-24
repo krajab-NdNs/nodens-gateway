@@ -1035,6 +1035,7 @@ class OccupantHist:
         mark_to_delete=1. track_id is all *safe* tracks (i.e. tracks to keep); typically done by inputting an array of current tracks.
         mark_to_delete=0. track_id is the track to delete."""
 
+        nodens.logger.info(f"OH.delete_track. sensor: {sensor_id}. track_id: {track_id}. mark_to_delete: {mark_to_delete}")
         ind_s = self.sensor_id.index(sensor_id)
 
         if mark_to_delete == 1:
@@ -1148,53 +1149,54 @@ class OccupantHist:
             self.most_inactive_time[ind_s] = dt.datetime.now(dt.timezone.utc) - self.time_inactive_start[ind_s][inactive_idx]
 
     # Calculate outputs
-    def calculate_outputs(self, thresh_distance = 0, energy_threshold = 0):
+    def calculate_outputs(self, sensor_id, thresh_distance = 0, energy_threshold = 0):
         # Re-initialise outputs
         self.outputs = []
         #self.outputs.__init__()
 
-        for idx, sensor in enumerate(self.sensor_id):    # For each sensor
-            self.outputs.append(self.Outputs())
-            self.outputs[idx].sensor_id = sensor
-            if len(self.id[idx]) > 0:
-                # Determine track to send
-                if max(self.tot_dist[idx]) >= thresh_distance: # Distance threshold at 0 for now, until UD sig tid is found.
-                    tid = self.tot_dist[idx].index(max(self.tot_dist[idx]))
+        ind_s = self.sensor_id.index(sensor_id)
 
-                    self.outputs[idx].track_id = self.id[idx][tid]
+        self.outputs.append(self.Outputs())
+        self.outputs[ind_s].sensor_id = sensor_id
+        if len(self.id[ind_s]) > 0:
+            # Determine track to send
+            if max(self.tot_dist[ind_s]) >= thresh_distance: # Distance threshold at 0 for now, until UD sig tid is found.
+                tid = self.tot_dist[ind_s].index(max(self.tot_dist[ind_s]))
 
-                    # Record parameters
-                    self.outputs[idx].track_X = self.x1[idx][tid]
-                    self.outputs[idx].track_Y = self.y1[idx][tid]
-                    self.outputs[idx].distance_moved = self.tot_dist[idx][tid]
-                    
-                else:
-                    pass
-                    #tid = self.ud_energy[idx].index(max(self.ud_energy[idx]))
+                self.outputs[ind_s].track_id = self.id[ind_s][tid]
 
-                # Gait parameters
-                self.gait_params[idx].calculate_gait_parameters()
-                self.outputs[idx].gait_string = self.gait_params[idx].gait_str
-
-            # Energy statistics (for scene not track)
-            ud_e = [val for val in self.e_ud_h[idx] if val is not None]
-            self.outputs[idx].ud_energy = sum(ud_e)
-            if self.outputs[idx].ud_energy > energy_threshold:
-                self.outputs[idx].was_active = 1
+                # Record parameters
+                self.outputs[ind_s].track_X = self.x1[ind_s][tid]
+                self.outputs[ind_s].track_Y = self.y1[ind_s][tid]
+                self.outputs[ind_s].distance_moved = self.tot_dist[ind_s][tid]
+                
             else:
-                self.outputs[idx].was_active = 0
-            pc_e = [val for val in self.e_pc_h[idx] if val is not None]
-            self.outputs[idx].pc_energy = sum(pc_e)
-            
-            # Room heatmaps
-            self.room_heatmap[idx].prepare_heatmap_string()
-            self.outputs[idx].heatmap_string = self.room_heatmap[idx].heatmap_string
+                pass
+                #tid = self.ud_energy[ind_s].index(max(self.ud_energy[ind_s]))
 
-            # Delete tracks which have left
-            for ind_t, track in enumerate(self.id[idx]):
-                if track in self.track_del_flag[idx]:
-                    self.delete_track(sensor,track,mark_to_delete=0)
-            self.track_del_flag[idx] = []
+            # Gait parameters
+            self.gait_params[ind_s].calculate_gait_parameters()
+            self.outputs[ind_s].gait_string = self.gait_params[ind_s].gait_str
+
+        # Energy statistics (for scene not track)
+        ud_e = [val for val in self.e_ud_h[ind_s] if val is not None]
+        self.outputs[ind_s].ud_energy = sum(ud_e)
+        if self.outputs[ind_s].ud_energy > energy_threshold:
+            self.outputs[ind_s].was_active = 1
+        else:
+            self.outputs[ind_s].was_active = 0
+        pc_e = [val for val in self.e_pc_h[ind_s] if val is not None]
+        self.outputs[ind_s].pc_energy = sum(pc_e)
+        
+        # Room heatmaps
+        self.room_heatmap[ind_s].prepare_heatmap_string()
+        self.outputs[ind_s].heatmap_string = self.room_heatmap[ind_s].heatmap_string
+
+        # Delete tracks which have left
+        for ind_t, track in enumerate(self.id[ind_s]):
+            if track in self.track_del_flag[ind_s]:
+                self.delete_track(sensor_id,track,mark_to_delete=0)
+        self.track_del_flag[ind_s] = []
 
 
     
