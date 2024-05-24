@@ -749,7 +749,7 @@ class GaitParameters:
     def add_new_track(self, sensor_id, track_id, Xh, Yh):
         if sensor_id == self.sensor_id:
             self.track_id.append(track_id)
-            nodens.logger.info(f"GAIT.add_new_track. track_id: {self.track_id}")
+            nodens.logger.info(f"GAIT.add_new_track. track_id: {self.track_id}. sensor_id: {sensor_id}")
             self.track_gait_params.append(self.TrackGait(self.sensor_id, track_id, num_hist_frames=self.num_hist_frames, num_window_frames=self.num_window_frames))
 
             self.track_gait_params[-1].update(track_id, Xh, Yh)
@@ -769,7 +769,7 @@ class GaitParameters:
             ind_t = self.track_id.index(track_id)
 
             self.track_id.pop(ind_t)
-            nodens.logger.info(f"GAIT.delete_track. track_id: {self.track_id}")
+            nodens.logger.info(f"GAIT.delete_track. track_id: {self.track_id}. sensor_id: {sensor_id}")
             self.track_gait_params.pop(ind_t)
         else:
             nodens.logger.warning(f"GaitParameters.delete_track. Sensor id: {sensor_id} does not match {self.sensor_id}")
@@ -798,6 +798,7 @@ class GaitParameters:
                 if len(self.gait_str) > 0:
                     self.gait_str += ";"
                 self.gait_str += ','.join(map(str, track_gaits.gait))
+                nodens.logger.info(f"GAIT.calculate_gait_parameters. track_gaits.gait: {track_gaits.gait}.")
 
         else:
             ind_t = self.track_id.index(track_id)
@@ -944,6 +945,7 @@ class OccupantHist:
                 # Record new values if track did not previously exist
                 #if track_id != []:
                 try:
+                    nodens.logger.info("NEW TRACK 1")
                     self.new_track(sensor_id,track_id,X,Y,new_sensor_flag=0)
                 except Exception as e:
                     nodens.logger.error(f"OH.update new_track 1. e: {e}")
@@ -954,6 +956,7 @@ class OccupantHist:
                     nodens.logger.error(f"OH.update new_sensor. e: {e}")
             if track_id != []:
                 try:
+                    nodens.logger.info("NEW TRACK 2")
                     self.new_track(sensor_id,track_id,X,Y,new_sensor_flag=1)
                 except Exception as e:
                     nodens.logger.error(f"OH.update new_track 2. e: {e}")
@@ -964,6 +967,7 @@ class OccupantHist:
         ind_s = self.sensor_id.index(sensor_id)
         # if new_sensor_flag == 0:
         self.id[ind_s].append(track_id)
+        nodens.logger.info(f"OH.new_track. track_id: {self.id[ind_s]}. sensor: {sensor_id}")
 
         self.x0[ind_s].append(X)
         self.y0[ind_s].append(Y)
