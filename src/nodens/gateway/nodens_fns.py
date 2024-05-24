@@ -790,15 +790,14 @@ class GaitParameters:
         """To calculate parameters for a specific track, specify the track_id."""
 
         self.gait_str = ""
-        print("\n")
         if (track_id == []):
             for track_gaits in self.track_gait_params:
                 track_gaits.gait = np.bincount(np.digitize(track_gaits.speed, track_gaits.gait_bins))
-                print(f"GAIT.calculate_gait_parameters. track_gaits.gait: {track_gaits.gait}")
+                nodens.logger.info(f"GAIT.calculate_gait_parameters. track_gaits.gait: {track_gaits.gait}")
                 if len(self.gait_str) > 0:
                     self.gait_str += ";"
                 self.gait_str += ','.join(map(str, track_gaits.gait))
-                print(f"GAIT.calculate_gait_parameters. self.gait_str: {self.gait_str}")
+                nodens.logger.debug(f"GAIT.calculate_gait_parameters. self.gait_str: {self.gait_str}")
 
         else:
             ind_t = self.track_id.index(track_id)
