@@ -863,10 +863,10 @@ class OccupantHist:
         self.e_ud_h[ind_s] = np.empty([self.e_ud_h.shape[1]], dtype=object)
         self.e_pc_h[ind_s] = np.empty([self.e_pc_h.shape[1]], dtype=object)
 
-        self.tot_dist[ind_s] = []
-        self.max_dist[ind_s] = [] 
-        self.flag_active[ind_s] = []
-        self.time_inactive_start[ind_s] = [] 
+        # self.tot_dist[ind_s] = 0*self.tot_dist[ind_s]
+        # self.max_dist[ind_s] = 0*self.max_dist[ind_s] 
+        # self.flag_active[ind_s] = 1*self.flag_active[ind_s]
+        self.time_inactive_start[ind_s] = dt.datetime.now(dt.timezone.utc)
 
         # Reset room heatmap
         self.room_heatmap[ind_s].reset_heatmap()
@@ -879,7 +879,7 @@ class OccupantHist:
         if (sensor_id in self.sensor_id):
             # Check for this specific sensor
             ind_s = self.sensor_id.index(sensor_id)
-            nodens.logger.info(f"OH.update. sensor_id: {sensor_id}. ind_s: {ind_s}. track_id: {track_id}. self.id[ind_s]: {self.id[ind_s]}. LOGIC: track exists: {track_id in self.id[ind_s]}")
+            #nodens.logger.info(f"OH.update. sensor_id: {sensor_id}. ind_s: {ind_s}. track_id: {track_id}. self.id[ind_s]: {self.id[ind_s]}. LOGIC: track exists: {track_id in self.id[ind_s]}")
 
             if (track_id == []):
                 pass
@@ -1125,7 +1125,7 @@ class OccupantHist:
                 self.flag_active[ind_s][ind_t] = 0
 
         except Exception as e:
-            nodens.logger.error(f"""Error {e.args}.""")
+            nodens.logger.error(f"""OH.activity_detection. {e.args}.""")
             #print("Inactive since {} for track: {} with dist: {}".format(self.time_inactive_start[ind_s][ind_t], track_id, self.tot_dist[ind_s][ind_t], self.max_dist[ind_s][ind_t]))
 
         # Calculate total energies for each frame
