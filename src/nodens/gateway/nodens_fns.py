@@ -1156,7 +1156,14 @@ class OccupantHist:
 
         ind_s = self.sensor_id.index(sensor_id)
 
-        self.outputs.append(self.Outputs())
+            
+        if len(self.outputs) < ind_s:
+            while True:
+                self.outputs.append(self.Outputs())
+                if len(self.outputs >= ind_s):
+                    break
+
+        self.outputs[ind_s] = self.Outputs()
         self.outputs[ind_s].sensor_id = sensor_id
         if len(self.id[ind_s]) > 0:
             # Determine track to send
