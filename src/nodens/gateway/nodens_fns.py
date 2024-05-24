@@ -1925,6 +1925,8 @@ class parseTLV:
         else:
             nodens.logger.warning(f"End of data packet with remaining data: {data[j:]}")
             j = 65535
+            lenN = 0
+            dataN = []
         
         return j,lenN,dataN
 
