@@ -115,14 +115,13 @@ class mesh:
             self.last_msg_timestamp = timestamp
             self.msg_history.insert(0,payload[5:])
             self.msg_timestamp_history.insert(0,timestamp)
-            nodens.logger.info("Message received: {}".format(self.last_msg))
 
-        def receive_info(self, payload, timestamp):
+        def receive_info(self, payload, timestamp, sensor_id):
             self.last_info = payload
             self.last_info_timestamp = timestamp
             self.info_history.insert(0,payload)
             self.info_timestamp_history.insert(0,timestamp)
-            nodens.logger.info("Info received: {}".format(self.last_info))
+            nodens.logger.info("Info received: {} for sensor: {} at timestamp: {}".format(self.last_info, sensor_id, timestamp))
 
 
 MESH = mesh()

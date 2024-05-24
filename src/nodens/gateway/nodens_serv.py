@@ -453,7 +453,7 @@ def on_message_sensorN(client, userdata, msg):
                     heartbeat = "\r" + heartbeat
                     # print(heartbeat, end='')
                     if 'Sensor Information' in mqttDataFinal:
-                        nodens.logger.debug("\nSensor information: {} for Device: {}\n". format(mqttDataFinal['Sensor Information'], mqttDataFinal['addr']))
+                        nodens.logger.info("\nSensor information: {} for Device: {}\n". format(mqttDataFinal['Sensor Information'], mqttDataFinal['addr']))
 
                         # Check for sensor version
                         temp = mqttDataFinal['Sensor Information']
@@ -466,7 +466,7 @@ def on_message_sensorN(client, userdata, msg):
 
                         elif temp[0:3] == 'MSG':
                             ndns_mesh.MESH.status.receive_msg(temp, mqttDataFinal['timestamp'])
-                            ndns_mesh.MESH.status.receive_info(temp, mqttDataFinal['timestamp'])
+                            ndns_mesh.MESH.status.receive_info(temp, mqttDataFinal['timestamp'], mqttDataFinal['addr'])
                             if ndns_mesh.MESH.status.last_msg.find("NEW CONFIG!") >= 0:
                                 msg = ndns_mesh.MESH.status.last_msg
                                 i0 = msg.find("X=")
@@ -484,7 +484,7 @@ def on_message_sensorN(client, userdata, msg):
                                 ndns_fns.rcp.ROOM_Y_MAX = (msg[i0+i1+1:i0+i2])
 
                         else:
-                            ndns_mesh.MESH.status.receive_info(temp, mqttDataFinal['timestamp'])
+                            ndns_mesh.MESH.status.receive_info(temp, mqttDataFinal['timestamp'], mqttDataFinal['addr'])
                 
                 elif mqttDataFinal['type'] == 'heartbeat':
                     heartbeat += "."
