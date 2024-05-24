@@ -198,7 +198,7 @@ def on_message_sensorN(client, userdata, msg):
                     ndns_fns.oh.delete_track(mqttData['addr'], temp_current_occupants, mark_to_delete=1)
 
                     # Calculate occupant history outputs
-                    ndns_fns.oh.calculate_outputs()
+                    ndns_fns.oh.calculate_outputs(mqttData['addr'])
 
                     mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
                     mqttClass = json.loads("{\"Activity detected\": \"" + str(int(ndns_fns.class_eng.activity_alert))
@@ -379,7 +379,7 @@ def on_message_sensorN(client, userdata, msg):
                         ndns_fns.oh.delete_track(mqttData['addr'], temp_current_occupants, mark_to_delete=1)
 
                         # Calculate occupant history outputs
-                        ndns_fns.oh.calculate_outputs()
+                        ndns_fns.oh.calculate_outputs(mqttData['addr'])
 
                         
                         mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
