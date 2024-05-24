@@ -201,9 +201,9 @@ def on_message_sensorN(client, userdata, msg):
                     ndns_fns.oh.calculate_outputs(mqttData['addr'])
 
                     mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
-                    mqttClass = json.loads("{\"Activity detected\": \"" + str(int(ndns_fns.class_eng.activity_alert))
-                                        + "\", \"Activity type\": \"" + str(int(ndns_fns.class_eng.classification))
-                                        + "\"}")
+                    # mqttClass = json.loads("{\"Activity detected\": \"" + str(int(ndns_fns.class_eng.activity_alert))
+                    #                     + "\", \"Activity type\": \"" + str(int(ndns_fns.class_eng.classification))
+                    #                     + "\"}")
                     mqttDataFinal = {**mqttData, #'addr' : mqttData['addr'],
                                     'Sensor timestamp' : T,
                                     'Average period occupancy' : ndns_fns.si.period_sum_occ[sen_idx]/ndns_fns.si.period_N[sen_idx], 
@@ -383,10 +383,10 @@ def on_message_sensorN(client, userdata, msg):
 
                         
                         mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
-                        mqttClass = json.loads("{\"Activity detected\": \"" + str(int(ndns_fns.class_eng.activity_alert))
-                                            + "\", \"Activity type\": \"" + str(int(ndns_fns.class_eng.classification))
-                                            + "\"}")
-                        mqttDataFinal = {**mqttTime, **mqttData, **mqttClass, **mqttDataFinal, 
+                        # mqttClass = json.loads("{\"Activity detected\": \"" + str(int(ndns_fns.class_eng.activity_alert))
+                        #                     + "\", \"Activity type\": \"" + str(int(ndns_fns.class_eng.classification))
+                        #                     + "\"}")
+                        mqttDataFinal = {**mqttTime, **mqttData, **mqttDataFinal, 
                                         'Sensor timestamp' : T,
                                         'Average period occupancy' : ndns_fns.si.period_sum_occ[sen_idx]/ndns_fns.si.period_N[sen_idx], 
                                         'Maximum period occupancy' : ndns_fns.si.period_max_occ[sen_idx],

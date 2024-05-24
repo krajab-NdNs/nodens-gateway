@@ -1787,20 +1787,20 @@ class classifierEngine:
         self.activity_check()
         
         classes = ['None', 'Fall', 'Jump', 'Sit']
-        if self.activity_flag == 1:
-            scores = [0, self.fall_score, self.jump_score, self.sit_score]
-            self.class_buffer = np.roll(self.class_buffer, 1)
-            self.class_buffer[0] = scores.index(max(scores))
-            if np.min(self.class_buffer) == np.max(self.class_buffer) and self.frames_since_activity >= self.activity_wait_frames:
-                self.classification = self.class_buffer[0][0]
-                self.frames_since_activity = 0
-                self.activity_alert = 1
-                print("ACTIVITY DETECTED: {}".format(self.classification))
-                print("Scores: {}, {}, {}".format(self.fall_score, self.jump_score, self.sit_score))
+        # if self.activity_flag == 1:
+        #     scores = [0, self.fall_score, self.jump_score, self.sit_score]
+        #     self.class_buffer = np.roll(self.class_buffer, 1)
+        #     self.class_buffer[0] = scores.index(max(scores))
+        #     if np.min(self.class_buffer) == np.max(self.class_buffer) and self.frames_since_activity >= self.activity_wait_frames:
+        #         self.classification = self.class_buffer[0][0]
+        #         self.frames_since_activity = 0
+        #         self.activity_alert = 1
+        #         print("ACTIVITY DETECTED: {}".format(self.classification))
+        #         print("Scores: {}, {}, {}".format(self.fall_score, self.jump_score, self.sit_score))
 
-        else:
-            self.class_buffer = np.roll(self.class_buffer, 1)
-            self.class_buffer[0] = 0
+        # else:
+        #     self.class_buffer = np.roll(self.class_buffer, 1)
+        #     self.class_buffer[0] = 0
 
 ## ~~~~~~~~~~~~~~~~~~~~~~ ##
 
