@@ -1671,12 +1671,12 @@ class classifierEngine:
     """Classifier engine. Currently a placeholder with a simple test."""
     def __init__(self, num_segments, class_frames_check, activity_wait_frames, energy_threshold):
         # Class buffer : class must have all positive hits to cause alert
-        self.class_buffer = np.zeros(shape=[class_frames_check,1])
+        self.class_buffer = np.zeros(shape=[class_frames_check,])
 
         # Data buffers: used for calculating
-        self.ud_sig_buffer = np.zeros(shape=[num_segments,1])
-        self.z_lf_buffer = np.zeros(shape=[num_segments,1])
-        self.z_track_buffer = np.zeros(shape=[num_segments,1])
+        self.ud_sig_buffer = np.zeros(shape=[num_segments,])
+        self.z_lf_buffer = np.zeros(shape=[num_segments,])
+        self.z_track_buffer = np.zeros(shape=[num_segments,])
 
         self.ud_sig_energy = 0
         self.zt_bw = 0
