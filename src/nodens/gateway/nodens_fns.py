@@ -1160,7 +1160,7 @@ class OccupantHist:
         if len(self.outputs) < ind_s:
             while True:
                 self.outputs.append(self.Outputs())
-                if len(self.outputs >= ind_s):
+                if len(self.outputs) >= ind_s:
                     break
 
         self.outputs[ind_s] = self.Outputs()
