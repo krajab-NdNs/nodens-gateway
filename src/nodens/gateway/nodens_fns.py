@@ -1720,12 +1720,16 @@ class classifierEngine:
                 self.zt_bw = np.nanmax(self.z_track_buffer) - np.nanmin(self.z_track_buffer)
             except:
                 self.zt_bw = 0
+        else:
+            self.zt_bw = 0
         self.zt_grad_mean = (self.z_track_buffer[-1] - self.z_track_buffer[0])/len(self.z_track_buffer)
         if (np.isnan(self.z_lf_buffer).all() == False):
             try:
                 self.z_lf = np.nanmin(self.z_lf_buffer)
             except: 
                 self.z_lf = 0
+        else:
+            self.z_lf = 0
         self.frames_since_activity += 1
 
     def activity_check(self):
