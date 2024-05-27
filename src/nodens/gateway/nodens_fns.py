@@ -964,8 +964,7 @@ class OccupantHist:
         ind_s = self.sensor_id.index(sensor_id)
         # if new_sensor_flag == 0:
         self.id[ind_s].append(track_id)
-        nodens.logger.info(f"OH.new_track. track_id: {self.id[ind_s]}. sensor: {sensor_id}")
-
+        
         self.x0[ind_s].append(X)
         self.y0[ind_s].append(Y)
         self.x1[ind_s].append(X)

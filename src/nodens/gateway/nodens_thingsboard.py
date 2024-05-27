@@ -273,7 +273,7 @@ class tb:
                 flag = 1
                 FLAG_TX_IN_PROGRESS = 0
             except Exception as e:
-                nodens.logger.error(f"THINGSBOARD: multiline payload finalise error: {e.args}")
+                nodens.logger.error(f"THINGSBOARD: multiline payload finalise error: {e.args}. Topic: {nodens.cp.TB_ATTRIBUTES_TOPIC}. Sensor: {self.subscribed_sensors[i]}, {i}")
                 sleep(1)
 
 TB = tb()
