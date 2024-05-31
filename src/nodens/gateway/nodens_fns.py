@@ -2058,7 +2058,7 @@ class MessagePipeline:
 ## ~~~~~~~~~~ MESSAGE DIAGNOSTICS ~~~~~~~~~~~~~~ ##
 class Counts:
     def __init__(self):
-        self.sensorId = []
+        self.sensor_id = []
         self.heartbeat = []
         self.full = []
         self.basic = []
@@ -2093,6 +2093,12 @@ class Counts:
             self.basic[ind_s] += 1
         else:
             nodens.logger.error(f"COUNTS not found. type: {type}")
+
+    def print_counts(self, sensor_id):
+        ind_s = self.sensor_id.index(sensor_id)
+
+        output = [self.heartbeat[ind_s], self.full[ind_s], self.basic[ind_s]]
+        return output
 
 # # Create a custom nodens.logger
 # nodens.logger = logging.getnodens.logger(__name__)
