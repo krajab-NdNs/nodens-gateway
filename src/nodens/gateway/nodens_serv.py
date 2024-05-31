@@ -291,7 +291,7 @@ def on_message_sensorN(client, userdata, msg):
             elif (mqttData['type'] == 'json'):
                 nodens.logger.info("JSON type: {}".format(mqttData))
             # Otherwise process occupancy info
-            elif 'heartbeat' not in mqttData:
+            elif data['type'] != 'heartbeat':
                 ndns_fns.counts.update(mqttData['addr'], 'basic')
                 ndns_fns.sm.update(mqttData)
                 mqttOcc = json.loads(data)
