@@ -126,12 +126,12 @@ def on_message_sensorN(client, userdata, msg):
             # Parse data 
             try:
                 data = base64.b64decode(mqttData['data'])
-                nodens.logger.info(f"data: {data}")
+                nodens.logger.info(f"\ndata: {data}")
                 nodens.logger.info(f"{json.loads(data)}")
                 nodens.logger.info(f"{json.loads(data)['type']}")
             except:
                 data = mqttData['data']
-                nodens.logger.info(f"raw data: {data}")
+                nodens.logger.info(f"\nraw data: {data}")
             str_data = str(data[0])
             data_int = [data[0]]
 
@@ -142,7 +142,7 @@ def on_message_sensorN(client, userdata, msg):
             else:
                 nodens.logger.warning("Data below length 8. Rx: {}".format(data))
 
-            nodens.logger.info(f"{str_data}")
+            nodens.logger.info(f"str_data: {str_data}. check: {str_data == '21436587'}")
 
             # Check if full data packet received
             if str_data == '21436587':
