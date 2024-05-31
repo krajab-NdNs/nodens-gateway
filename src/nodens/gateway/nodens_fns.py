@@ -2084,7 +2084,7 @@ class Counts:
 
         ind_s = self.sensor_id.index(sensor_id)
 
-        if type == 'hearbeat':
+        if type == 'heartbeat':
             self.heartbeat[ind_s] += 1
         elif type == 'full':
             self.full[ind_s] += 1
