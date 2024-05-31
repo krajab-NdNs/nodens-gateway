@@ -547,7 +547,7 @@ def on_message_sensorN(client, userdata, msg):
                     nodens.logger.warning("Another type: {}".format(mqttDataFinal))
 
             else:
-                if json.loads(mqttData)["type"] == 'heartbeat':
+                if json.loads(data)["type"] == 'heartbeat':
                     ndns_fns.counts.update(mqttData['addr'], 'heartbeat')
                     heartbeat += "."
                     heartbeat = "\r" + heartbeat
