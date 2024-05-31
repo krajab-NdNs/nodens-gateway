@@ -128,6 +128,7 @@ def on_message_sensorN(client, userdata, msg):
                 data = base64.b64decode(mqttData['data'])
                 nodens.logger.info(f"data: {data}")
                 nodens.logger.info(f"{json.loads(data)}")
+                nodens.logger.info(f"{json.loads(data)["type"]}")
             except:
                 data = mqttData['data']
             str_data = str(data[0])
@@ -142,6 +143,7 @@ def on_message_sensorN(client, userdata, msg):
 
             # Check if full data packet received
             if str_data == '21436587':
+                nodens.logger.info(f"str_data: {str_data}")
                 ndns_fns.counts.update(mqttData['addr'], 'full')
                 for i in range(len(data)-8):
                     str_data = str_data + str(data[i+8])
