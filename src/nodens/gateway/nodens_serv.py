@@ -203,10 +203,10 @@ def on_message_sensorN(client, userdata, msg):
                     # Calculate occupant history outputs
                     ind_s = ndns_fns.oh.calculate_outputs(mqttData['addr'])
 
-                    diag_info = (f"SERV Cloud Full. sensor: {mqttData['addr']}.",
-                                    f"Counts (heartbeat,full,basic): {ndns_fns.counts.print_counts(mqttData['addr'])}", 
-                                    f"N frames: {ndns_fns.si.period_N[sen_idx]}. Avg rate: {nodens.cp.CLOUD_WRITE_TIME/ndns_fns.si.period_N[sen_idx]:.2f}")
-                    nodens.logger.info(diag_info)
+                    # diag_info = (f"SERV Cloud Full. sensor: {mqttData['addr']}.",
+                    #                 f"Counts (heartbeat,full,basic): {ndns_fns.counts.print_counts(mqttData['addr'])}", 
+                    #                 f"N frames: {ndns_fns.si.period_N[sen_idx]}. Avg rate: {nodens.cp.CLOUD_WRITE_TIME/ndns_fns.si.period_N[sen_idx]:.2f}")
+                    # nodens.logger.info(diag_info)
                     ndns_fns.counts.initialise(mqttData['addr'])
                     
                     mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
@@ -407,10 +407,10 @@ def on_message_sensorN(client, userdata, msg):
                         # Calculate occupant history outputs
                         ind_s = ndns_fns.oh.calculate_outputs(mqttData['addr'])
 
-                        diag_info = (f"SERV Cloud. sensor: {mqttData['addr']}.",
-                                     f"Counts (heartbeat,full,basic): {ndns_fns.counts.print_counts(mqttData['addr'])}", 
-                                     f"N frames: {ndns_fns.si.period_N[sen_idx]}. Avg rate: {nodens.cp.CLOUD_WRITE_TIME/ndns_fns.si.period_N[sen_idx]:.2f}")
-                        nodens.logger.info(diag_info)
+                        # diag_info = (f"SERV Cloud. sensor: {mqttData['addr']}.",
+                        #              f"Counts (heartbeat,full,basic): {ndns_fns.counts.print_counts(mqttData['addr'])}", 
+                        #              f"N frames: {ndns_fns.si.period_N[sen_idx]}. Avg rate: {nodens.cp.CLOUD_WRITE_TIME/ndns_fns.si.period_N[sen_idx]:.2f}")
+                        # nodens.logger.info(diag_info)
                         ndns_fns.counts.initialise(mqttData['addr'])
 
                         
@@ -556,13 +556,16 @@ def on_message_sensorN(client, userdata, msg):
                 T0 = dt.datetime.now(dt.timezone.utc)
                 #print(heartbeat)
                 heartbeat = ""
-                nodens.logger.info("Connected: {}".format(ndns_fns.si.connected_sensors))
                 try:
-                    nodens.logger.info("Previously connected: {}".format(str(ndns_fns.si.last_t)))
-                    
-                    nodens.logger.info(print_text)
+                    print_diagnostics = (f"\nConnected: {ndns_fns.si.connected_sensors}",
+                                         f"\nPreviously connected: {ndns_fns.si.last_t}")
+                    for sensor_id in ndns_fns.si.connected_sensors:
+                        print_diagnostics = print_diagnostics + (f"\nMax counts (heartbeat,full,basic): {ndns_fns.counts.print_counts(sensor_id)[1]}",
+                                                                 f"\nMin counts (heartbeat,full,basic): {ndns_fns.counts.print_counts(sensor_id)[2]}")
+                    nodens.logger.info(print_diagnostics)
                 except Exception as e:
                     nodens.logger.info(f"Step 2 didn't work: {e.args}")
+                ndns_fns.counts.reset(mqttData['addr'])
                 
                 
 

@@ -2058,15 +2058,33 @@ class MessagePipeline:
 class Counts:
     def __init__(self):
         self.sensor_id = []
+
         self.heartbeat = []
         self.full = []
         self.basic = []
 
+        self.max_hearbeat = []
+        self.max_full = []
+        self.max_basic = []
+
+        self.min_heartbeat = []
+        self.min_full = []
+        self.min_basic = []
+
     def new_sensor(self, sensor_id):
         self.sensor_id.append(sensor_id)
+
         self.heartbeat.append(0)
         self.full.append(0)
         self.basic.append(0)
+
+        self.max_heartbeat.append(0)
+        self.max_full.append(0)
+        self.max_basic.append(0)
+
+        self.min_heartbeat.append(100000000)
+        self.min_full.append(100000000)
+        self.min_basic.append(100000000)
 
     def initialise(self, sensor_id):
         if sensor_id not in self.sensor_id:
@@ -2074,9 +2092,38 @@ class Counts:
 
         ind_s = self.sensor_id.index(sensor_id)
 
+        if self.heartbeat[ind_s] > self.max_heartbeat[ind_s]:
+            self.max_heartbeat[ind_s] = self.heartbeat[ind_s]
+        elif self.heartbeat[ind_s] < self.min_heartbeat[ind_s]:
+            self.min_heartbeat[ind_s] = self.heartbeat[ind_s]
+
+        if self.full[ind_s] > self.max_full[ind_s]:
+            self.max_full[ind_s] = self.full[ind_s]
+        elif self.full[ind_s] < self.min_full[ind_s]:
+            self.min_full[ind_s] = self.full[ind_s]
+
+        if self.basic[ind_s] > self.max_basic[ind_s]:
+            self.max_basic[ind_s] = self.basic[ind_s]
+        elif self.basic[ind_s] < self.min_basic[ind_s]:
+            self.min_basic[ind_s] = self.basic[ind_s]
+
         self.heartbeat[ind_s] = 0
         self.full[ind_s] = 0
         self.basic[ind_s] = 0
+
+    def reset(self, sensor_id):
+        if sensor_id not in self.sensor_id:
+            self.new_sensor(sensor_id)
+
+        ind_s = self.sensor_id.index(sensor_id)
+
+        self.max_heartbeat[ind_s] = 0
+        self.max_full[ind_s] = 0
+        self.max_basic[ind_s] = 0
+
+        self.min_heartbeat[ind_s] = 100000000
+        self.min_full[ind_s] = 100000000
+        self.min_basic[ind_s] = 100000000
 
     def update(self, sensor_id, type):
         if sensor_id not in self.sensor_id:
@@ -2096,7 +2143,9 @@ class Counts:
     def print_counts(self, sensor_id):
         ind_s = self.sensor_id.index(sensor_id)
 
-        output = [self.heartbeat[ind_s], self.full[ind_s], self.basic[ind_s]]
+        output = [[self.heartbeat[ind_s], self.full[ind_s], self.basic[ind_s]],
+                  [self.max_heartbeat[ind_s], self.max_full[ind_s], self.max_basic[ind_s]],
+                  [self.min_heartbeat[ind_s], self.min_full[ind_s], self.min_basic[ind_s]]]
         return output
 
 # # Create a custom nodens.logger
