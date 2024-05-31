@@ -557,11 +557,15 @@ def on_message_sensorN(client, userdata, msg):
                 #print(heartbeat)
                 heartbeat = ""
                 try:
-                    print_diagnostics = (f"\nConnected: {ndns_fns.si.connected_sensors}",
-                                         f"\nPreviously connected: {ndns_fns.si.last_t}")
-                    for sensor_id in ndns_fns.si.connected_sensors:
-                        print_diagnostics = print_diagnostics + (f"\nMax counts (heartbeat,full,basic): {ndns_fns.counts.print_counts(sensor_id)[1]}",
-                                                                 f"\nMin counts (heartbeat,full,basic): {ndns_fns.counts.print_counts(sensor_id)[2]}")
+                    print_diagnostics = (f"\n***************")
+                    for i,sensor_id in enumerate(ndns_fns.si.connected_sensors):
+                        temp_min = nodens.cp.PRINT_FREQ/(ndns_fns.counts.print_counts(sensor_id)[1][1] + ndns_fns.counts.print_counts(sensor_id)[1][2])
+                        temp_max = nodens.cp.PRINT_FREQ/(ndns_fns.counts.print_counts(sensor_id)[2][1] + ndns_fns.counts.print_counts(sensor_id)[2][2])
+                        print_diagnostics += (f"\n{sensor_id} @  {ndns_fns.si.last_t[i]} - "
+                                              f"\n\tFrame times. Min: {temp_min}. Max: {temp_max}."
+                                              f"\n\tMax counts (heartbeat,full,basic): {ndns_fns.counts.print_counts(sensor_id)[1]}"
+                                              f"\n\tMin counts (heartbeat,full,basic): {ndns_fns.counts.print_counts(sensor_id)[2]}"
+                                              f"\n***************")
                     nodens.logger.info(print_diagnostics)
                 except Exception as e:
                     nodens.logger.info(f"Step 2 didn't work: {e.args}")
