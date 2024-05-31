@@ -149,8 +149,6 @@ def on_message_sensorN(client, userdata, msg):
 
                 # Parse TLVs
                 ndns_fns.sd.update(3, data_int, 5)
-                if ndns_fns.sd.message == "EoP":
-                    nodens.logger.warning(f"data: {mqttData['data']}")
                 #ndns_fns.sts.update(ndns_fns.sd,1000)
                 ndns_fns.class_eng.framewise_calculation(ndns_fns.sd, 0)
                 ndns_fns.class_eng.classify()
