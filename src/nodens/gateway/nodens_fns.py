@@ -2055,6 +2055,44 @@ class MessagePipeline:
         else:
             nodens.logger.warning("Sensor index %d does not exist", index)
 
+## ~~~~~~~~~~ MESSAGE DIAGNOSTICS ~~~~~~~~~~~~~~ ##
+class Counts:
+    def __init__(self):
+        self.sensorId = []
+        self.heartbeat = []
+        self.full = []
+        self.basic = []
+
+    def new_sensor(self, sensor_id):
+        self.sensor_id.append(sensor_id)
+        self.heartbeat.append(0)
+        self.full.append(0)
+        self.basic.append(0)
+
+    def initialise(self, sensor_id):
+        if sensor_id not in self.sensor_id:
+            self.new_sensor(sensor_id)
+
+        ind_s = self.sensor_id.index(sensor_id)
+
+        self.heartbeat[ind_s] = 0
+        self.full[ind_s] = 0
+        self.basic[ind_s] = 0
+
+    def update(self, sensor_id, type):
+        if sensor_id not in self.sensor_id:
+            self.new_sensor(sensor_id)
+
+        ind_s = self.sensor_id.index(sensor_id)
+
+        if type == 'hearbeat':
+            self.heartbeat[ind_s] += 1
+        elif type == 'full':
+            self.full[ind_s] += 1
+        elif type == 'basic':
+            self.basic[ind_s] += 1
+        else:
+            nodens.logger.error(f"COUNTS not found. type: {type}")
 
 # # Create a custom nodens.logger
 # nodens.logger = logging.getnodens.logger(__name__)
@@ -2090,4 +2128,5 @@ rcp = radar_config_params()
 sv = sensor_version()
 class_eng = classifierEngine(11,5,100,3200)
 sd = parseTLV(3)
+counts = Counts()
 #sts = sensorTimeSeries()

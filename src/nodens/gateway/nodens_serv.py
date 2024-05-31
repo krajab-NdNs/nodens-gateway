@@ -137,8 +137,10 @@ def on_message_sensorN(client, userdata, msg):
                     data_int.append(data[i+1])
             else:
                 nodens.logger.warning("Data below length 8. Rx: {}".format(data))
+
             # Check if full data packet received
             if str_data == '21436587':
+                ndns_fns.counts.update(mqttData['addr'], 'full')
                 for i in range(len(data)-8):
                     str_data = str_data + str(data[i+8])
                     data_int.append(data[i+8])
@@ -200,8 +202,11 @@ def on_message_sensorN(client, userdata, msg):
                     # Calculate occupant history outputs
                     ind_s = ndns_fns.oh.calculate_outputs(mqttData['addr'])
 
-                    nodens.logger.info(f"SERV Cloud FULL. sensor: {mqttData['addr']}. N frames: {ndns_fns.si.period_N[sen_idx]}. Avg rate: {nodens.cp.CLOUD_WRITE_TIME/ndns_fns.si.period_N[sen_idx]:.2f}")
-
+                    diag_info = (f"SERV Cloud Full. sensor: {mqttData['addr']}.",
+                                    f"Counts (heartbeat,full,basic): {ndns_fns.counts.print_counts(mqttData['addr'])}", 
+                                    f"N frames: {ndns_fns.si.period_N[sen_idx]}. Avg rate: {nodens.cp.CLOUD_WRITE_TIME/ndns_fns.si.period_N[sen_idx]:.2f}")
+                    nodens.logger.info(diag_info)
+                    ndns_fns.counts.initialise(mqttData['addr'])
                     
                     mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
                     # mqttClass = json.loads("{\"Activity detected\": \"" + str(int(ndns_fns.class_eng.activity_alert))
@@ -284,9 +289,10 @@ def on_message_sensorN(client, userdata, msg):
                     ndns_fns.oh.refresh(mqttData['addr'])
 
             elif (mqttData['type'] == 'json'):
-                print("JSON type: {}".format(mqttData))
+                nodens.logger.info("JSON type: {}".format(mqttData))
             # Otherwise process occupancy info
-            else:
+            elif 'heartbeat' not in mqttData:
+                ndns_fns.counts.update(mqttData['addr'], 'basic')
                 ndns_fns.sm.update(mqttData)
                 mqttOcc = json.loads(data)
                 mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
@@ -400,7 +406,11 @@ def on_message_sensorN(client, userdata, msg):
                         # Calculate occupant history outputs
                         ind_s = ndns_fns.oh.calculate_outputs(mqttData['addr'])
 
-                        nodens.logger.info(f"SERV Cloud. sensor: {mqttData['addr']}. N frames: {ndns_fns.si.period_N[sen_idx]}. Avg rate: {nodens.cp.CLOUD_WRITE_TIME/ndns_fns.si.period_N[sen_idx]:.2f}")
+                        diag_info = (f"SERV Cloud. sensor: {mqttData['addr']}.",
+                                     f"Counts (heartbeat,full,basic): {ndns_fns.counts.print_counts(mqttData['addr'])}", 
+                                     f"N frames: {ndns_fns.si.period_N[sen_idx]}. Avg rate: {nodens.cp.CLOUD_WRITE_TIME/ndns_fns.si.period_N[sen_idx]:.2f}")
+                        nodens.logger.info(diag_info)
+                        ndns_fns.counts.initialise(mqttData['addr'])
 
                         
                         mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
@@ -530,6 +540,11 @@ def on_message_sensorN(client, userdata, msg):
                     #print(heartbeat, end='')
                 else:
                     nodens.logger.warning("Another type: {}".format(mqttDataFinal))
+
+            else:
+                ndns_fns.counts.update(mqttData['addr'], 'heartbeat')
+                heartbeat += "."
+                heartbeat = "\r" + heartbeat
 
             ##~~~~~~~~ Print info to screen process ~~~~~~~##
 
