@@ -1152,6 +1152,7 @@ class OccupantHist:
         #self.outputs.__init__()
 
         ind_s = self.sensor_id.index(sensor_id)
+        nodens.logger.info(f"FNS calculate_output. ind_s: {ind_s}")
 
             
         if len(self.outputs) <= ind_s:

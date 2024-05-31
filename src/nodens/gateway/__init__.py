@@ -46,7 +46,7 @@ c_handler.setLevel(logging.INFO)
 f_handler.setLevel(logging.INFO)
 
 # Create formatters and add it to handlers
-c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+c_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 c_handler.setFormatter(c_format)
 f_handler.setFormatter(f_format)

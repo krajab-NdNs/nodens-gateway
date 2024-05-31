@@ -381,6 +381,8 @@ def on_message_sensorN(client, userdata, msg):
                         # Calculate occupant history outputs
                         ndns_fns.oh.calculate_outputs(mqttData['addr'])
 
+                        nodens.logger.info(f"SERV Cloud. sensor: {mqttData['addr']}. N frames: {ndns_fns.si.period_N[sen_idx]}. Avg rate: {nodens.cp.CLOUD_WRITE_TIME/ndns_fns.si.period_N[sen_idx]:.2f}")
+
                         
                         mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
                         # mqttClass = json.loads("{\"Activity detected\": \"" + str(int(ndns_fns.class_eng.activity_alert))
@@ -400,8 +402,7 @@ def on_message_sensorN(client, userdata, msg):
                                         'Y' : ndns_fns.oh.outputs[sen_idx].track_Y
                             }
                         except Exception as e:
-                            nodens.logger.error(f"SERV mqttDataFinal INITIAL {e}. sensor: {mqttData['addr']}. sen_idx: {sen_idx}.",
-                                                f" len oh: {len(ndns_fns.oh.outputs)}.")
+                            nodens.logger.error(f"SERV mqttDataFinal INITIAL {e}. sensor: {mqttData['addr']}. sen_idx: {sen_idx}. len oh: {len(ndns_fns.oh.outputs)}.")
                         try:
                             mqttDataFinal = {**mqttDataFinal,
                                         'Distance moved' : ndns_fns.oh.outputs[sen_idx].distance_moved,
@@ -409,8 +410,7 @@ def on_message_sensorN(client, userdata, msg):
                                         'Presence detected' : ndns_fns.sd.presence.present
                                         }
                         except Exception as e:
-                            nodens.logger.error(f"SERV mqttDataFinal SUPP {e}. sensor: {mqttData['addr']}. sen_idx: {sen_idx}.",
-                                                f" len oh: {len(ndns_fns.oh.outputs)}.")
+                            nodens.logger.error(f"SERV mqttDataFinal SUPP {e}. sensor: {mqttData['addr']}. sen_idx: {sen_idx}. len oh: {len(ndns_fns.oh.outputs)}.")
                             
                         try:
                             mqttDataFinal = {**mqttDataFinal,
@@ -418,8 +418,7 @@ def on_message_sensorN(client, userdata, msg):
                                         'PC energy' : ndns_fns.oh.outputs[sen_idx].pc_energy
                                         }
                         except Exception as e:
-                            nodens.logger.error(f"SERV mqttDataFinal ENERGY {e}. sensor: {mqttData['addr']}. sen_idx: {sen_idx}.",
-                                                f" len oh: {len(ndns_fns.oh.outputs)}.")
+                            nodens.logger.error(f"SERV mqttDataFinal ENERGY {e}. sensor: {mqttData['addr']}. sen_idx: {sen_idx}. len oh: {len(ndns_fns.oh.outputs)}.")
                             
                         try:
                             mqttDataFinal = {**mqttDataFinal,
@@ -427,8 +426,7 @@ def on_message_sensorN(client, userdata, msg):
                                         'Gait distribution' : ndns_fns.oh.outputs[sen_idx].gait_string
                                         }
                         except Exception as e:
-                            nodens.logger.error(f"SERV mqttDataFinal NEW {e}. sensor: {mqttData['addr']}. sen_idx: {sen_idx}.",
-                                                f" len oh: {len(ndns_fns.oh.outputs)}.")
+                            nodens.logger.error(f"SERV mqttDataFinal NEW {e}. sensor: {mqttData['addr']}. sen_idx: {sen_idx}. len oh: {len(ndns_fns.oh.outputs)}.")
                         
                         ndns_fns.class_eng.activity_alert = 0
                         try:
