@@ -552,7 +552,7 @@ def on_message_sensorN(client, userdata, msg):
                     heartbeat += "."
                     heartbeat = "\r" + heartbeat
                 else:
-                    nodens.logger.info(f"Unrecognised type: {json.loads(mqttData)["type"]}. data: {mqttData}")
+                    nodens.logger.info(f"Unrecognised type: {json.loads(mqttData)['type']}. data: {mqttData}")
 
             ##~~~~~~~~ Print info to screen process ~~~~~~~##
 
