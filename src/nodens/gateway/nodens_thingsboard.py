@@ -143,7 +143,7 @@ class tb:
             self.payload["max_occupancy"] = input_data['Maximum period occupancy']
             self.payload["avg_occupancy"] = input_data['Average period occupancy']
         except Exception as e:
-            nodens.logger.error(f"THINGSBOARD: max/avg occupancy error: {e.args}")
+            nodens.logger.error(f"THINGSBOARD: max/avg occupancy error: {e.args} for sensor: {input_data['addr']}")
 
         # Track ID - select tid with highest energy.
         
@@ -171,20 +171,28 @@ class tb:
                 self.payload["gait_distribution"] = f"{input_data['Gait distribution']}"
 
             except Exception as e:
-                nodens.logger.error(f"THINGSBOARD: occupant error: {e.args}")
+                nodens.logger.error(f"THINGSBOARD: occupant error: {e.args} for sensor: {input_data['addr']}")
 
         # ~~~~~~~~~~~ ENERGY ~~~~~~~~~~~~~ #
         try:
             self.payload["track_ud_energy"] = f"{input_data['UD energy']:.2f}"
             self.payload["pc_energy"] = f"{input_data['PC energy']:.2f}"
         except Exception as e:
-            nodens.logger.error(f"THINGSBOARD: energy error: {e.args}")
+            nodens.logger.error(f"THINGSBOARD: energy error: {e.args} for sensor: {input_data['addr']}")
+            try:
+                nodens.logger.error(f"THINGSBOARD. track energy data: {input_data['UD energy']}. pc data: {input_data['PC energy']}")
+            except:
+                pass
         
         # ~~~~~~~~~~~ HEATMAP ~~~~~~~~~~~~~ #
         try:
             self.payload["room_occ_heatmap"] = f"{input_data['Occupancy heatmap']}"
         except Exception as e:
-            nodens.logger.error(f"THINGSBOARD: heatmap error: {e.args}")
+            nodens.logger.error(f"THINGSBOARD: heatmap error: {e.args} for sensor: {input_data['addr']}")
+            try:
+                nodens.logger.error(f"THINGSBOARD: heatmap data: {input_data['Occupancy heatmap']}")
+            except:
+                pass
 
 
                 # self.payload["occ_1_X"] = "-"
@@ -214,7 +222,7 @@ class tb:
             else:
                 self.payload["data_diagnostics"] = input_data['data'] 
         except Exception as e:
-            nodens.logger.error(f"THINGSBOARD: diagnostics error: {e.args}")   
+            nodens.logger.error(f"THINGSBOARD: diagnostics error: {e.args} for sensor: {input_data['addr']}")   
         
     def prepare_log(self, log_msg):
         # Initialize payload

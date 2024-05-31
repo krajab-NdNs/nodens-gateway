@@ -1203,6 +1203,8 @@ class OccupantHist:
                 self.delete_track(sensor_id,track,mark_to_delete=0)
         self.track_del_flag[ind_s] = []
 
+        return ind_s
+
 
     
     # Class to define outputs
