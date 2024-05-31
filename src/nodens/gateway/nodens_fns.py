@@ -1846,6 +1846,7 @@ class parseTLV:
         self.ud = MicroDoppler()
         self.vs = VitalSigns()
         self.presence = PresenceDetect()
+        self.message = []   # Use this to save any relevant messages to pass on to main process
 
     def update(self, version, data, Nud):
         if (version == 3):
@@ -1859,6 +1860,7 @@ class parseTLV:
         j = hl
         flag_track = False
         flag_pc = False
+        self.message = []
         while (j < self.packet_len):
             if (data[j:j+4] == [6,0,0,0]):
                 flag_pc = True
@@ -1918,10 +1920,11 @@ class parseTLV:
             dataN = data[j:j+lenN]
             j += lenN
         else:
-            nodens.logger.warning(f"End of data packet with remaining data: {data[j:]}")
+            nodens.logger.warning(f"End of data packet with remaining data: {data[j:]}. j: {j}. packet_length: {self.packet_len}")
             j = 65535
             lenN = 0
             dataN = []
+            self.message = "EoP"
         
         return j,lenN,dataN
 
