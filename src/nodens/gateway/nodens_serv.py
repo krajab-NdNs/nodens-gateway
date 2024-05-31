@@ -128,7 +128,6 @@ def on_message_sensorN(client, userdata, msg):
                 data = base64.b64decode(mqttData['data'])
             except:
                 data = mqttData['data']
-                nodens.logger.info(f"\n\nraw data: {data}")
             str_data = str(data[0])
             data_int = [data[0]]
 
@@ -290,7 +289,7 @@ def on_message_sensorN(client, userdata, msg):
                     ndns_fns.oh.refresh(mqttData['addr'])
 
             elif (mqttData['type'] == 'json'):
-                nodens.logger.info("JSON type: {}".format(mqttData))
+                nodens.logger.debug("JSON type: {}".format(mqttData))
             # Otherwise process occupancy info
             elif "type" not in json.loads(data):
                 ndns_fns.counts.update(mqttData['addr'], 'basic')
