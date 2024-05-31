@@ -129,7 +129,6 @@ def thingsboard_thread(pipeline):
 
             for i in range(len(nodens_thingsboard.TB.client_sub)):
                 if nodens_thingsboard.TB.client_sub[i]._userdata != []:
-                    print(nodens_thingsboard.TB.client_sub[i]._userdata)
                     nodens_thingsboard.TB.client_sub[i]._userdata = []
         except Exception as e:
             nodens.logger.error(f"THINGSBOARD: thread error: {e.args}")

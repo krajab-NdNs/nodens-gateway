@@ -139,8 +139,11 @@ class tb:
         #self.payload["num_occupants"] = input_data['Number of Occupants']
 
         #self.payload["min_occupants"] = input_data['Minimum period occupancy']
-        self.payload["max_occupancy"] = input_data['Maximum period occupancy']
-        self.payload["avg_occupancy"] = input_data['Average period occupancy']
+        try:
+            self.payload["max_occupancy"] = input_data['Maximum period occupancy']
+            self.payload["avg_occupancy"] = input_data['Average period occupancy']
+        except Exception as e:
+            nodens.logger.error(f"THINGSBOARD: max/avg occupancy error: {e.args}")
 
         # Track ID - select tid with highest energy.
         
@@ -158,8 +161,6 @@ class tb:
                 # ~~~~~~~~~~~ ACTIVITY ~~~~~~~~~~~~~ #
                 self.payload["dist_moved"] = f"{input_data['Distance moved']:.2f}"
                 self.payload["was_active_this_period"] = input_data['Was active']
-                self.payload["track_ud_energy"] = f"{input_data['UD energy']:.2f}"
-                self.payload["pc_energy"] = f"{input_data['PC energy']:.2f}"
                 # self.payload["most_inactive_track"] = input_data['Most inactive track']
                 # self.payload["most_inactive_time"] = input_data['Most inactive time']
 
@@ -170,14 +171,20 @@ class tb:
                 self.payload["gait_distribution"] = f"{input_data['Gait distribution']}"
 
             except Exception as e:
-                nodens.logger.debug(f"THINGSBOARD: occupant error: {e.args}")
+                nodens.logger.error(f"THINGSBOARD: occupant error: {e.args}")
 
         # ~~~~~~~~~~~ ENERGY ~~~~~~~~~~~~~ #
-        self.payload["track_ud_energy"] = f"{input_data['UD energy']:.2f}"
-        self.payload["pc_energy"] = f"{input_data['PC energy']:.2f}"
+        try:
+            self.payload["track_ud_energy"] = f"{input_data['UD energy']:.2f}"
+            self.payload["pc_energy"] = f"{input_data['PC energy']:.2f}"
+        except Exception as e:
+            nodens.logger.error(f"THINGSBOARD: energy error: {e.args}")
         
         # ~~~~~~~~~~~ HEATMAP ~~~~~~~~~~~~~ #
-        self.payload["room_occ_heatmap"] = f"{input_data['Occupancy heatmap']}"
+        try:
+            self.payload["room_occ_heatmap"] = f"{input_data['Occupancy heatmap']}"
+        except Exception as e:
+            nodens.logger.error(f"THINGSBOARD: heatmap error: {e.args}")
 
 
                 # self.payload["occ_1_X"] = "-"
@@ -201,11 +208,13 @@ class tb:
         # ~~~~~~~~~~~ DIAGNOSTICS ~~~~~~~~~~~~~ #
 
         # Full data
-        if input_data['Full data flag'] == 0:
-            self.payload["data_diagnostics"] = input_data['data'] 
-        else:
-            self.payload["data_diagnostics"] = input_data['data'] 
-            #self.payload["data_diagnostics"] = input_data['data']      
+        try:
+            if input_data['Full data flag'] == 0:
+                self.payload["data_diagnostics"] = input_data['data'] 
+            else:
+                self.payload["data_diagnostics"] = input_data['data'] 
+        except Exception as e:
+            nodens.logger.error(f"THINGSBOARD: diagnostics error: {e.args}")   
         
     def prepare_log(self, log_msg):
         # Initialize payload
@@ -250,7 +259,7 @@ class tb:
         try:
             json_message = json.dumps(self.payload)
         except Exception as e:
-            nodens.logger.error(f"THINGSBOARD: {e.args}. Payload:{self.payload}")
+            nodens.logger.error(f"THINGSBOARD multiline payload json error: {e.args}. Payload:{self.payload}")
 
         flag = 0
         while flag == 0:

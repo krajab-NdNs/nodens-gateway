@@ -942,7 +942,6 @@ class OccupantHist:
                 # Record new values if track did not previously exist
                 #if track_id != []:
                 try:
-                    nodens.logger.info("NEW TRACK 1")
                     self.new_track(sensor_id,track_id,X,Y,new_sensor_flag=0)
                 except Exception as e:
                     nodens.logger.error(f"OH.update new_track 1. e: {e}")
@@ -953,7 +952,6 @@ class OccupantHist:
                     nodens.logger.error(f"OH.update new_sensor. e: {e}")
             if track_id != []:
                 try:
-                    nodens.logger.info("NEW TRACK 2")
                     self.new_track(sensor_id,track_id,X,Y,new_sensor_flag=1)
                 except Exception as e:
                     nodens.logger.error(f"OH.update new_track 2. e: {e}")

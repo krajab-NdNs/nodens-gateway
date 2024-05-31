@@ -278,7 +278,7 @@ def on_message_sensorN(client, userdata, msg):
                 ndns_fns.si.update_short(sen_idx, T, mqttDataFinal)
                 
                 if ('Number of Occupants' in mqttDataFinal):
-                    mqttDataTemp = [T.strftime("%H:%M:%S")]
+                    mqttDataTemp = [T.strftime("%Y-%m-%dZ%H:%M:%S")]
                     mqttDataTemp.append(mqttData['addr'])
                     #ndns_fns.si.num_occ[sen_idx] = mqttDataFinal['Number of Occupants']
                     mqttDataTemp.append(mqttDataFinal['Number of Occupants'])
@@ -395,19 +395,40 @@ def on_message_sensorN(client, userdata, msg):
                                         'Full data flag' : 0}
                         try:
                             mqttDataFinal = {**mqttDataFinal,
-                                            'Track id' : ndns_fns.oh.outputs[sen_idx].track_id,
-                                            'X' : ndns_fns.oh.outputs[sen_idx].track_X,
-                                            'Y' : ndns_fns.oh.outputs[sen_idx].track_Y,
-                                            'Distance moved' : ndns_fns.oh.outputs[sen_idx].distance_moved,
-                                            'Was active' : ndns_fns.oh.outputs[sen_idx].was_active,
-                                            'UD energy' : ndns_fns.oh.outputs[sen_idx].ud_energy,
-                                            'PC energy' : ndns_fns.oh.outputs[sen_idx].pc_energy,
-                                            'Presence detected' : ndns_fns.sd.presence.present,
-                                            'Occupancy heatmap' : ndns_fns.oh.outputs[sen_idx].heatmap_string,
-                                            'Gait distribution' : ndns_fns.oh.outputs[sen_idx].gait_string
-                                            }
+                                        'Track id' : ndns_fns.oh.outputs[sen_idx].track_id,
+                                        'X' : ndns_fns.oh.outputs[sen_idx].track_X,
+                                        'Y' : ndns_fns.oh.outputs[sen_idx].track_Y
+                            }
                         except Exception as e:
-                            nodens.logger.error(f"{e}. sen_idx: {sen_idx}. len oh: {len(ndns_fns.oh.outputs)}")
+                            nodens.logger.error(f"SERV mqttDataFinal INITIAL {e}. sensor: {mqttData['addr']}. sen_idx: {sen_idx}.",
+                                                f" len oh: {len(ndns_fns.oh.outputs)}.")
+                        try:
+                            mqttDataFinal = {**mqttDataFinal,
+                                        'Distance moved' : ndns_fns.oh.outputs[sen_idx].distance_moved,
+                                        'Was active' : ndns_fns.oh.outputs[sen_idx].was_active,
+                                        'Presence detected' : ndns_fns.sd.presence.present
+                                        }
+                        except Exception as e:
+                            nodens.logger.error(f"SERV mqttDataFinal SUPP {e}. sensor: {mqttData['addr']}. sen_idx: {sen_idx}.",
+                                                f" len oh: {len(ndns_fns.oh.outputs)}.")
+                            
+                        try:
+                            mqttDataFinal = {**mqttDataFinal,
+                                        'UD energy' : ndns_fns.oh.outputs[sen_idx].ud_energy,
+                                        'PC energy' : ndns_fns.oh.outputs[sen_idx].pc_energy
+                                        }
+                        except Exception as e:
+                            nodens.logger.error(f"SERV mqttDataFinal ENERGY {e}. sensor: {mqttData['addr']}. sen_idx: {sen_idx}.",
+                                                f" len oh: {len(ndns_fns.oh.outputs)}.")
+                            
+                        try:
+                            mqttDataFinal = {**mqttDataFinal,
+                                        'Occupancy heatmap' : ndns_fns.oh.outputs[sen_idx].heatmap_string,
+                                        'Gait distribution' : ndns_fns.oh.outputs[sen_idx].gait_string
+                                        }
+                        except Exception as e:
+                            nodens.logger.error(f"SERV mqttDataFinal NEW {e}. sensor: {mqttData['addr']}. sen_idx: {sen_idx}.",
+                                                f" len oh: {len(ndns_fns.oh.outputs)}.")
                         
                         ndns_fns.class_eng.activity_alert = 0
                         try:
