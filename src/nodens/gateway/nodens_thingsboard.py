@@ -180,7 +180,7 @@ class tb:
         except Exception as e:
             nodens.logger.error(f"THINGSBOARD: energy error: {e.args} for sensor: {input_data['addr']}")
             try:
-                nodens.logger.error(f"THINGSBOARD. track energy data: {input_data['UD energy']}. pc data: {input_data['PC energy']}")
+                nodens.logger.error(f"THINGSBOARD. track energy data: {input_data['UD energy']}. pc data: {input_data['PC energy']}. occupancy: {input_data['Average period occupancy']}")
             except:
                 pass
         
@@ -190,7 +190,7 @@ class tb:
         except Exception as e:
             nodens.logger.error(f"THINGSBOARD: heatmap error: {e.args} for sensor: {input_data['addr']}")
             try:
-                nodens.logger.error(f"THINGSBOARD: heatmap data: {input_data['Occupancy heatmap']}")
+                nodens.logger.error(f"THINGSBOARD: heatmap data: {input_data['Occupancy heatmap']}. occupancy: {input_data['Average period occupancy']}")
             except:
                 pass
 
