@@ -128,7 +128,7 @@ def on_message_sensorN(client, userdata, msg):
                 data = base64.b64decode(mqttData['data'])
                 nodens.logger.info(f"data: {data}")
                 nodens.logger.info(f"{json.loads(data)}")
-                nodens.logger.info(f"{json.loads(data)["type"]}")
+                nodens.logger.info(f"{json.loads(data)['type']}")
             except:
                 data = mqttData['data']
             str_data = str(data[0])
