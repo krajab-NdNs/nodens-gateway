@@ -2063,7 +2063,7 @@ class Counts:
         self.full = []
         self.basic = []
 
-        self.max_hearbeat = []
+        self.max_heartbeat = []
         self.max_full = []
         self.max_basic = []
 
