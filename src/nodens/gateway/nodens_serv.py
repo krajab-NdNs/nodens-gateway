@@ -296,7 +296,7 @@ def on_message_sensorN(client, userdata, msg):
             elif (mqttData['type'] == 'json'):
                 nodens.logger.info("JSON type: {}".format(mqttData))
             # Otherwise process occupancy info
-            elif json.loads(data)["type"] != 'heartbeat':
+            elif "type" not in json.loads(data):
                 ndns_fns.counts.update(mqttData['addr'], 'basic')
                 ndns_fns.sm.update(mqttData)
                 mqttOcc = json.loads(data)
@@ -547,9 +547,12 @@ def on_message_sensorN(client, userdata, msg):
                     nodens.logger.warning("Another type: {}".format(mqttDataFinal))
 
             else:
-                ndns_fns.counts.update(mqttData['addr'], 'heartbeat')
-                heartbeat += "."
-                heartbeat = "\r" + heartbeat
+                if json.loads(mqttData)["type"] == 'heartbeat':
+                    ndns_fns.counts.update(mqttData['addr'], 'heartbeat')
+                    heartbeat += "."
+                    heartbeat = "\r" + heartbeat
+                else:
+                    nodens.logger.info(f"Unrecognised type: {json.loads(mqttData)["type"]}. data: {mqttData}")
 
             ##~~~~~~~~ Print info to screen process ~~~~~~~##
 
