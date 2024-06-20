@@ -134,7 +134,7 @@ def thingsboard_thread(pipeline):
             nodens_thingsboard.TB.subscribe_to_attributes(ndns_fns.si.connected_sensors)
 
             # Check if the mssage to send is a config (attribute)
-            nodens.logger.warning("TB pipeline")
+            nodens.logger.warning(f"TB pipeline: {message}")
             if "type" in message:
                 if message["type"] == "CONFIG":
                     nodens_thingsboard.TB.publish_config(message["addr"], message["payload"])
