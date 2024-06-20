@@ -58,53 +58,15 @@ class radar_config_params:
                 "staticBoundaryBox -2 2 2 5.5 0 3",
                 "boundaryBox -2.5 2.5 0.5 6 0 3",
                 "sensorPosition 1 0 0",
-                "gatingParam 3 2 2 2 4",    # 25
-                "stateParam 3 3 20 65500 5 65500",
-                "allocationParam 40 100 0.025 50 0.8 20",
+                "gatingParam 3 1.5 1.5 2 4",    # 25
+                "stateParam 3 3 12 65500 5 65500",
+                "allocationParam 40 100 0.025 20 0.8 20",
                 "maxAcceleration 0.1 0.1 0.1",
-                "trackingCfg 1 2 800 20 46 96 55",
+                "trackingCfg 1 2 800 15 46 96 55",
                 "presenceBoundaryBox -4 4 0.5 6 0 3",   # 30
                 "sensorStart"
                 ]
         
-        # Sensor target # 
-        self.SENSOR_TARGET = []
-        self.SENSOR_ROOT = '807d3abc9ba0'
-        self.SENSOR_TOPIC = 'mesh/' + self.SENSOR_ROOT + '/toDevice'
-        self.SENSOR_PORT = 1883
-
-        # Scanning config #
-        self.SCAN_TIME = 60 # Seconds between scans
-        self.FULL_DATA_FLAG = 0 # 1 = Capture full-data for diagnostics
-        self.FULL_DATA_TIME = 60 # Seconds between full-data captures
-
-        # Radar config #
-        self.RADAR_SEND_FLAG = 0 # 1 = Send radar config
-        # Note: Sensor located at origin (X,Y) = (0,0). Z-axis is room height. By default, sensor points along Y-axis.
-        self.ROOM_X_MIN = "-5"
-        self.ROOM_X_MAX = "5"
-        self.ROOM_Y_MIN = "0.25"
-        self.ROOM_Y_MAX = "10"
-        self.ROOM_Z_MIN = "-0.5"
-        self.ROOM_Z_MAX = "2"
-        # Static monitoring area
-        self.MONITOR_X = str(float(self.ROOM_X_MIN) + 0.5) + "," + str(float(self.ROOM_X_MAX) - 0.5)
-        self.MONITOR_Y = "0.5 ," + str(float(self.ROOM_Y_MAX) - 0.5)
-        self.MONITOR_Z = "-0.5, 2" #str(self.ROOM_Z_MIN + 0.5) + "," + str(self.ROOM_Z_MAX - 0.5)
-        # Notes on sensor orientation. 
-        # Default: (Yaw,Pitch) = (0,0) which points along the Y-axis.
-        # Units: degrees.
-        # Yaw: rotation around Z-axis (side-to-side). Clockwise is +ve.
-        # Pitch: rotation around X-axis (up-down). Upwards is +ve.
-        self.SENSOR_YAW = 0
-        self.SENSOR_PITCH = 0
-        self.SENSITIVITY = 1
-        self.OCC_SENSITIVITY = 1
-
-        # Entry config #
-        self.ENTRY_FLAG = 0
-        self.ENTRY_X = []
-        self.ENTRY_Y = []
 
         # Bed config #
         self.BED_FLAG = 0
@@ -144,8 +106,8 @@ class radar_config_params:
                 "staticBoundaryBox -2 2 2 5.5 0 3",
                 "boundaryBox -2.5 2.5 0.5 6 0 3",
                 "sensorPosition 1.2 0 0",
-                "gatingParam 3 2 2 2 4",    # 25
-                "stateParam 20 3 200 500 50 6000",
+                "gatingParam 3 1.5 1.5 2 4",    # 25
+                "stateParam 3 3 12 1000 5 6000",
                 "allocationParam 80 200 0.1 40 0.5 20",
                 "maxAcceleration 0.1 0.1 0.1",
                 "trackingCfg 1 2 800 20 46 96 55",
@@ -193,24 +155,26 @@ class radar_config_params:
             temp = raw[len("boundaryBox")+1:]
             temp = temp.split(" ")
 
-            self.ROOM_X_MIN = temp[0].strip()
-            self.ROOM_X_MAX = (temp[1]).strip()
-            self.ROOM_Y_MIN = (temp[2]).strip()
-            self.ROOM_Y_MAX = (temp[3]).strip()
-            self.ROOM_Z_MIN = (temp[4]).strip()
-            self.ROOM_Z_MAX = (temp[5]).strip()
+            self.ROOM_X = temp[0] + "," + temp[1]
+            self.ROOM_Y = temp[2] + "," + temp[3]
+            self.ROOM_Z = temp[4] + "," + temp[5]
 
         if "staticBoundaryBox" in raw:
             temp = raw[len("staticBoundaryBox")+1:]
             temp = temp.split(" ")
 
-            self.MONITOR_X = temp[0].strip() + "," + temp[1].strip()
-            self.MONITOR_Y = temp[2].strip() + "," + temp[3].strip()
-            self.MONITOR_Z = temp[4].strip() + "," + temp[5].strip()
+            self.MONITOR_X = temp[0] + "," + temp[1]
+            self.MONITOR_Y = temp[2] + "," + temp[3]
+            self.MONITOR_Z = temp[4] + "," + temp[5]
+
+        if "compRangeBiasAndRxChanPhase" in raw:
+            temp = raw[len("compRangeBiasAndRxChanPhase")+1:]
+
+            self.RADAR_CAL = temp
 
 
 # Parse updated sensor configuration file #
-def parse_config(config_file, EntryWays, rcp, cp, rate_unit = 0.5):
+def parse_config(config_file, EntryWays, rcp, cp, rate_unit = 0.25):
     ## ~~~~~~~ UPDATE CONFIGURATION ~~~~~~~ ##
     #rcp = ndns_fns.radar_config_params()
     #ndns_fns.rcp = ndns_fns.radar_config_params()
@@ -223,44 +187,41 @@ def parse_config(config_file, EntryWays, rcp, cp, rate_unit = 0.5):
         nodens.logger.debug(config['Sensor target']['SENSOR_ID'])
 
         # Sensor target #
-        rcp.SENSOR_ROOT = (get_config(config,'Sensor target', rcp.SENSOR_ROOT, 'ROOT_ID'))
-        rcp.SENSOR_TARGET = (get_config(config,'Sensor target', rcp.SENSOR_TARGET, 'SENSOR_ID'))
+        nodens.cp.SENSOR_ROOT = (get_config(config,'Sensor target', nodens.cp.SENSOR_ROOT, 'ROOT_ID'))
+        nodens.cp.SENSOR_TARGET = (get_config(config,'Sensor target', nodens.cp.SENSOR_TARGET, 'SENSOR_ID'))
         try:
-            rcp.SENSOR_TOPIC = config.get('Sensor target', 'SENSOR_TOPIC').partition('#')[0]  
+            nodens.cp.SENSOR_TOPIC = config.get('Sensor target', 'SENSOR_TOPIC').partition('#')[0]  
         except:
-            rcp.SENSOR_TOPIC = 'mesh/' + rcp.SENSOR_ROOT + '/toDevice'
-            nodens.logger.debug('{} not specified in config file. Default value used: {}'.format('SENSOR_TOPIC', rcp.SENSOR_TOPIC))
+            nodens.cp.SENSOR_TOPIC = 'mesh/' + nodens.cp.SENSOR_ROOT + '/toDevice'
+            nodens.logger.debug('{} not specified in config file. Default value used: {}'.format('SENSOR_TOPIC', nodens.cp.SENSOR_TOPIC))
         else:
-            rcp.SENSOR_TOPIC = config.get('Sensor target', 'SENSOR_TOPIC').partition('#')[0].rstrip()
-        if not bool(rcp.SENSOR_TOPIC):
-            rcp.SENSOR_TOPIC = '#'
-        nodens.logger.debug('Topic = {}'.format(rcp.SENSOR_TOPIC))
+            nodens.cp.SENSOR_TOPIC = config.get('Sensor target', 'SENSOR_TOPIC').partition('#')[0].rstrip()
+        if not bool(nodens.cp.SENSOR_TOPIC):
+            nodens.cp.SENSOR_TOPIC = '#'
+        nodens.logger.debug('Topic = {}'.format(nodens.cp.SENSOR_TOPIC))
 
         # Scanning config #
-        rcp.SCAN_TIME = float(get_config(config,'Scanning config', rcp.SCAN_TIME, 'SCAN_TIME'))
-        rcp.FULL_DATA_FLAG = int(get_config(config,'Scanning config', rcp.FULL_DATA_FLAG, 'FULL_DATA_FLAG'))
-        rcp.FULL_DATA_TIME = float(get_config(config,'Scanning config', rcp.FULL_DATA_TIME, 'FULL_DATA_TIME'))
+        nodens.cp.SCAN_TIME = float(get_config(config,'Scanning config', nodens.cp.SCAN_TIME, 'SCAN_TIME'))
+        nodens.cp.FULL_DATA_FLAG = int(get_config(config,'Scanning config', nodens.cp.FULL_DATA_FLAG, 'FULL_DATA_FLAG'))
+        nodens.cp.FULL_DATA_TIME = float(get_config(config,'Scanning config', nodens.cp.FULL_DATA_TIME, 'FULL_DATA_TIME'))
 
         # Radar config #
-        rcp.RADAR_SEND_FLAG = int(get_config(config,'Radar config', rcp.RADAR_SEND_FLAG, 'RADAR_SEND_FLAG'))
-        rcp.ROOM_X_MIN = (get_config(config,'Radar config', rcp.ROOM_X_MIN, 'ROOM_X_MIN'))
-        rcp.ROOM_X_MAX = (get_config(config,'Radar config', rcp.ROOM_X_MAX, 'ROOM_X_MAX'))
-        rcp.ROOM_Y_MIN = (get_config(config,'Radar config', rcp.ROOM_Y_MIN, 'ROOM_Y_MIN'))
-        rcp.ROOM_Y_MAX = (get_config(config,'Radar config', rcp.ROOM_Y_MAX, 'ROOM_Y_MAX'))
-        rcp.ROOM_Z_MIN = (get_config(config,'Radar config', rcp.ROOM_Z_MIN, 'ROOM_Z_MIN'))
-        rcp.ROOM_Z_MAX = (get_config(config,'Radar config', rcp.ROOM_Z_MAX, 'ROOM_Z_MAX'))
-        rcp.MONITOR_X = (get_config(config,'Radar config', rcp.MONITOR_X, 'MONITOR_X'))
-        rcp.MONITOR_Y = (get_config(config,'Radar config', rcp.MONITOR_Y, 'MONITOR_Y'))
-        rcp.MONITOR_Z = (get_config(config,'Radar config', rcp.MONITOR_Z, 'MONITOR_Z'))
-        rcp.SENSOR_YAW = float(get_config(config,'Radar config', rcp.SENSOR_YAW, 'SENSOR_YAW'))
-        rcp.SENSOR_PITCH = float(get_config(config,'Radar config', rcp.SENSOR_PITCH, 'SENSOR_PITCH'))
-        rcp.SENSITIVITY = (get_config(config,'Radar config', rcp.SENSITIVITY, 'SENSITIVITY'))
-        rcp.OCC_SENSITIVITY = (get_config(config,'Radar config', rcp.OCC_SENSITIVITY, 'OCC_SENSITIVITY'))
+        nodens.cp.RADAR_SEND_FLAG = int(get_config(config,'Radar config', nodens.cp.RADAR_SEND_FLAG, 'RADAR_SEND_FLAG'))
+        nodens.cp.ROOM_X = (get_config(config,'Radar config', nodens.cp.ROOM_X, 'ROOM_X'))
+        nodens.cp.ROOM_Y = (get_config(config,'Radar config', nodens.cp.ROOM_Y, 'ROOM_Y'))
+        nodens.cp.ROOM_Z = (get_config(config,'Radar config', nodens.cp.ROOM_Z, 'ROOM_Z'))
+        nodens.cp.MONITOR_X = (get_config(config,'Radar config', nodens.cp.MONITOR_X, 'MONITOR_X'))
+        nodens.cp.MONITOR_Y = (get_config(config,'Radar config', nodens.cp.MONITOR_Y, 'MONITOR_Y'))
+        nodens.cp.MONITOR_Z = (get_config(config,'Radar config', nodens.cp.MONITOR_Z, 'MONITOR_Z'))
+        nodens.cp.SENSOR_YAW = float(get_config(config,'Radar config', nodens.cp.SENSOR_YAW, 'SENSOR_YAW'))
+        nodens.cp.SENSOR_PITCH = float(get_config(config,'Radar config', nodens.cp.SENSOR_PITCH, 'SENSOR_PITCH'))
+        nodens.cp.SENSITIVITY = (get_config(config,'Radar config', nodens.cp.SENSITIVITY, 'SENSITIVITY'))
+        nodens.cp.OCC_SENSITIVITY = (get_config(config,'Radar config', nodens.cp.OCC_SENSITIVITY, 'OCC_SENSITIVITY'))
 
         # Entry config #
-        rcp.ENTRY_FLAG = int(get_config(config,'Entry config', rcp.ENTRY_FLAG, 'ENTRY_FLAG'))
-        rcp.ENTRY_X = get_config(config,'Entry config', rcp.ENTRY_X, 'ENTRY_X')
-        rcp.ENTRY_Y = get_config(config,'Entry config', rcp.ENTRY_Y, 'ENTRY_Y')
+        nodens.cp.ENTRY_FLAG = int(get_config(config,'Entry config', nodens.cp.ENTRY_FLAG, 'ENTRY_FLAG'))
+        nodens.cp.ENTRY_X = get_config(config,'Entry config', nodens.cp.ENTRY_X, 'ENTRY_X')
+        nodens.cp.ENTRY_Y = get_config(config,'Entry config', nodens.cp.ENTRY_Y, 'ENTRY_Y')
   
     else:
         nodens.logger.warning('No config file. Default values used.')
@@ -268,51 +229,55 @@ def parse_config(config_file, EntryWays, rcp, cp, rate_unit = 0.5):
     # Check sensor version and update config #
     #sv.request(client, rcp.SENSOR_TOPIC, rcp.SENSOR_TARGET)
     sendCMDtoSensor.request_version(rcp,cp,sv)
+    sendCMDtoSensor.request_config(rcp,cp)
+    time.sleep(5)
     if len(rcp.config_radar) == 0:
         rcp.config_dim(sv.radar_dim)
     
     # Parse Publish rates to payload #
     # rate_unit = Baseline data transmission rate
-    config_pub_rate = "CMD: PUBLISH RATE: " + str(round(rcp.SCAN_TIME/rate_unit))
-    payload_msg = [{ "addr" : [rcp.SENSOR_TARGET],
+    config_pub_rate = "CMD: PUBLISH RATE: " + str(round(nodens.cp.SCAN_TIME/rate_unit))
+    payload_msg = [{ "addr" : [nodens.cp.SENSOR_TARGET],
                         "type" : "json",
                         "data" : config_pub_rate + "\n"}]
 
-    if rcp.FULL_DATA_FLAG:
-        config_full_data = "CMD: FULL DATA ON. RATE: " + str(max(1,rcp.FULL_DATA_TIME/rcp.SCAN_TIME))
-        print(f"\nrate_unit: {rate_unit}s. SCAN TIME: {rcp.SCAN_TIME}s. PUBLISH RATE: {str(round(rcp.SCAN_TIME/rate_unit))}. FULL DATA RATE: {str(max(1,rcp.FULL_DATA_TIME/rcp.SCAN_TIME))}.\n")
+    if nodens.cp.FULL_DATA_FLAG:
+        config_full_data = "CMD: FULL DATA ON. RATE: " + str(max(1,nodens.cp.FULL_DATA_TIME/nodens.cp.SCAN_TIME))
+        nodens.logger.info(f"\nrate_unit: {rate_unit}s. SCAN TIME: {nodens.cp.SCAN_TIME}s. PUBLISH RATE: {str(round(nodens.cp.SCAN_TIME/rate_unit))}. FULL DATA RATE: {str(max(1,nodens.cp.FULL_DATA_TIME/nodens.cp.SCAN_TIME))}.\n")
     else:
         config_full_data = "CMD: FULL DATA OFF."
-        print(f"\nrate_unit: {rate_unit}s. SCAN TIME: {rcp.SCAN_TIME}s. PUBLISH RATE: {str(round(rcp.SCAN_TIME/rate_unit))}. FULL DATA OFF.\n")
+        nodens.logger.info(f"\nrate_unit: {rate_unit}s. SCAN TIME: {nodens.cp.SCAN_TIME}s. PUBLISH RATE: {str(round(nodens.cp.SCAN_TIME/rate_unit))}. FULL DATA OFF.\n")
         
-    payload_msg.append({ "addr" : [rcp.SENSOR_TARGET],
+    payload_msg.append({ "addr" : [nodens.cp.SENSOR_TARGET],
                     "type" : "json",
                     "data" : config_full_data + "\n"})
         
     # Send radar config #
-    if rcp.RADAR_SEND_FLAG:
+    if nodens.cp.RADAR_SEND_FLAG:
         # Occupant tracker sensitivity #
         # NOTE: only implemented for 2D so far
         if sv.radar_dim == 2:
             param_temp = rcp.config_radar[12].split(" ")
-            param_temp[1] = str(round(np.exp(1.8/float(rcp.OCC_SENSITIVITY)+2.1)))
-            param_temp[2] = str(round(np.exp(0.7/float(rcp.OCC_SENSITIVITY)+5.3)))
-            param_temp[4] = str(round(np.exp(0.7/float(rcp.OCC_SENSITIVITY)+2)))
+            param_temp[1] = str(round(np.exp(1.8/float(nodens.cp.OCC_SENSITIVITY)+2.1)))
+            param_temp[2] = str(round(np.exp(0.7/float(nodens.cp.OCC_SENSITIVITY)+5.3)))
+            param_temp[4] = str(round(np.exp(0.7/float(nodens.cp.OCC_SENSITIVITY)+2)))
             rcp.config_radar[12] = " ".join(param_temp)
             nodens.logger.debug(rcp.config_radar[12])
 
         # Radar sensitivity #
         if sv.radar_dim == 2:
             param_temp = rcp.config_radar[10].split(" ")
-            param_temp[10] = str(round(np.exp(0.7/float(rcp.SENSITIVITY)+2.3)))
-            param_temp[11] = str(round(np.exp(0.5/float(rcp.SENSITIVITY)+3)))
+            param_temp[10] = str(round(np.exp(0.7/float(nodens.cp.SENSITIVITY)+2.3)))
+            param_temp[11] = str(round(np.exp(0.5/float(nodens.cp.SENSITIVITY)+3)))
             rcp.config_radar[10] = " ".join(param_temp)
             nodens.logger.debug(rcp.config_radar[10])
          
         # Room size #
         if sv.radar_dim == 2:
             param_temp = rcp.config_radar[15].split(" ")
-            param_temp[1:5] = [str(rcp.ROOM_X_MIN), str(rcp.ROOM_X_MAX), str(rcp.ROOM_Y_MIN), str(rcp.ROOM_Y_MAX)]
+            temp_x = nodens.cp.ROOM_X.split(',')
+            temp_y = nodens.cp.ROOM_Y.split(',')
+            param_temp[1:5] = [temp_x[0].strip(), temp_x[1].strip(), temp_y[0].strip(), temp_y[1].strip()]
             rcp.config_radar[15] = " ".join(param_temp)
             nodens.logger.debug(rcp.config_radar[15])
         elif sv.radar_dim == 3:
@@ -324,10 +289,10 @@ def parse_config(config_file, EntryWays, rcp, cp, rate_unit = 0.5):
                     break
                 elif "staticBoundaryBox " in rcp.config_radar[i]:  
                     param_temp = rcp.config_radar[i].split(" ")
-                    temp_x = rcp.MONITOR_X.split(',')
-                    temp_y = rcp.MONITOR_Y.split(',')
-                    temp_z = rcp.MONITOR_Z.split(',')
-                    param_temp[1:7] = [temp_x[0], temp_x[1], temp_y[0], temp_y[1], temp_z[0], temp_z[1]]
+                    temp_x = nodens.cp.MONITOR_X.split(',')
+                    temp_y = nodens.cp.MONITOR_Y.split(',')
+                    temp_z = nodens.cp.MONITOR_Z.split(',')
+                    param_temp[1:7] = [temp_x[0].strip(), temp_x[1].strip(), temp_y[0].strip(), temp_y[1].strip(), temp_z[0].strip(), temp_z[1].strip()]
                     rcp.config_radar[i] = " ".join(param_temp)
                     nodens.logger.debug(rcp.config_radar[i])
                     break
@@ -337,15 +302,16 @@ def parse_config(config_file, EntryWays, rcp, cp, rate_unit = 0.5):
 
             # Boundary - 23
             i = 0
-            print("len:{}.".format(len(rcp.config_radar)))
             while True:
                 if i == len(rcp.config_radar):
                     nodens.logger.warning("Config error: {} not found!)".format("boundaryBox "))
                     break
                 elif "boundaryBox " in rcp.config_radar[i]:  
-                    print("len:{}. cfg:{}".format(len(rcp.config_radar),rcp.config_radar[i]))
                     param_temp = rcp.config_radar[i].split(" ")
-                    param_temp[1:7] = [str(rcp.ROOM_X_MIN), str(rcp.ROOM_X_MAX), str(rcp.ROOM_Y_MIN), str(rcp.ROOM_Y_MAX), str(rcp.ROOM_Z_MIN), str(rcp.ROOM_Z_MAX)]
+                    temp_x = nodens.cp.ROOM_X.split(',')
+                    temp_y = nodens.cp.ROOM_Y.split(',')
+                    temp_z = nodens.cp.ROOM_Z.split(',')
+                    param_temp[1:7] = [temp_x[0].strip(), temp_x[1].strip(), temp_y[0].strip(), temp_y[1].strip(), temp_z[0].strip(), temp_z[1].strip()]
                     rcp.config_radar[i] = " ".join(param_temp)
                     nodens.logger.debug(rcp.config_radar[i])
                     break
@@ -360,11 +326,27 @@ def parse_config(config_file, EntryWays, rcp, cp, rate_unit = 0.5):
                     break
                 elif "presenceBoundaryBox " in rcp.config_radar[i]:  
                     param_temp = rcp.config_radar[i].split(" ")
-                    temp_x = rcp.MONITOR_X.split(',')
-                    temp_y = rcp.MONITOR_Y.split(',')
-                    temp_z = rcp.MONITOR_Z.split(',')
-                    param_temp[1:7] = [temp_x[0], temp_x[1], temp_y[0], temp_y[1], temp_z[0], temp_z[1]]
+                    temp_x = nodens.cp.MONITOR_X.split(',')
+                    temp_y = nodens.cp.MONITOR_Y.split(',')
+                    temp_z = nodens.cp.MONITOR_Z.split(',')
+                    param_temp[1:7] = [temp_x[0].strip(), temp_x[1].strip(), temp_y[0].strip(), temp_y[1].strip(), temp_z[0].strip(), temp_z[1].strip()]
                     rcp.config_radar[i] = " ".join(param_temp)
+                    nodens.logger.debug(rcp.config_radar[i])
+                    break
+                else:
+                    i+=1
+
+            # Radar calibration - 21
+            "compRangeBiasAndRxChanPhase 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0"
+            i = 0
+            while True:
+                if i == len(rcp.config_radar):
+                    nodens.logger.warning("Config error: {} not found!)".format("compRangeBiasAndRxChanPhase "))
+                    break
+                elif "compRangeBiasAndRxChanPhase " in rcp.config_radar[i]:  
+                    temp_label = "compRangeBiasAndRxChanPhase "
+                    temp_r = nodens.cp.RADAR_CAL
+                    rcp.config_radar[i] = temp_label + temp_r
                     nodens.logger.debug(rcp.config_radar[i])
                     break
                 else:
@@ -372,26 +354,26 @@ def parse_config(config_file, EntryWays, rcp, cp, rate_unit = 0.5):
             
         # Parse config to payload #
         for i in range(len(rcp.config_radar)):
-            payload_msg.append({ "addr" : [rcp.SENSOR_TARGET],
+            payload_msg.append({ "addr" : [nodens.cp.SENSOR_TARGET],
                         "type" : "json",
                         "data" : rcp.config_radar[i] + "\n"})
 
 
-        payload_msg.append({ "addr" : [rcp.SENSOR_TARGET],
+        payload_msg.append({ "addr" : [nodens.cp.SENSOR_TARGET],
                         "type" : "json",
                         "data" : "CMD: TI RESET" + "\n"})
 
     # Update entry points #
-    if rcp.ENTRY_FLAG:
+    if nodens.cp.ENTRY_FLAG:
         # Check for sensor id
-        if (rcp.SENSOR_TARGET not in EntryWays.id):
-            EntryWays.id.append(rcp.SENSOR_TARGET)
+        if (nodens.cp.SENSOR_TARGET not in EntryWays.id):
+            EntryWays.id.append(nodens.cp.SENSOR_TARGET)
             EntryWays.x.append([])
             EntryWays.y.append([])
             EntryWays.count.append(0)
-        sen_idx = EntryWays.id.index(rcp.SENSOR_TARGET)
+        sen_idx = EntryWays.id.index(nodens.cp.SENSOR_TARGET)
 
-        temp = rcp.ENTRY_X
+        temp = nodens.cp.ENTRY_X
         temp = temp.split(';')
         temp_parse = []
         for i in range(len(temp)):
@@ -404,7 +386,7 @@ def parse_config(config_file, EntryWays, rcp, cp, rate_unit = 0.5):
                 nodens.logger.warning('WARNING! Incorrect format provided: {}. Format should be two numbers separated with a comma, e.g. \'-1,1\''.format(temp[i]))
         EntryWays.x[sen_idx] = temp_parse
 
-        temp = rcp.ENTRY_Y
+        temp = nodens.cp.ENTRY_Y
         temp = temp.split(';')
         temp_parse = []
         for i in range(len(temp)):
@@ -427,6 +409,17 @@ class SensorMesh:
         self.root_id = []    # ID of the root sensor
         self.last_time_connected = []    # timestamp of last detection
         self.layer_number = []   # Layer number
+
+        # Config parameters
+        # Update cloud db when sensorStart command received and config accepted
+        self.last_user_config_update_time = [] # Last time config was updated
+        self.sensor_config = [] # Latest sensor config
+        self.sensor_version = [] # Sensor firmwave version
+        self.sensor_publish_rate = []
+        self.sensor_full_data = [] # 1 = ON, 0 = OFF
+        self.sensor_full_data_rate = []
+        self.sensorStart_flag = [] # 1 = sensorStart command received and config accepted
+
         self.room_id = []    # FUTURE: Room location
         self.site_id = []    # FUTURE: Site location
         self.user_id = []    # FUTURE: User that the sensor is assigned to
@@ -455,9 +448,63 @@ class SensorMesh:
                 else:
                     self.root_id.append("")
                     self.layer_number.append("")
+                
+                self.last_user_config_update_time.append([])
+                self.sensor_config.append([])
+                self.sensor_version.append([])
+                self.sensor_publish_rate.append([])
+                self.sensor_full_data.append([])
+                self.sensor_full_data_rate.append([])
+                self.sensorStart_flag.append([])
 
         except:
-            nodens.logger.error("data: {}".format(data))
+            nodens.logger.error("SensorMesh update: {}".format(data))
+
+    # Store sensor config when received
+    def update_config(self, data):
+        addr = data["addr"][0]
+        msg_data = data["data"]
+        commands = ["REQUEST VERSION", "REQUEST CONFIG", "PUBLISH RATE", "FULL DATA", "TI RESET"]
+        T = dt.datetime.now(dt.timezone.utc)
+
+        if addr in self.sensor_id:
+            sens_idx = self.sensor_id.index(addr)
+
+        else:
+            self.sensor_id.append(addr)
+
+        if msg_data[:3] == "CMD":
+            payload = msg_data[5:]
+            ndns_mesh.MESH.status.receive_cmd(msg_data, T, addr)
+            cmd_num = ndns_mesh.MESH.status.last_cmd_num
+            if cmd_num == 0: #
+                self.sensor_version[sens_idx] = payload
+            elif cmd_num == 2:
+                self.sensor_publish_rate[sens_idx] = payload.split()[2]
+            elif cmd_num == 3:
+                if payload.split()[2][:2] == "ON":
+                    self.sensor_full_data[sens_idx] = 1
+                    self.sensor_full_data_rate[sens_idx] = payload.split()[4]
+                else:
+                    self.sensor_full_data[sens_idx] = 0
+                
+
+        else:
+            token = msg_data.split()[0]
+            if self.sensor_config[sens_idx] == []:
+                # REQUEST CONFIG
+                self.sensor_config[sens_idx] = rcp.config_radar
+            if token == "sensorStart":
+                self.sensorStart_flag[sens_idx] = 1
+            else:
+                for idx,config in enumerate(self.sensor_config[sens_idx]):
+                    if token == config.split()[0]:
+                        self.sensor_config[sens_idx][idx] = msg_data
+                        break
+                    elif config.split()[0] == "sensorStart":
+                        nodens.logger.warning(f"SensorMesh update_config. Command not recognised: {msg_data}")
+
+            
 
 # OTA update for ESP #
 def ota_esp(config_params):
@@ -2039,16 +2086,39 @@ class MessagePipeline:
         self.sensor_id = []
         self.flag_send = []
         self.message = []
+        self.config_flag_send = []
+        self.config_message = []
+
 
     def update(self, message):
         if message['addr'] in self.sensor_id:
             sens_idx = self.sensor_id.index(message['addr'])
             self.flag_send[sens_idx] = 1
             self.message[sens_idx] = message
+        
         else:
             self.sensor_id.append(message['addr'])
             self.flag_send.append(1)
             self.message.append(message)
+
+            # Initialise config params but leave empty
+            self.config_flag_send.append(0)
+            self.config_message.append([])
+
+    def config_update(self, sensor_id, config_payload):
+        config_message = {"type": "CONFIG", "addr":sensor_id, "payload":config_payload}
+        if sensor_id in self.sensor_id:
+            sens_idx = self.sensor_id.index(sensor_id)
+            self.config_flag_send[sens_idx] = 1
+            self.config_message[sens_idx] = config_message
+        else:
+            self.sensor_id.append(sensor_id)
+            self.config_flag_send.append(1)
+            self.config_message.append(config_message)
+
+            # Initialise message params but leave empty
+            self.flag_send.append(0)
+            self.message.append([])
 
     def clear(self, index):
         if index < len(self.sensor_id):
@@ -2056,6 +2126,13 @@ class MessagePipeline:
             self.message[index] = ""
         else:
             nodens.logger.warning("Sensor index %d does not exist", index)
+
+    def clear_config(self, index):
+        if index < len(self.sensor_id):
+            self.config_flag_send[index] = 0
+            self.config_message[index] = ""
+        else:
+            nodens.logger.warning("Sensor index %d does not exist", index)    
 
 ## ~~~~~~~~~~ MESSAGE DIAGNOSTICS ~~~~~~~~~~~~~~ ##
 class Counts:

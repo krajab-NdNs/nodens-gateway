@@ -1,5 +1,13 @@
 ## Changelog
 
+### Version 24.6.0 (2024-06-20)
+- Added functionality: publish/read sensor configs to/from Thingsboard
+
+### Version 24.5.6 (2024-05-29)
+- Various bug fixes
+- Added feature: heatmaps
+- Added feature: gait distributions
+
 ### Version 24.5.3 (2024-05-21)
 - Various bug fixes
 - Added feature: delete tracks from occupant history when track has left scene

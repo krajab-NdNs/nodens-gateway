@@ -41,16 +41,24 @@ def sensor_thread(pipeline_thingsboard,pipeline_insight_hub):
 
         # Check message pipeline for messages to send
         idx = [i for i,val in enumerate(ndns_fns.message_pipeline.flag_send) if val == 1]
-        for i in range(len(idx)):
+        for s_idx in idx:
 
             if nodens.cp.ENABLE_THINGSBOARD:
-                pipeline_thingsboard.set_message(ndns_fns.message_pipeline.message[idx[i]], "Producer")
+                pipeline_thingsboard.set_message(ndns_fns.message_pipeline.message[s_idx], "Producer")
 
             if nodens.cp.ENABLE_SIEMENS_IH:
-                pipeline_insight_hub.set_message(ndns_fns.message_pipeline.message[idx[i]], "Producer")
+                pipeline_insight_hub.set_message(ndns_fns.message_pipeline.message[s_idx], "Producer")
 
-            ndns_fns.message_pipeline.clear(idx[i])
+            ndns_fns.message_pipeline.clear(s_idx)
 
+        # Check message pipeline for configs to update
+        idx = [i for i,val in enumerate(ndns_fns.message_pipeline.config_flag_send) if val == 1]
+        for s_idx in idx:
+
+            if nodens.cp.ENABLE_THINGSBOARD:
+                pipeline_thingsboard.set_message(ndns_fns.message_pipeline.config_message[s_idx], "Producer")
+
+            ndns_fns.message_pipeline.clear_config(s_idx)
 
         if nodens_mesh.MESH.client.connect_status == 0:
             nodens.logger.debug("MESH: Time to reconnect")
@@ -124,8 +132,14 @@ def thingsboard_thread(pipeline):
             message = pipeline.get_message("Consumer")
         #sleep(0.1)
             nodens_thingsboard.TB.subscribe_to_attributes(ndns_fns.si.connected_sensors)
-            nodens_thingsboard.TB.prepare_data(message)
-            nodens_thingsboard.TB.multiline_payload(message['addr'])
+
+            # Check if the mssage to send is a config (attribute)
+            if "type" in message:
+                if message["type"] == "CONFIG":
+                    nodens_thingsboard.TB.publish_config(message["addr"], message["payload"])
+            else:
+                nodens_thingsboard.TB.prepare_data(message)
+                nodens_thingsboard.TB.multiline_payload(message['addr'])
 
             for i in range(len(nodens_thingsboard.TB.client_sub)):
                 if nodens_thingsboard.TB.client_sub[i]._userdata != []:
@@ -193,6 +207,7 @@ if __name__ == "__main__":
     thread_thingsboard = threading.Thread(target=thingsboard_thread, args=(pipeline_thingsboard,), daemon=True)
     #thread_thingsboard_sub = threading.Thread(target=thingsboard_subscribe_thread, args=(pipeline_thingsboard_sub,), daemon=True)
     thread_insights_hub = threading.Thread(target=insights_hub_thread, args=(pipeline_insight_hub,), daemon=True)
+    ## ADD NEW THREAD FOR CONFIG + ATTRIBUTES PUBLISH
 
     thread_sensors.start()
     if nodens.cp.ENABLE_THINGSBOARD:

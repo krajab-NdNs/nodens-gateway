@@ -20,7 +20,6 @@ import csv
 import nodens.gateway as nodens
 from nodens.gateway import nodens_fns as ndns_fns
 from nodens.gateway import nodens_mesh as ndns_mesh
-from nodens.gateway import nodens_thingsboard as ndns_tb
 from platformdirs import user_documents_dir
 
 global mqttDataN
@@ -121,7 +120,7 @@ def on_message_sensorN(client, userdata, msg):
 
         # Check if command is received
         if mqttData['data'][0:3] == "CMD":
-            nodens.logger.info("Command verified: {}".format(mqttData['data']))
+            ndns_mesh.MESH.status.receive_cmd(mqttData['data'], T, mqttData['addr'])
         else:
             # Parse data 
             try:
@@ -290,6 +289,15 @@ def on_message_sensorN(client, userdata, msg):
 
             elif (mqttData['type'] == 'json'):
                 nodens.logger.debug("JSON type: {}".format(mqttData))
+                ndns_fns.sm.update_config(mqttData)
+
+                # If sensor config has been received and is complete, then update database
+                s_idx = [idx for idx,val in enumerate(ndns_fns.sm.sensorStart_flag) if val == 1]
+                for idx in s_idx:
+                    # Record message to send, if requested by Cloud service
+                    ndns_fns.message_pipeline.config_update(ndns_fns.sm.sensor_id[idx], ndns_fns.sm.sensor_config[idx])
+                    ndns_fns.sm.sensorStart_flag[idx] = 0
+
             # Otherwise process occupancy info
             elif "type" not in json.loads(data):
                 ndns_fns.counts.update(mqttData['addr'], 'basic')

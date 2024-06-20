@@ -232,10 +232,23 @@ class tb:
         # TODO: add different log types, e.g. commands, levels
         self.payload["log"] = log_msg
 
+    def publish_config(self, sensor_id, config_payload):
+        s_idx = self.sensor_id.index(sensor_id)
+        username = self.access_token[s_idx]
+        self.client.username_pw_set(username)
+
+        json_message = json.dumps(config_payload)
+
+        nodens.logger.info(f"THINGSBOARD PUBLISH CONFIG: {json_message} to {sensor_id}")
+        self.client.publish(nodens.cp.TB_ATTRIBUTES_TOPIC, json_message, qos=1)
+
+
     def multiline_payload(self, sensor_id):
         global TB_CONNECT
         global FLAG_TX_IN_PROGRESS
 
+        ## Disconnect and unsub from all sensor attribute subscriptions
+        #  Then connect to client for sensor to publish ##
         try:
             while FLAG_TX_IN_PROGRESS == 1:
                 sleep(0.1)
@@ -252,7 +265,6 @@ class tb:
         except Exception as e:
             nodens.logger.error(f"THINGSBOARD: multiline payload initialise error: {e.args}")
 
-           
         self.connect()
             # while TB_CONNECT == 0:
             #     if (dt.datetime.now(dt.timezone.utc) - T_temp).seconds > 60:
@@ -264,11 +276,13 @@ class tb:
             #     else:
             #         time.sleep(1)
 
+        ## Prepare json payload to publish ##
         try:
             json_message = json.dumps(self.payload)
         except Exception as e:
             nodens.logger.error(f"THINGSBOARD multiline payload json error: {e.args}. Payload:{self.payload}")
 
+        ## Publish payload  then close connection ##
         flag = 0
         while flag == 0:
             try:
@@ -280,6 +294,7 @@ class tb:
 
         self.end()
 
+        ## Resub to all sensor attribute subscriptions ##
         flag = 0
         while flag == 0:
             try:

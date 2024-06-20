@@ -123,6 +123,49 @@ class mesh:
             self.info_timestamp_history.insert(0,timestamp)
             nodens.logger.info("Info received: {} for sensor: {} at timestamp: {}".format(self.last_info, sensor_id, timestamp))
 
+        def receive_cmd(self, payload, timestamp, sensor_id):
+            self.commands = ["REQUEST VERSION", "REQUEST CONFIG", "PUBLISH RATE", "FULL DATA", "TI RESET"]
+            self.last_cmd = payload[5:]
+            self.last_cmd_num = -1
+
+            # Check if received command matches
+            for num,val in enumerate(self.commands):
+                if self.last_cmd[:len(val)] == val:
+                    self.last_cmd_num = num
+
+            
+            nodens.logger.info(f"Command verified: {payload} for sensor: {sensor_id} at timestamp: {timestamp}")
+
+
 
 MESH = mesh()
+
+## Commands received:
+
+# Command verified: CMD: REQUEST VERSION
+# Sensor information: VERSION: C02003B.R3D001B for Device: 7cdfa1016266
+
+# Command verified: CMD: REQUEST CONFIG
+# Sensor information: CONFIG: dfeDataOutputMode 1 for Device: 7cdfa1016266
+# Sensor information: CONFIG: sensorStart for Device: 7cdfa1016266
+
+# Command verified: CMD: PUBLISH RATE: 1
+
+# Command verified: CMD: FULL DATA ON. RATE: 2.0
+# Info received: Full data ON for sensor: 7cdfa1016266 at timestamp: 2024-06-18T14:47:39Z
+
+# Command verified: CMD: TI RESET
+# Info received: Sensor already running. Storing new config for sensor: 7cdfa1016266 at timestamp: 2024-06-18T14:47:42Z
+
+
+## Info received:
+
+# Sensor information: Sensor already running for Device: 7cdfa1016266
+# Info received: Sensor already running for sensor: 7cdfa1016266 at timestamp: 2024-06-18T12:50:47Z
+# Info received: ESP publish rate 5. Full data OFF for sensor: 7cdfa1016266 at timestamp: 2024-06-18T12:50:47Z
+# Info received: Sensor Started for sensor: 7cdfa1016266 at timestamp: 2024-06-18T12:50:47Z
+# Info received: Waiting for config for sensor: 7cdfa101721a at timestamp: 2024-06-18T09:04:34Z
+# Info received: Using default config for sensor: 7cdfa101721a at timestamp: 2024-06-18T09:04:34Z
+# Info received: Config sent to sensor for sensor: 7cdfa101721a at timestamp: 2024-06-18T09:04:38Z
+
 
