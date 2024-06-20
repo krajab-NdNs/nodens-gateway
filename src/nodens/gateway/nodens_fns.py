@@ -449,7 +449,7 @@ class SensorMesh:
                     self.layer_number.append("")
                 
                 self.last_user_config_update_time.append([])
-                self.sensor_config.append([])
+                self.new_config()
                 self.sensor_version.append([])
                 self.sensor_publish_rate.append([])
                 self.sensor_full_data.append([])
@@ -496,12 +496,36 @@ class SensorMesh:
             if token == "sensorStart":
                 self.sensorStart_flag[sens_idx] = 1
             else:
-                for idx,config in enumerate(self.sensor_config[sens_idx]):
-                    if token == config.split()[0]:
-                        self.sensor_config[sens_idx][idx] = msg_data
-                        break
-                    elif config.split()[0] == "sensorStart":
-                        nodens.logger.warning(f"SensorMesh update_config. Command not recognised: {msg_data}")
+                if token in self.sensor_config[sens_idx]:
+                    self.sensor_config[sens_idx][token] = msg_data()
+                # for idx,config in enumerate(self.sensor_config[sens_idx]):
+                #     if token == config.split()[0]:
+                #         self.sensor_config[sens_idx][idx] = msg_data
+                #         break
+                #     elif config.split()[0] == "sensorStart":
+                #         nodens.logger.warning(f"SensorMesh update_config. Command not recognised: {msg_data}")
+    def new_config(self):
+        self.sensor_config.append({
+            "sensorPosition": "",
+            "staticBoundaryBox": "",
+            "boundaryBox": "",
+            "presenceBoundaryBox":"",
+            "compRangeBiasAndRxChanPhase":"",
+            "profileCfg":"",
+            "frameCfg":"",
+            "dynamicRACfarCfg":"",
+            "staticRACfarCfg":"",
+            "dynamicRangeAngleCfg":"",
+            "dynamic2DAngleCfg":"",
+            "staticRangeAngleCfg":"",
+            "fineMotionCfg":"",
+            "gatingParam":"",
+            "stateParam":"",
+            "allocationParam":"",
+            "trackingCfg":""
+            }   
+        )
+    
 
             
 
