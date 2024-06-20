@@ -66,7 +66,6 @@ class radar_config_params:
                 "presenceBoundaryBox -4 4 0.5 6 0 3",   # 30
                 "sensorStart"
                 ]
-        
 
         # Bed config #
         self.BED_FLAG = 0
