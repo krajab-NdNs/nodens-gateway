@@ -237,7 +237,7 @@ class tb:
         username = self.access_token[s_idx]
         self.client.username_pw_set(username)
 
-        payload = {"sensor_config":config_payload}
+        payload = {"sensor_config":config_payload[0]}
         json_message = json.dumps(payload)
 
         nodens.logger.info(f"THINGSBOARD PUBLISH CONFIG: {json_message} to {sensor_id}")
