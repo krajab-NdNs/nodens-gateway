@@ -113,7 +113,7 @@ def on_message_sensorN(client, userdata, msg):
         sen_idx = ndns_fns.si.check(mqttData)
 
         if (mqttData['addr'] not in ndns_fns.ew.id):
-            ndns_fns.ew.id.append(ndns_fns.rcp.SENSOR_TARGET)
+            ndns_fns.ew.id.append(mqttData['addr'])
             ndns_fns.ew.x.append([])
             ndns_fns.ew.y.append([])
             ndns_fns.ew.count.append(0)
