@@ -499,6 +499,7 @@ class SensorMesh:
                 if token in self.sensor_config[sens_idx]:
                     token_len = len(token)
                     self.sensor_config[sens_idx][token] = msg_data[len(token):]
+                    nodens.logger.warning(f"CONFIG. {token}: {self.sensor_config[sens_idx][token]}")
                 # for idx,config in enumerate(self.sensor_config[sens_idx]):
                 #     if token == config.split()[0]:
                 #         self.sensor_config[sens_idx][idx] = msg_data
