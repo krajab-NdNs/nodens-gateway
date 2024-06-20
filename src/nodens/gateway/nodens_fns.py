@@ -497,7 +497,8 @@ class SensorMesh:
                 self.sensorStart_flag[sens_idx] = 1
             else:
                 if token in self.sensor_config[sens_idx]:
-                    self.sensor_config[sens_idx][token] = msg_data()
+                    token_len = len(token)
+                    self.sensor_config[sens_idx][token] = msg_data[len(token):]
                 # for idx,config in enumerate(self.sensor_config[sens_idx]):
                 #     if token == config.split()[0]:
                 #         self.sensor_config[sens_idx][idx] = msg_data
