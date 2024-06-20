@@ -138,9 +138,9 @@ def thingsboard_thread(pipeline):
             if "type" in message:
                 if message["type"] == "CONFIG":
                     nodens_thingsboard.TB.publish_config(message["addr"], message["payload"])
-            else:
-                nodens_thingsboard.TB.prepare_data(message)
-                nodens_thingsboard.TB.multiline_payload(message['addr'])
+                else:
+                    nodens_thingsboard.TB.prepare_data(message)
+                    nodens_thingsboard.TB.multiline_payload(message['addr'])
 
             for i in range(len(nodens_thingsboard.TB.client_sub)):
                 if nodens_thingsboard.TB.client_sub[i]._userdata != []:
