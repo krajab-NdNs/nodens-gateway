@@ -463,13 +463,13 @@ class SensorMesh:
                 nodens.logger.warning(f" sensor: {addr}, {self.sensor_id}. root: {self.root_id}")  
                 # After initialising new sensor, request version and config
                 sendCMDtoSensor.request_version(rcp,nodens.cp,sv,addr,self.root_id[sens_idx])
-                time.sleep(1)
+                # time.sleep(1)
 
-                try:
-                    sendCMDtoSensor.request_config(rcp,nodens.cp,addr,self.root_id[self.sensor_id.index(addr)])
+                # try:
+                #     sendCMDtoSensor.request_config(rcp,nodens.cp,addr,self.root_id[self.sensor_id.index(addr)])
 
-                except:
-                    nodens.logger.error("SensorMesh request_config: {}".format(data))
+                # except:
+                #     nodens.logger.error("SensorMesh request_config: {}".format(data))
 
     # Store sensor config when received
     def update_config(self, data):
@@ -2080,10 +2080,8 @@ class sendCMDtoSensor(object):
         nodens.logger.info(f"REQUEST VERSION. payload_msg:{sensor_topic}")
         
 
-        try:
-            ndns_mesh.MESH.multiline_payload(cp.SENSOR_IP,cp.SENSOR_PORT,60, sensor_topic,"", payload_msg)
-        except:
-            nodens.logger.error(f"REQUEST VERSION multiline_payload.")
+        
+        ndns_mesh.MESH.multiline_payload(cp.SENSOR_IP,cp.SENSOR_PORT,60, sensor_topic,"", payload_msg)
 
         nodens.logger.info("Published sensor version request to {}".format(sensor_topic))
         temp = 0
