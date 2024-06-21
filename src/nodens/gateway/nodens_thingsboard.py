@@ -8,6 +8,7 @@ from nodens.gateway import nodens_fns as ndns_fns
 from time import sleep as sleep
 
 global TB_CONNECT
+global TB_MSG_RX
 global FLAG_TX_IN_PROGRESS
 
 def on_subscribe_tb(unused_client, unused_userdata, mid, granted_qos):
@@ -37,9 +38,15 @@ def on_publish_tb(client,userdata,result):             #create function for call
     nodens.logger.debug("THINGSBOARD: on_publish: result {}. userdata: {} \n".format(result, userdata))
 
 def on_message_tb(client, userdata, msg):
-    print("msg received")
     nodens.logger.info('THINGSBOARD: on_message: userdata {}, msg {}'.format(userdata, msg.payload.decode("utf-8")))
     client.user_data_set(msg.payload.decode("utf-8"))
+
+def on_message_config_tb(client, userdata, msg):
+    global TB_MSG_RX
+    nodens.logger.info('THINGSBOARD: CONFIG: on_message: userdata {}, msg {}'.format(userdata, msg.payload.decode("utf-8")))
+    ndns_fns.sm.update_with_received_config(msg.payload.decode("utf-8"))
+    TB_MSG_RX = 1
+
 
 class tb:
     def __init__(self):
@@ -245,6 +252,82 @@ class tb:
 
         nodens.logger.info(f"THINGSBOARD PUBLISH CONFIG: {json_message} to {sensor_id}")
         self.client.publish(nodens.cp.TB_ATTRIBUTES_TOPIC, json_message, qos=1)
+
+    def get_config(self, sensor_id):
+        global TB_CONNECT
+        global TB_MSG_RX
+        TB_MSG_RX = 0
+        s_idx = self.sensor_id.index(sensor_id)
+        username = self.access_token[s_idx]
+
+        # Prepare config schema to retrieve
+        sensor_config_schema = {
+            "sensorID":"",
+            "sensorPosition": "",
+            "staticBoundaryBox": "",
+            "boundaryBox": "",
+            "presenceBoundaryBox":"",
+            "compRangeBiasAndRxChanPhase":"",
+            "profileCfg":"",
+            "frameCfg":"",
+            "dynamicRACfarCfg":"",
+            "staticRACfarCfg":"",
+            "dynamicRangeAngleCfg":"",
+            "dynamic2DAngleCfg":"",
+            "staticRangeAngleCfg":"",
+            "fineMotionCfg":"",
+            "gatingParam":"",
+            "stateParam":"",
+            "allocationParam":"",
+            "trackingCfg":""
+            } 
+        
+        k = sensor_config_schema.keys()
+        labels = ""
+        for key in k:
+            labels += f"{key},"
+
+        payload = {
+            "clientKeys":labels[:-1]
+        }
+        json_payload = json.dumps(payload)
+
+        # Setup new mqtt client for config (attributes) check
+        client_config = mqtt.Client()
+        client_config.on_connect = on_connect_tb
+        client_config.on_disconnect = on_disconnect_tb
+        client_config.on_subscribe = on_subscribe_tb
+        client_config.on_unsubscribe = on_unsubscribe_tb
+        client_config.on_message = on_message_tb
+        client_config.username_pw_set(username)
+
+         # Connect and subscribe
+        TB_CONNECT = 0
+        client_config.connect(nodens.cp.TB_HOST,nodens.cp.TB_PORT,nodens.cp.TB_KEEPALIVE)
+        client_config.loop_start()
+        while TB_CONNECT == 0:
+            sleep(1)
+        client_config.subscribe(nodens.cp.TB_ATTRIBUTES_REQUEST_TOPIC, qos=1)
+        
+        req_id = 1
+        while TB_MSG_RX == 0:
+            while req_id < 10:
+                j = 0 # check no
+                client_config.publish(f"v1/devices/me/attributes/request/{req_id}", json_payload)
+                while j < 5:
+                    time.sleep(0.1)
+                    if TB_MSG_RX == 0:
+                        break
+                    j+=1
+                if TB_MSG_RX == 0:
+                    break
+                req_id+=1
+        client_config.unsubscribe("#")
+        client_config.loop_stop()
+        client_config.disconnect()
+        
+
+
 
 
     def multiline_payload(self, sensor_id):

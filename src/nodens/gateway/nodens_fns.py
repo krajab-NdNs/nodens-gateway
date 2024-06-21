@@ -456,6 +456,11 @@ class SensorMesh:
                 self.sensor_full_data_rate.append([])
                 self.sensorStart_flag.append([])
 
+                # After initialising new sensor, request version and config
+                sendCMDtoSensor.request_version(rcp,nodens.cp,sv,addr,self.root_id[self.sensor_id.index(addr)])
+                sendCMDtoSensor.request_config(rcp,nodens.cp,addr,self.root_id[self.sensor_id.index(addr)])
+
+
         except:
             nodens.logger.error("SensorMesh update: {}".format(data))
 
@@ -489,6 +494,7 @@ class SensorMesh:
                 
 
         else:
+            self.sensor_config[sens_idx]["sensorID"] = addr
             token = msg_data.split()[0]
             if self.sensor_config[sens_idx] == []:
                 # REQUEST CONFIG
@@ -497,7 +503,6 @@ class SensorMesh:
                 self.sensorStart_flag[sens_idx] = 1
             else:
                 if token in self.sensor_config[sens_idx]:
-                    token_len = len(token)
                     self.sensor_config[sens_idx][token] = msg_data[len(token):]
                     nodens.logger.warning(f"CONFIG. {token}: {self.sensor_config[sens_idx][token]}")
                 # for idx,config in enumerate(self.sensor_config[sens_idx]):
@@ -506,8 +511,23 @@ class SensorMesh:
                 #         break
                 #     elif config.split()[0] == "sensorStart":
                 #         nodens.logger.warning(f"SensorMesh update_config. Command not recognised: {msg_data}")
+
+    # Store sensor config when received from remote server
+    def update_with_received_config(self, payload):
+        addr = payload["client"]["sensorID"]
+        if addr in self.sensor_id:
+            sens_idx = self.sensor_id.index(addr)
+
+        keys = self.sensor_config[sens_idx].keys()
+        for key in keys:
+            if key in payload["client"]:
+                self.sensor_config[sens_idx][key] = payload["client"][key]
+                nodens.logger.info(f"SensorMesh. Received config from server. {key}: {self.sensor_config[sens_idx][key]}")
+
+
     def new_config(self):
         self.sensor_config.append({
+            "sensorID":"",
             "sensorPosition": "",
             "staticBoundaryBox": "",
             "boundaryBox": "",
@@ -2032,16 +2052,26 @@ class sendCMDtoSensor(object):
 
         ndns_mesh.MESH.multiline_payload(cp.SENSOR_IP,cp.SENSOR_PORT,60, rcp.SENSOR_TOPIC,"", payload_msg)
 
-    def request_version(rcp,cp,sv):
+    def request_version(rcp,cp,sv,sensor_target=[], sensor_root=[]):
         config_req = "CMD: REQUEST VERSION"
 
-        payload_msg =[{ "addr" : [rcp.SENSOR_TARGET],
-                        "type" : "json",
-                        "data" : config_req + "\n"}]
+        if sensor_target == []:
+            payload_msg =[{ "addr" : [rcp.SENSOR_TARGET],
+                            "type" : "json",
+                            "data" : config_req + "\n"}]
+        else:
+            payload_msg =[{ "addr" : [sensor_target],
+                            "type" : "json",
+                            "data" : config_req + "\n"}]
 
-        rcp.SENSOR_TOPIC = 'mesh/' + rcp.SENSOR_ROOT + '/toDevice'
+        if sensor_root == []:
+            rcp.SENSOR_TOPIC = 'mesh/' + rcp.SENSOR_ROOT + '/toDevice'
+            sensor_topic = 'mesh/' + rcp.SENSOR_ROOT + '/toDevice'
+        else:
+            sensor_topic = 'mesh/' + sensor_root + '/toDevice'
+        
 
-        ndns_mesh.MESH.multiline_payload(cp.SENSOR_IP,cp.SENSOR_PORT,60, rcp.SENSOR_TOPIC,"", payload_msg)
+        ndns_mesh.MESH.multiline_payload(cp.SENSOR_IP,cp.SENSOR_PORT,60, sensor_topic,"", payload_msg)
 
         nodens.logger.info("Published sensor version request to {}".format(rcp.SENSOR_TOPIC))
         temp = 0
@@ -2057,18 +2087,27 @@ class sendCMDtoSensor(object):
                 nodens.logger.info("No response to version request. Continue...")
                 break
 
-    def request_config(rcp,cp):
+    def request_config(rcp,cp,sensor_target=[], sensor_root=[]):
         config_req = "CMD: REQUEST CONFIG"
 
-        payload_msg =[{ "addr" : [rcp.SENSOR_TARGET],
-                        "type" : "json",
-                        "data" : config_req + "\n"}]
+        if sensor_target == []:
+            payload_msg =[{ "addr" : [rcp.SENSOR_TARGET],
+                            "type" : "json",
+                            "data" : config_req + "\n"}]
+        else:
+            payload_msg =[{ "addr" : [sensor_target],
+                            "type" : "json",
+                            "data" : config_req + "\n"}]
 
-        rcp.SENSOR_TOPIC = 'mesh/' + rcp.SENSOR_ROOT + '/toDevice'
+        if sensor_root == []:
+            rcp.SENSOR_TOPIC = 'mesh/' + rcp.SENSOR_ROOT + '/toDevice'
+            sensor_topic = 'mesh/' + rcp.SENSOR_ROOT + '/toDevice'
+        else:
+            sensor_topic = 'mesh/' + sensor_root + '/toDevice'
 
         rcp.cfg_idx = 0
         rcp.cfg_sensorStart = 0
-        ndns_mesh.MESH.multiline_payload(cp.SENSOR_IP,cp.SENSOR_PORT,60, rcp.SENSOR_TOPIC,"", payload_msg)
+        ndns_mesh.MESH.multiline_payload(cp.SENSOR_IP,cp.SENSOR_PORT,60, sensor_topic,"", payload_msg)
        
 
     def start_config_proc(rcp,cp):
