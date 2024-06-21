@@ -427,18 +427,18 @@ class SensorMesh:
     # data - top level json data received via mqtt. Already checked that it's not the full data stream
     def update(self, data):
         addr = data["addr"]
-        try:
-            data_data = json.loads(base64.b64decode(data['data']))
+        data_data = json.loads(base64.b64decode(data['data']))
 
-            if addr in self.sensor_id:
-                sens_idx = self.sensor_id.index(addr)
-                self.sensor_id[sens_idx] = addr
-                self.last_time_connected[sens_idx] = data_data["timestamp"]
-                if "type" in data_data:
-                    self.root_id[sens_idx] = data_data["root"]
-                    self.layer_number[sens_idx] = data_data["layer"]
+        if addr in self.sensor_id:
+            sens_idx = self.sensor_id.index(addr)
+            self.sensor_id[sens_idx] = addr
+            self.last_time_connected[sens_idx] = data_data["timestamp"]
+            if "type" in data_data:
+                self.root_id[sens_idx] = data_data["root"]
+                self.layer_number[sens_idx] = data_data["layer"]
 
-            else:
+        else:
+            try:
                 self.sensor_id.append(addr)
                 self.last_time_connected.append(data_data["timestamp"])
                 if "type" in data_data:
@@ -455,14 +455,16 @@ class SensorMesh:
                 self.sensor_full_data.append([])
                 self.sensor_full_data_rate.append([])
                 self.sensorStart_flag.append([])
+            except:
+                nodens.logger.error("SensorMesh update 0: {}".format(data))
 
+            try:
                 # After initialising new sensor, request version and config
                 sendCMDtoSensor.request_version(rcp,nodens.cp,sv,addr,self.root_id[self.sensor_id.index(addr)])
                 sendCMDtoSensor.request_config(rcp,nodens.cp,addr,self.root_id[self.sensor_id.index(addr)])
 
-
-        except:
-            nodens.logger.error("SensorMesh update: {}".format(data))
+            except:
+                nodens.logger.error("SensorMesh update: {}".format(data))
 
     # Store sensor config when received
     def update_config(self, data):
