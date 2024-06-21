@@ -426,7 +426,6 @@ class SensorMesh:
     # Update sensor mesh info
     # data - top level json data received via mqtt. Already checked that it's not the full data stream
     def update(self, data):
-        nodens.logger.warning(f"SensorMesh 0")
         addr = data["addr"]
         data_data = json.loads(base64.b64decode(data['data']))
 
@@ -437,7 +436,6 @@ class SensorMesh:
             if "type" in data_data:
                 self.root_id[sens_idx] = data_data["root"]
                 self.layer_number[sens_idx] = data_data["layer"]
-            nodens.logger.warning(f"SensorMesh A")
 
         else:
             try:
@@ -463,7 +461,7 @@ class SensorMesh:
             sens_idx = self.sensor_id.index(addr)
             if self.root_id[sens_idx] != "":
                 # After initialising new sensor, request version and config
-                # sendCMDtoSensor.request_version(rcp,nodens.cp,sv,addr,self.root_id[sens_idx])
+                sendCMDtoSensor.request_version(rcp,nodens.cp,sv,addr,self.root_id[sens_idx])
                 nodens.logger.warning(f" sensor: {addr}, {self.sensor_id}. root: {self.root_id}")  
 
                 # time.sleep(1)
@@ -473,7 +471,6 @@ class SensorMesh:
 
                 # except:
                 #     nodens.logger.error("SensorMesh request_config: {}".format(data))
-            nodens.logger.warning(f"SensorMesh B")
 
     # Store sensor config when received
     def update_config(self, data):
