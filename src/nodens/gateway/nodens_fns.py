@@ -458,16 +458,18 @@ class SensorMesh:
             except:
                 nodens.logger.error("SensorMesh update 0: {}".format(data))
             nodens.logger.warning(f" sensor: {addr}, {self.sensor_id}. root: {self.root_id}")
-            try:    
-                # After initialising new sensor, request version and config
-                sendCMDtoSensor.request_version(rcp,nodens.cp,sv,addr,self.root_id[self.sensor_id.index(addr)])
-            except:
-                nodens.logger.error("SensorMesh request_version: {}".format(data))
-            try:
-                sendCMDtoSensor.request_config(rcp,nodens.cp,addr,self.root_id[self.sensor_id.index(addr)])
+            sens_idx = self.sensor_id.index(addr)
+            if self.root_id[sens_idx] != "":
+                try:    
+                    # After initialising new sensor, request version and config
+                    sendCMDtoSensor.request_version(rcp,nodens.cp,sv,addr,self.root_id[self.sensor_id.index(addr)])
+                except:
+                    nodens.logger.error("SensorMesh request_version: {}".format(data))
+                try:
+                    sendCMDtoSensor.request_config(rcp,nodens.cp,addr,self.root_id[self.sensor_id.index(addr)])
 
-            except:
-                nodens.logger.error("SensorMesh request_config: {}".format(data))
+                except:
+                    nodens.logger.error("SensorMesh request_config: {}".format(data))
 
     # Store sensor config when received
     def update_config(self, data):
