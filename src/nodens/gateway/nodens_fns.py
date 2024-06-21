@@ -463,6 +463,7 @@ class SensorMesh:
                 nodens.logger.warning(f" sensor: {addr}, {self.sensor_id}. root: {self.root_id}")  
                 # After initialising new sensor, request version and config
                 sendCMDtoSensor.request_version(rcp,nodens.cp,sv,addr,self.root_id[sens_idx])
+                time.sleep(1)
 
                 try:
                     sendCMDtoSensor.request_config(rcp,nodens.cp,addr,self.root_id[self.sensor_id.index(addr)])
