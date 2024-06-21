@@ -510,7 +510,7 @@ def on_message_sensorN(client, userdata, msg):
                     ndns_fns.si.last_t[sen_idx] = T
                     heartbeat += "+"
                     heartbeat = "\r" + heartbeat
-                    nodens.logger.info(heartbeat, end='')
+                    # nodens.logger.info(heartbeat, end='')
                     if 'Sensor Information' in mqttDataFinal:
                         nodens.logger.info("\nSensor information: {} for Device: {}\n". format(mqttDataFinal['Sensor Information'], mqttDataFinal['addr']))
 
@@ -558,7 +558,7 @@ def on_message_sensorN(client, userdata, msg):
             else:
                 if json.loads(data)["type"] == 'heartbeat':
                     ndns_fns.counts.update(mqttData['addr'], 'heartbeat')
-                    # ndns_fns.sm.update(mqttData)
+                    ndns_fns.sm.update(mqttData)
                     nodens.logger.warning(f"heartbeat")
                     heartbeat += "."
                     heartbeat = "\r" + heartbeat
