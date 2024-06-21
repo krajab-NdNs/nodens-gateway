@@ -460,12 +460,10 @@ class SensorMesh:
             
             sens_idx = self.sensor_id.index(addr)
             if self.root_id[sens_idx] != "":
-                nodens.logger.warning(f" sensor: {addr}, {self.sensor_id}. root: {self.root_id}")
-                try:    
-                    # After initialising new sensor, request version and config
-                    sendCMDtoSensor.request_version(rcp,nodens.cp,sv,addr,self.root_id[self.sensor_id.index(addr)])
-                except:
-                    nodens.logger.error("SensorMesh request_version: {}".format(data))
+                nodens.logger.warning(f" sensor: {addr}, {self.sensor_id}. root: {self.root_id}")  
+                # After initialising new sensor, request version and config
+                sendCMDtoSensor.request_version(rcp,nodens.cp,sv,addr,self.root_id[sens_idx])
+
                 try:
                     sendCMDtoSensor.request_config(rcp,nodens.cp,addr,self.root_id[self.sensor_id.index(addr)])
 
@@ -2071,29 +2069,37 @@ class sendCMDtoSensor(object):
             payload_msg =[{ "addr" : [sensor_target],
                             "type" : "json",
                             "data" : config_req + "\n"}]
+        nodens.logger.info(f"REQUEST VERSION. payload_msg:{payload_msg}")
 
         if sensor_root == []:
             rcp.SENSOR_TOPIC = 'mesh/' + rcp.SENSOR_ROOT + '/toDevice'
             sensor_topic = 'mesh/' + rcp.SENSOR_ROOT + '/toDevice'
         else:
             sensor_topic = 'mesh/' + sensor_root + '/toDevice'
+        nodens.logger.info(f"REQUEST VERSION. payload_msg:{sensor_topic}")
         
 
-        ndns_mesh.MESH.multiline_payload(cp.SENSOR_IP,cp.SENSOR_PORT,60, sensor_topic,"", payload_msg)
+        try:
+            ndns_mesh.MESH.multiline_payload(cp.SENSOR_IP,cp.SENSOR_PORT,60, sensor_topic,"", payload_msg)
+        except:
+            nodens.logger.error(f"REQUEST VERSION multiline_payload.")
 
         nodens.logger.info("Published sensor version request to {}".format(rcp.SENSOR_TOPIC))
         temp = 0
-        while (1):
-            if sv.string != []:
-                nodens.logger.info("Version received. Version = {}. Dimensions = {}.".format(sv.string, sv.radar_dim))
-                break
-            elif temp < 20:
-                nodens.logger.info("Waiting... {}".format(sv.string))
-                temp += 1
-                time.sleep(0.2)
-            else:
-                nodens.logger.info("No response to version request. Continue...")
-                break
+        try:
+            while (1):
+                if sv.string != []:
+                    nodens.logger.info("Version received. Version = {}. Dimensions = {}.".format(sv.string, sv.radar_dim))
+                    break
+                elif temp < 20:
+                    nodens.logger.info("Waiting... {}".format(sv.string))
+                    temp += 1
+                    time.sleep(0.2)
+                else:
+                    nodens.logger.info("No response to version request. Continue...")
+                    break
+        except:
+            nodens.logger.error(f"REQUEST VERSION sv.")
 
     def request_config(rcp,cp,sensor_target=[], sensor_root=[]):
         config_req = "CMD: REQUEST CONFIG"
