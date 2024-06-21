@@ -2086,21 +2086,21 @@ class sendCMDtoSensor(object):
         ndns_mesh.MESH.multiline_payload(cp.SENSOR_IP,cp.SENSOR_PORT,60, sensor_topic,"", payload_msg)
 
         nodens.logger.info("Published sensor version request to {}".format(sensor_topic))
-        temp = 0
-        try:
-            while (1):
-                if sv.string != []:
-                    nodens.logger.info("Version received. Version = {}. Dimensions = {}.".format(sv.string, sv.radar_dim))
-                    break
-                elif temp < 20:
-                    nodens.logger.info("Waiting... {}".format(sv.string))
-                    temp += 1
-                    time.sleep(0.2)
-                else:
-                    nodens.logger.info("No response to version request. Continue...")
-                    break
-        except:
-            nodens.logger.error(f"REQUEST VERSION sv.")
+        # temp = 0
+        # try:
+        #     while (1):
+        #         if sv.string != []:
+        #             nodens.logger.info("Version received. Version = {}. Dimensions = {}.".format(sv.string, sv.radar_dim))
+        #             break
+        #         elif temp < 20:
+        #             nodens.logger.info("Waiting... {}".format(sv.string))
+        #             temp += 1
+        #             time.sleep(0.2)
+        #         else:
+        #             nodens.logger.info("No response to version request. Continue...")
+        #             break
+        # except:
+        #     nodens.logger.error(f"REQUEST VERSION sv.")
 
     def request_config(rcp,cp,sensor_target=[], sensor_root=[]):
         config_req = "CMD: REQUEST CONFIG"

@@ -507,14 +507,14 @@ def on_message_sensorN(client, userdata, msg):
                     ndns_fns.si.last_t[sen_idx] = T
                     heartbeat += "+"
                     heartbeat = "\r" + heartbeat
-                    # print(heartbeat, end='')
+                    nodens.logger.info(heartbeat, end='')
                     if 'Sensor Information' in mqttDataFinal:
                         nodens.logger.info("\nSensor information: {} for Device: {}\n". format(mqttDataFinal['Sensor Information'], mqttDataFinal['addr']))
 
                         # Check for sensor version
                         temp = mqttDataFinal['Sensor Information']
                         
-                        if temp[0:7] == 'VERSION':
+                        if temp[:7] == 'VERSION':
                             nodens.logger.info(f"Version received: {temp[9:]}")
                             ndns_fns.sv.parse(temp[9:])
                             ndns_fns.sm.update_config(temp)
