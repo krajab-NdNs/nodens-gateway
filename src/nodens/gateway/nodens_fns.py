@@ -457,8 +457,8 @@ class SensorMesh:
                 self.sensorStart_flag.append([])
             except:
                 nodens.logger.error("SensorMesh update 0: {}".format(data))
-
-            try:
+            nodens.logger.warning(f" sensor: {addr}, {self.sensor_id}. root: {self.root_id}")
+            try:    
                 # After initialising new sensor, request version and config
                 sendCMDtoSensor.request_version(rcp,nodens.cp,sv,addr,self.root_id[self.sensor_id.index(addr)])
             except:
