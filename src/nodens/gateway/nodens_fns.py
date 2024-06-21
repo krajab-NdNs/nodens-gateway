@@ -461,10 +461,13 @@ class SensorMesh:
             try:
                 # After initialising new sensor, request version and config
                 sendCMDtoSensor.request_version(rcp,nodens.cp,sv,addr,self.root_id[self.sensor_id.index(addr)])
+            except:
+                nodens.logger.error("SensorMesh request_version: {}".format(data))
+            try:
                 sendCMDtoSensor.request_config(rcp,nodens.cp,addr,self.root_id[self.sensor_id.index(addr)])
 
             except:
-                nodens.logger.error("SensorMesh update: {}".format(data))
+                nodens.logger.error("SensorMesh request_config: {}".format(data))
 
     # Store sensor config when received
     def update_config(self, data):
