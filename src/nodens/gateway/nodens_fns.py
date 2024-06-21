@@ -2084,7 +2084,7 @@ class sendCMDtoSensor(object):
         except:
             nodens.logger.error(f"REQUEST VERSION multiline_payload.")
 
-        nodens.logger.info("Published sensor version request to {}".format(rcp.SENSOR_TOPIC))
+        nodens.logger.info("Published sensor version request to {}".format(sensor_topic))
         temp = 0
         try:
             while (1):
