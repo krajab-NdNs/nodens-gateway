@@ -552,6 +552,7 @@ def on_message_sensorN(client, userdata, msg):
             else:
                 if json.loads(data)["type"] == 'heartbeat':
                     ndns_fns.counts.update(mqttData['addr'], 'heartbeat')
+                    ndns_fns.sm.update(mqttData)
                     heartbeat += "."
                     heartbeat = "\r" + heartbeat
                 else:
