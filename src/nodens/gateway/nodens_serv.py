@@ -94,7 +94,7 @@ def on_message_sensorN(client, userdata, msg):
     #getting data from mqtt
     mqttDataN = (msg.payload)
     mqttData = json.loads(mqttDataN)
-    nodens.logger.debug(f"{mqttData}")
+    nodens.logger.info(f"{mqttData}")
     # Get time
     T = dt.datetime.now(dt.timezone.utc)
 
@@ -303,7 +303,6 @@ def on_message_sensorN(client, userdata, msg):
             elif "type" not in json.loads(data):
                 ndns_fns.counts.update(mqttData['addr'], 'basic')
                 ndns_fns.sm.update(mqttData)
-                nodens.logger.warning("Occupancy A:")
                 mqttOcc = json.loads(data)
                 mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
                 mqttDataFinal = {**mqttTime, **mqttData, **mqttOcc}
@@ -500,7 +499,6 @@ def on_message_sensorN(client, userdata, msg):
 
                         # Refresh occupancy histories for next Cloud transmission frame
                         ndns_fns.oh.refresh(mqttData['addr'])
-                    nodens.logger.warning("Occupancy B:")
                     
                 else:
                     #ndns_fns.si.num_occ[sen_idx] = 0
