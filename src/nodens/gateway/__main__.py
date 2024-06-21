@@ -126,6 +126,7 @@ def thingsboard_thread(pipeline):
     if i > -1:
         nodens.logger.error("\n\nTHINGSBOARD: NO ACCESS TOKENS FOUND. Please locate file: thingsboard_access.json.\n\n")
 
+
     #nodens_thingsboard.TB.subscribe_to_attributes(ndns_fns.si.connected_sensors)
     while 1:
         try:

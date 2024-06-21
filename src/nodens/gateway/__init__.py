@@ -101,6 +101,8 @@ class config_program:
         self.TB_KEEPALIVE = 60
         self.TB_PUB_TOPIC = "v1/devices/me/telemetry"
         self.TB_ATTRIBUTES_TOPIC = "v1/devices/me/attributes"
+        self.TB_ATTRIBUTES_REQUEST_TOPIC = "v1/devices/me/attributes/response/+"
+        self.TB_ATTRIBUTES_REQUEST_PUB_TOPIC = "v1/devices/me/attributes/request/"
         self.TB_ACCESS_TOKEN_FOLDER = ""
         self.TB_ACCESS_TOKEN_FILENAME = "thingsboard_access.json"
 
