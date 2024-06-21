@@ -489,7 +489,7 @@ class SensorMesh:
             ndns_mesh.MESH.status.receive_cmd(msg_data, T, addr)
             cmd_num = ndns_mesh.MESH.status.last_cmd_num
             if cmd_num == 0: #
-                self.sensor_version[sens_idx] = payload
+                nodens.logger.info ("SensorMesh. CMD REQUEST VERSION")
             elif cmd_num == 2:
                 self.sensor_publish_rate[sens_idx] = payload.split()[2]
             elif cmd_num == 3:
@@ -499,7 +499,9 @@ class SensorMesh:
                 else:
                     self.sensor_full_data[sens_idx] = 0
                 
-
+        elif data[:6] == "CONFIG":
+            payload = msg_data[8:]
+            self.sensor_version[sens_idx] = payload
         else:
             self.sensor_config[sens_idx]["sensorID"] = addr
             token = msg_data.split()[0]
