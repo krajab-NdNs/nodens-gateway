@@ -515,9 +515,10 @@ def on_message_sensorN(client, userdata, msg):
                         temp = mqttDataFinal['Sensor Information']
                         
                         if temp[0:7] == 'VERSION':
+                            nodens.logger.info(f"Version received: {temp[9:]}")
                             ndns_fns.sv.parse(temp[9:])
                             ndns_fns.sm.update_config(temp)
-                            nodens.logger.info(f"Version received: {temp[9:]}")
+                            
 
                         elif temp[0:6] == 'CONFIG':
                             ndns_fns.rcp.receive_config(temp[8:])
