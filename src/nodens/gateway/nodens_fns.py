@@ -437,6 +437,7 @@ class SensorMesh:
             if "type" in data_data:
                 self.root_id[sens_idx] = data_data["root"]
                 self.layer_number[sens_idx] = data_data["layer"]
+            nodens.logger.warning(f"SensorMesh A")
 
         else:
             try:
@@ -472,6 +473,7 @@ class SensorMesh:
 
                 # except:
                 #     nodens.logger.error("SensorMesh request_config: {}".format(data))
+            nodens.logger.warning(f"SensorMesh B")
 
     # Store sensor config when received
     def update_config(self, data):
