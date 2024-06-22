@@ -94,7 +94,7 @@ def on_message_sensorN(client, userdata, msg):
     #getting data from mqtt
     mqttDataN = (msg.payload)
     mqttData = json.loads(mqttDataN)
-    nodens.logger.debug(f"{mqttData}")
+    nodens.logger.warning(f"{mqttData}")
     # Get time
     T = dt.datetime.now(dt.timezone.utc)
 
