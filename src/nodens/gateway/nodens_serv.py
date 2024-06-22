@@ -94,7 +94,7 @@ def on_message_sensorN(client, userdata, msg):
     #getting data from mqtt
     mqttDataN = (msg.payload)
     mqttData = json.loads(mqttDataN)
-    nodens.logger.warning(f"{mqttData}")
+    nodens.logger.debug(f"{mqttData}")
     # Get time
     T = dt.datetime.now(dt.timezone.utc)
 
@@ -112,6 +112,7 @@ def on_message_sensorN(client, userdata, msg):
     if 'addr' in mqttData:
         # try:
         sen_idx = ndns_fns.si.check(mqttData)
+        nodens.logger.warning(f"{mqttData["data"]}")
 
         if (mqttData['addr'] not in ndns_fns.ew.id):
             ndns_fns.ew.id.append(mqttData['addr'])

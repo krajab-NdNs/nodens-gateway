@@ -78,15 +78,15 @@ class mesh:
         nodens.logger.debug("MESH: reconnect done")
 
     def multiline_payload(self, ip, port, timeout, topic, cb, payload):
-        self.reconnect(ip, port, timeout, topic, cb)
-        time.sleep(2)
+        #self.reconnect(ip, port, timeout, topic, cb)
+        #time.sleep(2)
         for i in range(len(payload)):
             json_message = json.dumps(payload[i])
-            nodens.logger.debug("CONFIG SEND: {}".format(json_message))
+            nodens.logger.warning("CONFIG SEND: {}".format(json_message))
             self.client.publish(topic, json_message)
             time.sleep(0.1)
-        self.client.subscribe('#')
-        self.client.loop_start()
+        # self.client.subscribe('#')
+        # self.client.loop_start()
     
     class Status:
         def __init__(self):
