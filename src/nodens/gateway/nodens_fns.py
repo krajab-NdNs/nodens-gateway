@@ -474,7 +474,6 @@ class SensorMesh:
 
     # Store sensor config when received
     def update_config(self, data, addr=[]):
-        nodens.logger.warning(f"SensorMesh 1")
         if addr == []:
             try:
                 addr = data["addr"][0]
@@ -509,7 +508,7 @@ class SensorMesh:
                 else:
                     self.sensor_full_data[sens_idx] = 0
                 
-        elif data[:6] == "CONFIG":
+        elif msg_data[:6] == "CONFIG":
             payload = msg_data[8:]
             self.sensor_version[sens_idx] = payload
         else:
