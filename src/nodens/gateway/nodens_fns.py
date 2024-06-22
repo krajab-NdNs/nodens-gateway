@@ -461,7 +461,7 @@ class SensorMesh:
             sens_idx = self.sensor_id.index(addr)
             if self.root_id[sens_idx] != "":
                 # After initialising new sensor, request version and config
-                # sendCMDtoSensor.request_version(rcp,nodens.cp,sv,addr,self.root_id[sens_idx])
+                sendCMDtoSensor.request_version(rcp,nodens.cp,sv,addr,self.root_id[sens_idx])
                 nodens.logger.warning(f" sensor: {addr}, {self.sensor_id}. root: {self.root_id}")  
 
                 # time.sleep(1)
