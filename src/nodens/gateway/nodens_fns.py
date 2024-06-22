@@ -480,7 +480,11 @@ class SensorMesh:
                 addr = data["addr"][0]
             except:
                 addr = data["addr"]
-        msg_data = data["data"]
+        
+        if "data" in data:
+            msg_data = data["data"]
+        else:
+            msg_data = data
         commands = ["REQUEST VERSION", "REQUEST CONFIG", "PUBLISH RATE", "FULL DATA", "TI RESET"]
         T = dt.datetime.now(dt.timezone.utc)
 
