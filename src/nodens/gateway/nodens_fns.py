@@ -473,12 +473,13 @@ class SensorMesh:
                     nodens.logger.error("SensorMesh request_config: {}".format(data))
 
     # Store sensor config when received
-    def update_config(self, data):
+    def update_config(self, data, addr=[]):
         nodens.logger.warning(f"SensorMesh 1")
-        try:
-            addr = data["addr"][0]
-        except:
-            addr = data["addr"]
+        if addr == []:
+            try:
+                addr = data["addr"][0]
+            except:
+                addr = data["addr"]
         msg_data = data["data"]
         commands = ["REQUEST VERSION", "REQUEST CONFIG", "PUBLISH RATE", "FULL DATA", "TI RESET"]
         T = dt.datetime.now(dt.timezone.utc)
