@@ -112,7 +112,6 @@ def on_message_sensorN(client, userdata, msg):
     if 'addr' in mqttData:
         # try:
         sen_idx = ndns_fns.si.check(mqttData)
-        nodens.logger.warning(f"{mqttData['data']}")
 
         if (mqttData['addr'] not in ndns_fns.ew.id):
             ndns_fns.ew.id.append(mqttData['addr'])
