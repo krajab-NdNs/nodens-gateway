@@ -519,7 +519,7 @@ def on_message_sensorN(client, userdata, msg):
                         if temp[:7] == 'VERSION':
                             nodens.logger.info(f"Version received: {temp[9:]}")
                             ndns_fns.sv.parse(temp[9:])
-                            ndns_fns.sm.update_config(temp, mqttDataFinal['addr'])
+                            # ndns_fns.sm.update_config(temp, mqttDataFinal['addr'])
                             
 
                         elif temp[0:6] == 'CONFIG':
