@@ -523,6 +523,7 @@ def on_message_sensorN(client, userdata, msg):
                             
 
                         elif temp[0:6] == 'CONFIG':
+                            nodens.logger.warning("CONFIG RECEIVED")
                             ndns_fns.rcp.receive_config(temp[8:])
 
                         elif temp[0:3] == 'MSG':
@@ -558,7 +559,7 @@ def on_message_sensorN(client, userdata, msg):
                 if json.loads(data)["type"] == 'heartbeat':
                     ndns_fns.counts.update(mqttData['addr'], 'heartbeat')
                     ndns_fns.sm.update(mqttData)
-                    nodens.logger.warning(f"heartbeat")
+                    # nodens.logger.warning(f"heartbeat")
                     heartbeat += "."
                     heartbeat = "\r" + heartbeat
                 else:
