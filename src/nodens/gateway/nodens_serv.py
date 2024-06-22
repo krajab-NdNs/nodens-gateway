@@ -519,13 +519,13 @@ def on_message_sensorN(client, userdata, msg):
                         if temp[:7] == 'VERSION':
                             nodens.logger.info(f"Version received: {temp[9:]}")
                             ndns_fns.sv.parse(temp[9:])
-                            ndns_fns.sm.update_config(temp)
+                            ndns_fns.sm.update_config(temp, mqttDataFinal['addr'])
                             
 
                         elif temp[0:6] == 'CONFIG':
                             nodens.logger.warning("CONFIG RECEIVED")
                             ndns_fns.rcp.receive_config(temp[8:])
-                            ndns_fns.sm.update_config(temp)
+                            ndns_fns.sm.update_config(temp, mqttDataFinal['addr'])
 
                         elif temp[0:3] == 'MSG':
                             ndns_mesh.MESH.status.receive_msg(temp, mqttDataFinal['timestamp'])
