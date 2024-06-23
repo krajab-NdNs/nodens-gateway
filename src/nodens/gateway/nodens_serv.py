@@ -511,7 +511,7 @@ def on_message_sensorN(client, userdata, msg):
                     heartbeat = "\r" + heartbeat
                     # nodens.logger.info(heartbeat, end='')
                     if 'Sensor Information' in mqttDataFinal:
-                        nodens.logger.info("\nSensor information: {} for Device: {}\n". format(mqttDataFinal['Sensor Information'], mqttDataFinal['addr']))
+                        nodens.logger.info("\nSensor information: {} for Device: {}". format(mqttDataFinal['Sensor Information'], mqttDataFinal['addr']))
 
                         # Check for sensor version
                         temp = mqttDataFinal['Sensor Information']
