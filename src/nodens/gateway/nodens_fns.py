@@ -473,6 +473,13 @@ class SensorMesh:
                     nodens.logger.error("SensorMesh request_config: {}".format(data))
 
     # Store sensor config when received
+    # This will udpate the configs and versions
+    # If a new config is transmitted to a sensor, it is sent as a package of 
+    #   type: "json"
+    #   payload: "config..."
+    # When polling a sensor for a current config, it is received as 
+    #   type: "bytes"
+    #   payload: "CONFIG: config..."
     def update_config(self, data, addr=[]):
         if addr == []:
             try:
@@ -507,10 +514,16 @@ class SensorMesh:
                     self.sensor_full_data_rate[sens_idx] = payload.split()[4]
                 else:
                     self.sensor_full_data[sens_idx] = 0
-                
+        elif msg_data[:7] == "VERSION":
+            payload = msg_data[9:]
+            self.sensor_version[sens_idx] = payload  
+            nodens.logger.warning(f"SensorMesh. version: {payload}")      
         elif msg_data[:6] == "CONFIG":
             payload = msg_data[8:]
-            self.sensor_version[sens_idx] = payload
+            #self.sensor_version[sens_idx] = payload
+            nodens.logger.info("SensorMesh.update_config. Config rx")
+            if payload.split()[0] == "sensorStart":
+                self.sensorStart_flag[sens_idx] = 1
         else:
             self.sensor_config[sens_idx]["sensorID"] = addr
             token = msg_data.split()[0]
@@ -2256,6 +2269,20 @@ class MessagePipeline:
             self.flag_send.append(0)
             self.message.append([])
 
+    def config_check(self, sensor_id):
+        config_message = {"type": "CONFIG_RX", "addr":sensor_id, "payload":""}
+        if sensor_id in self.sensor_id:
+            sens_idx = self.sensor_id.index(sensor_id)
+            self.config_flag_send[sens_idx] = 1
+            self.config_message[sens_idx] = config_message
+        else:
+            self.sensor_id.append(sensor_id)
+            self.config_flag_send.append(1)
+            self.config_message.append(config_message)
+
+            # Initialise message params but leave empty
+            self.flag_send.append(0)
+            self.message.append([])
 
     def clear(self, index):
         if index < len(self.sensor_id):

@@ -525,6 +525,9 @@ def on_message_sensorN(client, userdata, msg):
                         elif temp[0:6] == 'CONFIG':
                             ndns_fns.rcp.receive_config(temp[8:])
                             ndns_fns.sm.update_config(temp, mqttDataFinal['addr'])
+                            if ndns_fns.sm.sensorStart_flag[idx] == 1:
+                                ndns_fns.message_pipeline.config_check(mqttDataFinal['addr'])
+                                ndns_fns.sm.sensorStart_flag[idx] = 0
 
                         elif temp[0:3] == 'MSG':
                             ndns_mesh.MESH.status.receive_msg(temp, mqttDataFinal['timestamp'])

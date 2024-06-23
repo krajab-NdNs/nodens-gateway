@@ -134,10 +134,12 @@ def thingsboard_thread(pipeline):
         #sleep(0.1)
             nodens_thingsboard.TB.subscribe_to_attributes(ndns_fns.si.connected_sensors)
 
-            # Check if the mssage to send is a config (attribute)
+            # Check if the message to send is a config (attribute)
             if "type" in message:
-                if message["type"] == "CONFIG":
+                if message["type"] == "CONFIG_TX":
                     nodens_thingsboard.TB.publish_config(message["addr"], message["payload"])
+                elif message["type"] == "CONFIG_RX":
+                    nodens_thingsboard.TB.get_config(message["addr"])
                 else:
                     nodens_thingsboard.TB.prepare_data(message)
                     nodens_thingsboard.TB.multiline_payload(message['addr'])
