@@ -662,7 +662,7 @@ class SensorMesh:
                     if token in self.sensor_config[sens_idx]:
                         rcp.config_radar[i] = f"{token} {self.sensor_config[sens_idx][token]}"
 
-                    nodens.logger.info(f"CONFIG UPDATE: {rcp.config_radar[i]}\n")
+                    nodens.logger.info(f"CONFIG UPDATE. idx: {i} cfg: {rcp.config_radar[i]}\n")
                     payload_msg.append({ "addr" : [addr],
                             "type" : "json",
                             "data" : rcp.config_radar[i] + "\n"})
