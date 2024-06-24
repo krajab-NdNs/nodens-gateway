@@ -526,7 +526,7 @@ class SensorMesh:
             # Parse and populate current sensor config
             token = payload.split()[0]
             if token in self.sensor_config[sens_idx]:
-                self.sensor_config[sens_idx][token] == payload[len(token)+1:]
+                self.sensor_config[sens_idx][token] = payload[len(token)+1:]
                 nodens.logger.info(f"SensorMesh.update_config. token: {token} / {self.sensor_config[sens_idx][token]}")
 
             if payload.split()[0] == "sensorStart":
