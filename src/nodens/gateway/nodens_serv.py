@@ -290,7 +290,7 @@ def on_message_sensorN(client, userdata, msg):
                     ndns_fns.oh.refresh(mqttData['addr'])
 
             elif (mqttData['type'] == 'json'):
-                nodens.logger.debug("JSON type: {}".format(mqttData))
+                nodens.logger.warning("JSON type: {}".format(mqttData))
                 ndns_fns.sm.update_config(mqttData)
 
                 # If sensor config has been received and is complete, then update database
