@@ -521,7 +521,14 @@ class SensorMesh:
         elif msg_data[:6] == "CONFIG":
             payload = msg_data[8:]
             #self.sensor_version[sens_idx] = payload
-            nodens.logger.info("SensorMesh.update_config. Config rx")
+            nodens.logger.info(f"SensorMesh.update_config. Config rx: {payload}")
+
+            # Parse and populate current sensor config
+            token = payload.split()[0]
+            if token in self.sensor_config[sens_idx]:
+                self.sensor_config[sens_idx][token] == payload[len(token)+1:]
+                nodens.logger.info(f"SensorMesh.update_config. token: {token} / {self.sensor_config[sens_idx][token]}")
+
             if payload.split()[0] == "sensorStart":
                 self.sensorStart_flag[sens_idx] = 1
         else:
