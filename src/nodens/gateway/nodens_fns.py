@@ -570,8 +570,7 @@ class SensorMesh:
                         msg_data = msg_data[:-1]
 
                     # Remove leading space
-                    if (msg_data[0] == " "):
-                        msg_data = msg_data[1:]
+                    msg_data = msg_data.strip()
 
                     self.sensor_config[sens_idx][token] = msg_data
 
@@ -607,10 +606,9 @@ class SensorMesh:
                         tb_saved_config = tb_saved_config[:-1]
 
                     # Remove leading space
-                    if (tb_saved_config[0] == " "):
-                        tb_saved_config = tb_saved_config[1:]
+                    tb_saved_config = tb_saved_config.strip()
 
-                    sensor_current_config = self.sensor_config[sens_idx][key]
+                    sensor_current_config = self.sensor_config[sens_idx][key].strip()
                     nodens.logger.debug(f"SensorMesh. Received config from server. {key}. sensor:{sensor_current_config}. tb:{tb_saved_config}")
                     if sensor_current_config != tb_saved_config:
                         sensor_current_config = tb_saved_config
