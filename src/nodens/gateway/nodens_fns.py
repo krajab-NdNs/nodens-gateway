@@ -586,7 +586,6 @@ class SensorMesh:
 
     # Store sensor config when received from remote server
     def update_with_received_config(self, payload, rate_unit = 0.25):
-        nodens.logger.warning(f"\n SM update_with_received_config. payload: {payload}")
         json_payload = json.loads(payload)
         config_changed_flag = 0
         addr = json_payload["client"]["sensorID"]
@@ -617,16 +616,18 @@ class SensorMesh:
                     if sensor_current_config != tb_saved_config:
                         sensor_current_config = tb_saved_config
                         config_changed_flag = 1
-                        nodens.logger.warning(f"SensorMesh. Cloud config differs from current sensor config!")
+                        nodens.logger.warning(f"SensorMesh. Cloud config differs from current sensor config!\n{key}. sensor:{self.sensor_config[sens_idx][key]}. tb:{tb_saved_config}")
 
             # Update publish rate
-            if json_payload["client"]["publishRate"] != "":
-                self.sensor_publish_rate[sens_idx] = json_payload["client"]["publishRate"]
+            if "publishRate" in json_payload["client"]:
+                if json_payload["client"]["publishRate"] != "":
+                    self.sensor_publish_rate[sens_idx] = json_payload["client"]["publishRate"]
             
             # Update full data
-            if json_payload["client"]["fullData"] != "":
-                self.sensor_full_data[sens_idx] = json_payload["client"]["fullData"]
-                self.sensor_full_data_rate[sens_idx] = json_payload["client"]["fullDataRate"]
+            if "fullData" in json_payload["client"]:
+                if json_payload["client"]["fullData"] != "":
+                    self.sensor_full_data[sens_idx] = json_payload["client"]["fullData"]
+                    self.sensor_full_data_rate[sens_idx] = json_payload["client"]["fullDataRate"]
         except Exception as e:
             nodens.logger.error(f"SM update_with_received_config. Check rx config: {e}")
 
@@ -661,9 +662,10 @@ class SensorMesh:
                     token = rcp.config_radar[i].split()[0]
                     if token in self.sensor_config[sens_idx]:
                         rcp.config_radar[i] = f"{token} {self.sensor_config[sens_idx][token]}"
-                        payload_msg.append({ "addr" : [addr],
-                                "type" : "json",
-                                "data" : rcp.config_radar[i] + "\n"})
+                        nodens.logger.info(f"CONFIG UPDATE: {rcp.config_radar[i]}\n")
+                    payload_msg.append({ "addr" : [addr],
+                            "type" : "json",
+                            "data" : rcp.config_radar[i] + "\n"})
 
                 # Parse radar reset command
                 payload_msg.append({ "addr" : [addr],
