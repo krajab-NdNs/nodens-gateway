@@ -526,7 +526,6 @@ class SensorMesh:
         elif msg_data[:6] == "CONFIG":
             payload = msg_data[8:]
             #self.sensor_version[sens_idx] = payload
-            nodens.logger.info(f"SensorMesh.update_config. Config rx: {payload}")
 
             # Parse and populate current sensor config
             token = payload.split()[0]
@@ -612,11 +611,11 @@ class SensorMesh:
                         tb_saved_config = tb_saved_config[1:]
 
                     sensor_current_config = self.sensor_config[sens_idx][key]
-                    nodens.logger.debug(f"SensorMesh. Received config from server. {key}. sensor:{self.sensor_config[sens_idx][key]}. tb:{tb_saved_config}")
+                    nodens.logger.debug(f"SensorMesh. Received config from server. {key}. sensor:{sensor_current_config}. tb:{tb_saved_config}")
                     if sensor_current_config != tb_saved_config:
                         sensor_current_config = tb_saved_config
                         config_changed_flag = 1
-                        nodens.logger.warning(f"SensorMesh. Cloud config differs from current sensor config!\n{key}. sensor:{self.sensor_config[sens_idx][key]}. tb:{tb_saved_config}")
+                        nodens.logger.warning(f"SensorMesh. Cloud config differs from current sensor config!\n\t{key}. \n\tsensor: {sensor_current_config}. \n\ttb: {tb_saved_config}")
 
             # Update publish rate
             if "publishRate" in json_payload["client"]:
@@ -662,7 +661,8 @@ class SensorMesh:
                     token = rcp.config_radar[i].split()[0]
                     if token in self.sensor_config[sens_idx]:
                         rcp.config_radar[i] = f"{token} {self.sensor_config[sens_idx][token]}"
-                        nodens.logger.info(f"CONFIG UPDATE: {rcp.config_radar[i]}\n")
+
+                    nodens.logger.info(f"CONFIG UPDATE: {rcp.config_radar[i]}\n")
                     payload_msg.append({ "addr" : [addr],
                             "type" : "json",
                             "data" : rcp.config_radar[i] + "\n"})
