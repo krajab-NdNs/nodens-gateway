@@ -615,7 +615,7 @@ class SensorMesh:
                     if sensor_current_config != tb_saved_config:
                         sensor_current_config = tb_saved_config
                         config_changed_flag = 1
-                        nodens.logger.warning(f"SensorMesh. Cloud config differs from current sensor config!\n\t{key}. \n\tsensor: {sensor_current_config}. \n\ttb: {tb_saved_config}")
+                        nodens.logger.warning(f"SensorMesh. Cloud config differs from current sensor config!\n\t{key}. \n\tsensor: {sensor_current_config} \n\ttb: {tb_saved_config}")
 
             # Update publish rate
             if "publishRate" in json_payload["client"]:

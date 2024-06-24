@@ -121,7 +121,7 @@ class mesh:
             self.last_info_timestamp = timestamp
             self.info_history.insert(0,payload)
             self.info_timestamp_history.insert(0,timestamp)
-            nodens.logger.info("Info received: {} for sensor: {} at timestamp: {}".format(self.last_info, sensor_id, timestamp))
+            # nodens.logger.info("Info received: {} for sensor: {} at timestamp: {}".format(self.last_info, sensor_id, timestamp))
 
         def receive_cmd(self, payload, timestamp, sensor_id):
             self.commands = ["REQUEST VERSION", "REQUEST CONFIG", "PUBLISH RATE", "FULL DATA", "TI RESET"]
