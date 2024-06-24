@@ -280,7 +280,10 @@ class tb:
             "gatingParam":"",
             "stateParam":"",
             "allocationParam":"",
-            "trackingCfg":""
+            "trackingCfg":"",
+            "publishRate":"",
+            "fullData":"",
+            "fullDataRate":""
             } 
         
         k = sensor_config_schema.keys()

@@ -500,6 +500,7 @@ class SensorMesh:
         else:
             self.sensor_id.append(addr)
 
+        # Commands sent to sensor, e.g. request version or change publish rate
         if msg_data[:3] == "CMD":
             payload = msg_data[5:]
             ndns_mesh.MESH.status.receive_cmd(msg_data, T, addr)
@@ -510,14 +511,18 @@ class SensorMesh:
                 self.sensor_publish_rate[sens_idx] = payload.split()[2]
             elif cmd_num == 3:
                 if payload.split()[2][:2] == "ON":
-                    self.sensor_full_data[sens_idx] = 1
+                    self.sensor_full_data[sens_idx] = "ON"
                     self.sensor_full_data_rate[sens_idx] = payload.split()[4]
                 else:
-                    self.sensor_full_data[sens_idx] = 0
+                    self.sensor_full_data[sens_idx] = "OFF"
+        
+        # Current sensor version number
         elif msg_data[:7] == "VERSION":
             payload = msg_data[9:]
             self.sensor_version[sens_idx] = payload  
             nodens.logger.warning(f"SensorMesh. version: {payload}")      
+        
+        # Current configuration stored on sensor
         elif msg_data[:6] == "CONFIG":
             payload = msg_data[8:]
             #self.sensor_version[sens_idx] = payload
@@ -531,6 +536,8 @@ class SensorMesh:
 
             if payload.split()[0] == "sensorStart":
                 self.sensorStart_flag[sens_idx] = 1
+        
+        # Typically used to parse config sent to sensor, or type: json
         else:
             self.sensor_config[sens_idx]["sensorID"] = addr
             token = msg_data.split()[0]
@@ -538,10 +545,37 @@ class SensorMesh:
                 # REQUEST CONFIG
                 self.sensor_config[sens_idx] = rcp.config_radar
             if token == "sensorStart":
+                # Publish rate if set:
+                if self.sensor_publish_rate[sens_idx] != []:
+                    self.sensor_config[sens_idx]["publishRate"] = str(self.sensor_publish_rate[sens_idx])
+                else:
+                    self.sensor_config[sens_idx]["publishRate"] = ""
+
+                # Full data if set:
+                if self.sensor_full_data[sens_idx] != []:
+                    self.sensor_config[sens_idx]["fullData"] = str(self.sensor_full_data[sens_idx])
+                    self.sensor_config[sens_idx]["fullDataRate"] = str(self.sensor_full_data_rate[sens_idx])
+                else:
+                    self.sensor_config[sens_idx]["fullData"] = ""
+                    self.sensor_config[sens_idx]["fullDataRate"] = ""
+
                 self.sensorStart_flag[sens_idx] = 1
             else:
                 if token in self.sensor_config[sens_idx]:
-                    self.sensor_config[sens_idx][token] = msg_data[len(token):]
+                    msg_data = msg_data[len(token)+1:]
+
+                    # Remove trailing \n
+                    if (msg_data[-2:] == "\n"):
+                        msg_data = msg_data[:-2]
+                    elif (msg_data[-1:] == "\n"):
+                        msg_data = msg_data[:-1]
+
+                    # Remove leading space
+                    if (msg_data[0] == " "):
+                        msg_data = msg_data[1:]
+
+                    self.sensor_config[sens_idx][token] = msg_data
+
                     nodens.logger.warning(f"CONFIG. {token}: {self.sensor_config[sens_idx][token]}")
                 # for idx,config in enumerate(self.sensor_config[sens_idx]):
                 #     if token == config.split()[0]:
@@ -579,35 +613,47 @@ class SensorMesh:
                         tb_saved_config = tb_saved_config[1:]
 
                     sensor_current_config = self.sensor_config[sens_idx][key]
-                    nodens.logger.info(f"SensorMesh. Received config from server. {key}. sensor:{self.sensor_config[sens_idx][key]}. tb:{tb_saved_config}")
+                    nodens.logger.debug(f"SensorMesh. Received config from server. {key}. sensor:{self.sensor_config[sens_idx][key]}. tb:{tb_saved_config}")
                     if sensor_current_config != tb_saved_config:
                         sensor_current_config = tb_saved_config
                         config_changed_flag = 1
                         nodens.logger.warning(f"SensorMesh. Cloud config differs from current sensor config!")
+
+            # Update publish rate
+            if json_payload["client"]["publishRate"] != "":
+                self.sensor_publish_rate[sens_idx] = json_payload["client"]["publishRate"]
+            
+            # Update full data
+            if json_payload["client"]["fullData"] != "":
+                self.sensor_full_data[sens_idx] = json_payload["client"]["fullData"]
+                self.sensor_full_data_rate[sens_idx] = json_payload["client"]["fullDataRate"]
         except Exception as e:
             nodens.logger.error(f"SM update_with_received_config. Check rx config: {e}")
 
         # If the config has changed, update the sensor with the Cloud config
         try:
             if config_changed_flag == 1:
+                payload_msg = []
                 # Parse config publish rate
                 # rate_unit = Baseline data transmission rate
-                config_pub_rate = "CMD: PUBLISH RATE: " + str(round(nodens.cp.SCAN_TIME/rate_unit))
-                payload_msg = [{ "addr" : [addr],
-                                    "type" : "json",
-                                    "data" : config_pub_rate + "\n"}]
+                if self.sensor_publish_rate[sens_idx] != []:
+                    config_pub_rate = f"CMD: PUBLISH RATE: {self.sensor_publish_rate[sens_idx]}"
+                    nodens.logger.info(f"CONFIG PUBLISH RATE: {config_full_data}\n")
+                    payload_msg.append({ "addr" : [addr],
+                                        "type" : "json",
+                                        "data" : config_pub_rate + "\n"})
 
                 # Parse full data command
-                if nodens.cp.FULL_DATA_FLAG:
-                    config_full_data = "CMD: FULL DATA ON. RATE: " + str(max(1,nodens.cp.FULL_DATA_TIME/nodens.cp.SCAN_TIME))
-                    nodens.logger.info(f"\nrate_unit: {rate_unit}s. SCAN TIME: {nodens.cp.SCAN_TIME}s. PUBLISH RATE: {str(round(nodens.cp.SCAN_TIME/rate_unit))}. FULL DATA RATE: {str(max(1,nodens.cp.FULL_DATA_TIME/nodens.cp.SCAN_TIME))}.\n")
-                else:
-                    config_full_data = "CMD: FULL DATA OFF."
-                    nodens.logger.info(f"\nrate_unit: {rate_unit}s. SCAN TIME: {nodens.cp.SCAN_TIME}s. PUBLISH RATE: {str(round(nodens.cp.SCAN_TIME/rate_unit))}. FULL DATA OFF.\n")
+                if self.sensor_full_data[sens_idx] != []:
+                    if self.sensor_full_data[sens_idx] == "ON":
+                        config_full_data = f"CMD: FULL DATA ON. RATE: {self.sensor_full_data_rate[sens_idx]}"   
+                    else:
+                        config_full_data = "CMD: FULL DATA OFF."
+                    nodens.logger.info(f"CONFIG FULL DATA: {config_full_data}\n")
                     
-                payload_msg.append({ "addr" : [addr],
-                        "type" : "json",
-                        "data" : config_full_data + "\n"})
+                    payload_msg.append({ "addr" : [addr],
+                            "type" : "json",
+                            "data" : config_full_data + "\n"})
                 
                 # Parse config to payload #
                 sens_idx = self.sensor_id.index(addr)
@@ -651,7 +697,10 @@ class SensorMesh:
             "gatingParam":"",
             "stateParam":"",
             "allocationParam":"",
-            "trackingCfg":""
+            "trackingCfg":"",
+            "publishRate":"",
+            "fullData":"",
+            "fullDataRate":""
             }   
         )
     
@@ -2282,6 +2331,7 @@ class MessagePipeline:
             self.config_flag_send.append(0)
             self.config_message.append([])
 
+    ## Publish config to Thingsboard ##
     def config_update(self, sensor_id, config_payload):
         config_message = {"type": "CONFIG_TX", "addr":sensor_id, "payload":config_payload}
         if sensor_id in self.sensor_id:
@@ -2297,6 +2347,7 @@ class MessagePipeline:
             self.flag_send.append(0)
             self.message.append([])
 
+    ## Read config from Thingsboard ##
     def config_check(self, sensor_id):
         nodens.logger.warning("MessagePipeline config_check")
         config_message = {"type": "CONFIG_RX", "addr":sensor_id, "payload":""}
