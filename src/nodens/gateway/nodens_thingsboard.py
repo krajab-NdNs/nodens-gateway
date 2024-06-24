@@ -38,12 +38,12 @@ def on_publish_tb(client,userdata,result):             #create function for call
     nodens.logger.debug("THINGSBOARD: on_publish: result {}. userdata: {} \n".format(result, userdata))
 
 def on_message_tb(client, userdata, msg):
-    nodens.logger.info('THINGSBOARD: on_message: userdata {}, msg {}'.format(userdata, msg.payload.decode('utf-8')))
+    nodens.logger.info('THINGSBOARD: on_message_tb: userdata {}, msg {}'.format(userdata, msg.payload.decode('utf-8')))
     client.user_data_set(msg.payload.decode("utf-8"))
 
 def on_message_config_tb(client, userdata, msg):
     global TB_MSG_RX
-    nodens.logger.info(f"THINGSBOARD: CONFIG: on_message: userdata {userdata}, msg {msg.payload.decode('utf-8')}")
+    nodens.logger.info(f"THINGSBOARD: CONFIG: on_message_config_tb: userdata {userdata}, msg {msg.payload.decode('utf-8')}")
     ndns_fns.sm.update_with_received_config(msg.payload.decode('utf-8'))
     TB_MSG_RX = 1
     nodens.logger.info(f"THINGSBOARD: CONFIG: TB_MSG_RX: {TB_MSG_RX}")
@@ -299,7 +299,7 @@ class tb:
         client_config.on_disconnect = on_disconnect_tb
         client_config.on_subscribe = on_subscribe_tb
         client_config.on_unsubscribe = on_unsubscribe_tb
-        client_config.on_message = on_message_tb
+        client_config.on_message = on_message_config_tb
         client_config.username_pw_set(username)
 
          # Connect and subscribe
