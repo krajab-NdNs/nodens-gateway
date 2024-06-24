@@ -2270,6 +2270,7 @@ class MessagePipeline:
             self.message.append([])
 
     def config_check(self, sensor_id):
+        nodens.logger.warning("MessagePipeline config_check")
         config_message = {"type": "CONFIG_RX", "addr":sensor_id, "payload":""}
         if sensor_id in self.sensor_id:
             sens_idx = self.sensor_id.index(sensor_id)

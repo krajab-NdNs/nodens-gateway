@@ -46,6 +46,7 @@ def on_message_config_tb(client, userdata, msg):
     nodens.logger.info('THINGSBOARD: CONFIG: on_message: userdata {}, msg {}'.format(userdata, msg.payload.decode("utf-8")))
     ndns_fns.sm.update_with_received_config(msg.payload.decode("utf-8"))
     TB_MSG_RX = 1
+    nodens.logger.info('THINGSBOARD: CONFIG: TB_MSG_RX: {TB_MSG_RX}'.format(TB_MSG_RX))
 
 
 class tb:
@@ -322,9 +323,11 @@ class tb:
                 if TB_MSG_RX == 0:
                     break
                 req_id+=1
+        nodens.logger.warning("TB get_config unsub")
         client_config.unsubscribe("#")
         client_config.loop_stop()
         client_config.disconnect()
+        nodens.logger.warning("TB get_config disconnect")
         
 
 
