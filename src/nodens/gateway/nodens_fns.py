@@ -559,7 +559,7 @@ class SensorMesh:
         if addr in self.sensor_id:
             sens_idx = self.sensor_id.index(addr)
 
-        nodens.logger.warning(f"\n SM update_with_received_config addr.")   
+        nodens.logger.warning(f"\n SM update_with_received_config addr: {addr}. idx: {sens_idx}")   
 
         try:
             # Check each received config and compare to current sensor config
@@ -567,8 +567,12 @@ class SensorMesh:
             for key in keys:
                 if key in json_payload["client"]:
                     tb_saved_config = json_payload["client"][key]
+                    if (tb_saved_config[-2:] == "\n"):
+                        tb_saved_config = tb_saved_config[:-2]
+                    elif (tb_saved_config[-1:] == "\n"):
+                        tb_saved_config = tb_saved_config[:-1]
                     sensor_current_config = self.sensor_config[sens_idx][key]
-                    nodens.logger.info(f"SensorMesh. Received config from server. {key}: {self.sensor_config[sens_idx][key]}")
+                    nodens.logger.info(f"SensorMesh. Received config from server. {key}. sensor:{self.sensor_config[sens_idx][key]}. tb:{tb_saved_config}")
                     if sensor_current_config != tb_saved_config:
                         sensor_current_config = tb_saved_config
                         config_changed_flag = 1
