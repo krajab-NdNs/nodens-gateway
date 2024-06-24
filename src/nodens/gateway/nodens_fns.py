@@ -546,10 +546,9 @@ class SensorMesh:
     # Store sensor config when received from remote server
     def update_with_received_config(self, payload, rate_unit = 0.25):
         nodens.logger.warning(f"\n SM update_with_received_config. payload: {payload}")
+        json_payload = json.loads(payload)
         config_changed_flag = 0
-        nodens.logger.warning(f"\n SM update_with_received_config. client: {json.loads(payload)['client']}")
-        nodens.logger.warning(f"\n SM update_with_received_config. addr: {json.loads(payload)['client']['sensorID']}")
-        addr = json.loads(payload)["client"]["sensorID"]
+        addr = json_payload["client"]["sensorID"]
         if addr in self.sensor_id:
             sens_idx = self.sensor_id.index(addr)
 
@@ -559,8 +558,8 @@ class SensorMesh:
             # Check each received config and compare to current sensor config
             keys = self.sensor_config[sens_idx].keys()
             for key in keys:
-                if key in payload["client"]:
-                    tb_saved_config = payload["client"][key]
+                if key in json_payload["client"]:
+                    tb_saved_config = json_payload["client"][key]
                     sensor_current_config = self.sensor_config[sens_idx][key]
                     nodens.logger.info(f"SensorMesh. Received config from server. {key}: {self.sensor_config[sens_idx][key]}")
                     if sensor_current_config != tb_saved_config:
