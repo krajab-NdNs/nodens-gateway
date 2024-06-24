@@ -545,64 +545,73 @@ class SensorMesh:
 
     # Store sensor config when received from remote server
     def update_with_received_config(self, payload, rate_unit = 0.25):
+        nodens.logger.warning(f"\n SM update_with_received_config.")
         config_changed_flag = 0
         addr = payload["client"]["sensorID"]
         if addr in self.sensor_id:
             sens_idx = self.sensor_id.index(addr)
 
-        # Check each received config and compare to current sensor config
-        keys = self.sensor_config[sens_idx].keys()
-        for key in keys:
-            if key in payload["client"]:
-                tb_saved_config = payload["client"][key]
-                sensor_current_config = self.sensor_config[sens_idx][key]
-                nodens.logger.info(f"SensorMesh. Received config from server. {key}: {self.sensor_config[sens_idx][key]}")
-                if sensor_current_config != tb_saved_config:
-                    sensor_current_config = tb_saved_config
-                    config_changed_flag = 1
-                    nodens.logger.warning(f"SensorMesh. Cloud config differs from current sensor config!")
+        nodens.logger.warning(f"\n SM update_with_received_config addr.")   
+
+        try:
+            # Check each received config and compare to current sensor config
+            keys = self.sensor_config[sens_idx].keys()
+            for key in keys:
+                if key in payload["client"]:
+                    tb_saved_config = payload["client"][key]
+                    sensor_current_config = self.sensor_config[sens_idx][key]
+                    nodens.logger.info(f"SensorMesh. Received config from server. {key}: {self.sensor_config[sens_idx][key]}")
+                    if sensor_current_config != tb_saved_config:
+                        sensor_current_config = tb_saved_config
+                        config_changed_flag = 1
+                        nodens.logger.warning(f"SensorMesh. Cloud config differs from current sensor config!")
+        except Exception as e:
+            nodens.logger.error(f"SM update_with_received_config. Check rx config: {e}")
 
         # If the config has changed, update the sensor with the Cloud config
-        if config_changed_flag == 1:
-            # Parse config publish rate
-            # rate_unit = Baseline data transmission rate
-            config_pub_rate = "CMD: PUBLISH RATE: " + str(round(nodens.cp.SCAN_TIME/rate_unit))
-            payload_msg = [{ "addr" : [addr],
+        try:
+            if config_changed_flag == 1:
+                # Parse config publish rate
+                # rate_unit = Baseline data transmission rate
+                config_pub_rate = "CMD: PUBLISH RATE: " + str(round(nodens.cp.SCAN_TIME/rate_unit))
+                payload_msg = [{ "addr" : [addr],
+                                    "type" : "json",
+                                    "data" : config_pub_rate + "\n"}]
+
+                # Parse full data command
+                if nodens.cp.FULL_DATA_FLAG:
+                    config_full_data = "CMD: FULL DATA ON. RATE: " + str(max(1,nodens.cp.FULL_DATA_TIME/nodens.cp.SCAN_TIME))
+                    nodens.logger.info(f"\nrate_unit: {rate_unit}s. SCAN TIME: {nodens.cp.SCAN_TIME}s. PUBLISH RATE: {str(round(nodens.cp.SCAN_TIME/rate_unit))}. FULL DATA RATE: {str(max(1,nodens.cp.FULL_DATA_TIME/nodens.cp.SCAN_TIME))}.\n")
+                else:
+                    config_full_data = "CMD: FULL DATA OFF."
+                    nodens.logger.info(f"\nrate_unit: {rate_unit}s. SCAN TIME: {nodens.cp.SCAN_TIME}s. PUBLISH RATE: {str(round(nodens.cp.SCAN_TIME/rate_unit))}. FULL DATA OFF.\n")
+                    
+                payload_msg.append({ "addr" : [addr],
+                        "type" : "json",
+                        "data" : config_full_data + "\n"})
+                
+                # Parse config to payload #
+                sens_idx = self.sensor_id.index(addr)
+                for i in range(len(rcp.config_radar)):
+                    token = rcp.config_radar[i].split()[0]
+                    if token in self.sensor_config[sens_idx]:
+                        rcp.config_radar[i] = f"{token} {self.sensor_config[sens_idx][token]}"
+                        payload_msg.append({ "addr" : [addr],
                                 "type" : "json",
-                                "data" : config_pub_rate + "\n"}]
+                                "data" : rcp.config_radar[i] + "\n"})
 
-            # Parse full data command
-            if nodens.cp.FULL_DATA_FLAG:
-                config_full_data = "CMD: FULL DATA ON. RATE: " + str(max(1,nodens.cp.FULL_DATA_TIME/nodens.cp.SCAN_TIME))
-                nodens.logger.info(f"\nrate_unit: {rate_unit}s. SCAN TIME: {nodens.cp.SCAN_TIME}s. PUBLISH RATE: {str(round(nodens.cp.SCAN_TIME/rate_unit))}. FULL DATA RATE: {str(max(1,nodens.cp.FULL_DATA_TIME/nodens.cp.SCAN_TIME))}.\n")
-            else:
-                config_full_data = "CMD: FULL DATA OFF."
-                nodens.logger.info(f"\nrate_unit: {rate_unit}s. SCAN TIME: {nodens.cp.SCAN_TIME}s. PUBLISH RATE: {str(round(nodens.cp.SCAN_TIME/rate_unit))}. FULL DATA OFF.\n")
-                
-            payload_msg.append({ "addr" : [addr],
-                    "type" : "json",
-                    "data" : config_full_data + "\n"})
-            
-            # Parse config to payload #
-            sens_idx = self.sensor_id.index(addr)
-            for i in range(len(rcp.config_radar)):
-                token = rcp.config_radar[i].split()[0]
-                if token in self.sensor_config[sens_idx]:
-                    rcp.config_radar[i] = f"{token} {self.sensor_config[sens_idx][token]}"
-                    payload_msg.append({ "addr" : [addr],
-                            "type" : "json",
-                            "data" : rcp.config_radar[i] + "\n"})
+                # Parse radar reset command
+                payload_msg.append({ "addr" : [addr],
+                                "type" : "json",
+                                "data" : "CMD: TI RESET" + "\n"})
+                    
+                # Send config to sensor
+                sensor_topic = 'mesh/' + self.root_id[sens_idx] + '/toDevice'
 
-            # Parse radar reset command
-            payload_msg.append({ "addr" : [addr],
-                            "type" : "json",
-                            "data" : "CMD: TI RESET" + "\n"})
-                
-            # Send config to sensor
-            sensor_topic = 'mesh/' + self.root_id[sens_idx] + '/toDevice'
-        
+                ndns_mesh.MESH.multiline_payload(nodens.cp.SENSOR_IP,nodens.cp.SENSOR_PORT,60, sensor_topic,"", payload_msg)
 
-            ndns_mesh.MESH.multiline_payload(nodens.cp.SENSOR_IP,nodens.cp.SENSOR_PORT,60, sensor_topic,"", payload_msg)
+        except Exception as e:
+            nodens.logger.error(f"SM update_with_received_config. config changed: {e}")
 
     def new_config(self):
         self.sensor_config.append({
