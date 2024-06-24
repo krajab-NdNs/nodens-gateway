@@ -567,10 +567,17 @@ class SensorMesh:
             for key in keys:
                 if key in json_payload["client"]:
                     tb_saved_config = json_payload["client"][key]
+
+                    # Remove trailing \n
                     if (tb_saved_config[-2:] == "\n"):
                         tb_saved_config = tb_saved_config[:-2]
                     elif (tb_saved_config[-1:] == "\n"):
                         tb_saved_config = tb_saved_config[:-1]
+
+                    # Remove leading space
+                    if (tb_saved_config[0] == " "):
+                        tb_saved_config = tb_saved_config[1:]
+
                     sensor_current_config = self.sensor_config[sens_idx][key]
                     nodens.logger.info(f"SensorMesh. Received config from server. {key}. sensor:{self.sensor_config[sens_idx][key]}. tb:{tb_saved_config}")
                     if sensor_current_config != tb_saved_config:
