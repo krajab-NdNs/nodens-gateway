@@ -548,7 +548,7 @@ class SensorMesh:
         nodens.logger.warning(f"\n SM update_with_received_config. payload: {payload}")
         config_changed_flag = 0
         nodens.logger.warning(f"\n SM update_with_received_config. client: {payload['client']}")
-        nodens.logger.warning(f"\n SM update_with_received_config. addr: {payload['client']["sensorID"]}")
+        nodens.logger.warning(f"\n SM update_with_received_config. addr: {payload['client']['sensorID']}")
         addr = payload["client"]["sensorID"]
         if addr in self.sensor_id:
             sens_idx = self.sensor_id.index(addr)
