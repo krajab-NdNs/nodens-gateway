@@ -534,7 +534,7 @@ class SensorMesh:
             token = payload.split()[0]
             if token in self.sensor_config[sens_idx]:
                 self.sensor_config[sens_idx][token] = payload[len(token)+1:]
-                nodens.logger.info(f"SensorMesh.update_config. token: {token} / {self.sensor_config[sens_idx][token]}")
+                nodens.logger.info(f"SensorMesh. Received config from sensor. token: {token} / {self.sensor_config[sens_idx][token]}")
 
             if payload.split()[0] == "sensorStart":
                 self.sensorStart_flag[sens_idx] = 1
@@ -620,9 +620,9 @@ class SensorMesh:
                         sensor_current_config = self.sensor_config[sens_idx][key].strip()
                         nodens.logger.info(f"SensorMesh. Received config from server. {key}. sensor:{sensor_current_config}. tb:{tb_saved_config}")
                         if sensor_current_config != tb_saved_config:
-                            nodens.logger.warning(f"SensorMesh. Cloud config differs from current sensor config!\n\t{key}. \n\tsensor: {sensor_current_config}. \n\ttb: {tb_saved_config}.")
                             sensor_current_config = tb_saved_config
                             if key != "sensorID":
+                                nodens.logger.warning(f"SensorMesh. Cloud config differs from current sensor config!\n\t{key}. \n\tsensor: {sensor_current_config}. \n\ttb: {tb_saved_config}.")
                                 config_changed_flag = 1
                             
 

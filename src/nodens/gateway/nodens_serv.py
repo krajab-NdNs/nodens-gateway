@@ -638,6 +638,8 @@ def on_message_sensorN(client, userdata, msg):
                 sens_idx = ndns_fns.sm.sensor_id.index(mqttDataFinal['addr'])
                 if (T - ndns_fns.sm.last_config_check_time[sens_idx]).seconds > 15*60:
                     ndns_fns.message_pipeline.config_check(mqttDataFinal['addr'])
+                else:
+                    nodens.logger.warning(f"TIME: {(T - ndns_fns.sm.last_config_check_time[sens_idx]).seconds}")
 
         # except:
         #     pass
