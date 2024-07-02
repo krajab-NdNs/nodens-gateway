@@ -647,7 +647,7 @@ class SensorMesh:
                     # rate_unit = Baseline data transmission rate
                     if self.sensor_publish_rate[sens_idx] != []:
                         config_pub_rate = f"CMD: PUBLISH RATE: {self.sensor_publish_rate[sens_idx]}"
-                        nodens.logger.info(f"CONFIG PUBLISH RATE: {config_full_data}\n")
+                        nodens.logger.info(f"CONFIG PUBLISH RATE: {config_pub_rate}\n")
                         payload_msg.append({ "addr" : [addr],
                                             "type" : "json",
                                             "data" : config_pub_rate + "\n"})
