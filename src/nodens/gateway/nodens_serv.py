@@ -527,9 +527,10 @@ def on_message_sensorN(client, userdata, msg):
                         elif temp[0:6] == 'CONFIG':
                             ndns_fns.rcp.receive_config(temp[8:])
                             ndns_fns.sm.update_config(temp, mqttDataFinal['addr'])
-                            if ndns_fns.sm.sensorStart_flag[sen_idx] == 1:
+                            sens_idx = ndns_fns.sm.sensor_id(mqttDataFinal['addr'])
+                            if ndns_fns.sm.sensorStart_flag[sens_idx] == 1:
                                 ndns_fns.message_pipeline.config_check(mqttDataFinal['addr'])
-                                ndns_fns.sm.sensorStart_flag[sen_idx] = 0
+                                ndns_fns.sm.sensorStart_flag[sens_idx] = 0
 
                         elif temp[0:3] == 'MSG':
                             ndns_mesh.MESH.status.receive_msg(temp, mqttDataFinal['timestamp'])
@@ -629,6 +630,11 @@ def on_message_sensorN(client, userdata, msg):
                 idx_write = 0
                 mqttData_SAVE = []
                 mqttData_SAVEFull = []
+
+                # Check config if necessary
+                sens_idx = ndns_fns.sm.sensor_id.index(mqttDataFinal['addr'])
+                if (T - ndns_fns.sm.last_config_check_time[sens_idx]).seconds > 15*60:
+                    ndns_fns.message_pipeline.config_check(mqttDataFinal['addr'])
 
         # except:
         #     pass

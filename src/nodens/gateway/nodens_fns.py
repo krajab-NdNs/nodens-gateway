@@ -411,7 +411,7 @@ class SensorMesh:
 
         # Config parameters
         # Update cloud db when sensorStart command received and config accepted
-        self.last_user_config_update_time = [] # Last time config was updated
+        self.last_config_check_time = [] # Last time config was updated
         self.sensor_config = [] # Latest sensor config
         self.sensor_version = [] # Sensor firmwave version
         self.sensor_publish_rate = []
@@ -448,7 +448,7 @@ class SensorMesh:
                     self.root_id.append("")
                     self.layer_number.append("")
                 
-                self.last_user_config_update_time.append([])
+                self.last_config_check_time.append(dt.datetime.now(dt.timezone.utc))
                 self.new_config()
                 self.sensor_version.append([])
                 self.sensor_publish_rate.append([])
@@ -473,7 +473,7 @@ class SensorMesh:
                     nodens.logger.error("SensorMesh request_config: {}".format(data))
 
     # Store sensor config when received
-    # This will udpate the configs and versions
+    # This will update the configs and versions
     # If a new config is transmitted to a sensor, it is sent as a package of 
     #   type: "json"
     #   payload: "config..."
@@ -583,6 +583,9 @@ class SensorMesh:
                 #         nodens.logger.warning(f"SensorMesh update_config. Command not recognised: {msg_data}")
 
     # Store sensor config when received from remote server
+    #   Load config from Cloud
+    #   Compare to saved config
+    #   Update config with Cloud version if they don't match.
     def update_with_received_config(self, payload, rate_unit = 0.25):
         json_payload = json.loads(payload)
         config_changed_flag = 0
@@ -592,6 +595,7 @@ class SensorMesh:
                 sens_idx = self.sensor_id.index(addr)
 
             nodens.logger.warning(f"\n SM update_with_received_config addr: {addr}. idx: {sens_idx}")   
+            self.last_config_check_time[sens_idx] = dt.datetime.now(dt.timezone.utc)
 
             try:
                 # Check each received config and compare to current sensor config
