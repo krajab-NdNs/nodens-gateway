@@ -502,6 +502,7 @@ class SensorMesh:
 
         # Commands sent to sensor, e.g. request version or change publish rate
         if msg_data[:3] == "CMD":
+            nodens.logger.warning(f"SensorMesh CMD: {msg_data}")
             payload = msg_data[5:]
             ndns_mesh.MESH.status.receive_cmd(msg_data, T, addr)
             cmd_num = ndns_mesh.MESH.status.last_cmd_num
@@ -509,10 +510,12 @@ class SensorMesh:
                 nodens.logger.info ("SensorMesh. CMD REQUEST VERSION")
             elif cmd_num == 2:
                 self.sensor_publish_rate[sens_idx] = payload.split()[2]
+                nodens.logger.warning(f"SensorMesh pub rate: {self.sensor_publish_rate[sens_idx]}. payload: {payload}")
             elif cmd_num == 3:
                 if payload.split()[2][:2] == "ON":
                     self.sensor_full_data[sens_idx] = "ON"
                     self.sensor_full_data_rate[sens_idx] = payload.split()[4]
+                    nodens.logger.warning(f"SensorMesh full rate: {self.sensor_full_data_rate[sens_idx]}. payload: {payload}")
                 else:
                     self.sensor_full_data[sens_idx] = "OFF"
         
@@ -595,7 +598,7 @@ class SensorMesh:
             if addr in self.sensor_id:
                 sens_idx = self.sensor_id.index(addr)
 
-            nodens.logger.warning(f"\n SM update_with_received_config addr: {addr}. idx: {sens_idx}")   
+            nodens.logger.warning(f"SM update_with_received_config addr: {addr}. idx: {sens_idx}")   
             self.last_config_check_time[sens_idx] = dt.datetime.now(dt.timezone.utc)
 
             try:

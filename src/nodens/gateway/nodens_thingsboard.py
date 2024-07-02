@@ -35,7 +35,7 @@ def on_unsubscribe_tb(client, userdata, mid):
     nodens.logger.debug('THINGSBOARD: on_unsubscribe: mid {}. userdata: {}.'.format(mid, userdata))
 
 def on_publish_tb(client,userdata,result):             #create function for callback
-    nodens.logger.debug("THINGSBOARD: on_publish: result {}. userdata: {} \n".format(result, userdata))
+    nodens.logger.debug("THINGSBOARD: on_publish: result {}. userdata: {}".format(result, userdata))
 
 def on_message_tb(client, userdata, msg):
     nodens.logger.info('THINGSBOARD: on_message_tb: userdata {}, msg {}'.format(userdata, msg.payload.decode('utf-8')))
@@ -319,11 +319,12 @@ class tb:
                 j = 0 # check no
                 client_config.publish(f"v1/devices/me/attributes/request/{req_id}", json_payload)
                 while j < 3:
+                    nodens.logger.warning(f"TB request req_id: {req_id} j: {j} TB_MSG_RX: {TB_MSG_RX}")
                     time.sleep(0.3)
-                    if TB_MSG_RX == 0:
+                    if TB_MSG_RX == 1:
                         break
                     j+=1
-                if TB_MSG_RX == 0:
+                if TB_MSG_RX == 1:
                     break
                 req_id+=1
         nodens.logger.warning("TB get_config unsub")
