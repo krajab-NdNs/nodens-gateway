@@ -515,7 +515,7 @@ def on_message_sensorN(client, userdata, msg):
                     if 'Sensor Information' in mqttDataFinal:
                         temp_text = "Waiting for config"
                         if mqttDataFinal['Sensor Information'][:len(temp_text)] != temp_text:
-                            nodens.logger.info("\nSensor information: {} for Device: {}". format(mqttDataFinal['Sensor Information'], mqttDataFinal['addr']))
+                            nodens.logger.info("Sensor information: {} for Device: {}". format(mqttDataFinal['Sensor Information'], mqttDataFinal['addr']))
 
                         # Check for sensor version
                         temp = mqttDataFinal['Sensor Information']

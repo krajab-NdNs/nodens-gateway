@@ -318,8 +318,8 @@ class tb:
             while req_id < 10:
                 j = 0 # check no
                 client_config.publish(f"v1/devices/me/attributes/request/{req_id}", json_payload)
-                while j < 5:
-                    time.sleep(0.1)
+                while j < 3:
+                    time.sleep(0.3)
                     if TB_MSG_RX == 0:
                         break
                     j+=1
