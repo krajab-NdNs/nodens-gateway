@@ -295,6 +295,8 @@ def on_message_sensorN(client, userdata, msg):
 
                 # If sensor config has been received and is complete, then update database
                 s_idx = [idx for idx,val in enumerate(ndns_fns.sm.sensorStart_flag) if val == 1]
+                if len(s_idx) > 0:
+                    nodens.logger.warning(f"Update database. ndns_fns.sm.sensorStart_flag: {ndns_fns.sm.sensorStart_flag}. s_idx: {s_idx}")
                 for idx in s_idx:
                     # Record message to send, if requested by Cloud service
                     ndns_fns.message_pipeline.config_update(ndns_fns.sm.sensor_id[idx], ndns_fns.sm.sensor_config[idx])

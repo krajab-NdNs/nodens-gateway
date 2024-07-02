@@ -559,6 +559,7 @@ class SensorMesh:
                     self.sensor_config[sens_idx]["fullDataRate"] = ""
 
                 self.sensorStart_flag[sens_idx] = 1
+                nodens.logger.warning(f"sensorMesh new config. publishRate: {self.sensor_publish_rate[sens_idx]}. fullDataRage: {self.sensor_full_data_rate[sens_idx]}")
             else:
                 if token in self.sensor_config[sens_idx]:
                     msg_data = msg_data[len(token)+1:]
