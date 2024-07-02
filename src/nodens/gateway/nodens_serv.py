@@ -123,6 +123,7 @@ def on_message_sensorN(client, userdata, msg):
         if mqttData['data'][0:3] == "CMD":
             nodens.logger.warning("receive_cmd")
             ndns_mesh.MESH.status.receive_cmd(mqttData['data'], T, mqttData['addr'])
+            ndns_fns.sm.update_config(mqttData)
         else:
             # Parse data 
             try:
