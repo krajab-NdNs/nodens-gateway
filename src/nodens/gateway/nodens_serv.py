@@ -635,12 +635,13 @@ def on_message_sensorN(client, userdata, msg):
                 mqttData_SAVEFull = []
 
         # Check config if necessary
-        sens_idx = ndns_fns.sm.sensor_id.index(mqttData['addr'])
-        if ndns_fns.sm.last_config_check_time[sens_idx] != []:
-            if (T - ndns_fns.sm.last_config_check_time[sens_idx]).seconds > 15*60:
-                ndns_fns.message_pipeline.config_check(mqttData['addr'])
-            else:
-                nodens.logger.warning(f"TIME: {(T - ndns_fns.sm.last_config_check_time[sens_idx]).seconds}")
+        if mqttData['addr'] in ndns_fns.sm.sensor_id:
+            sens_idx = ndns_fns.sm.sensor_id.index(mqttData['addr'])
+            if ndns_fns.sm.last_config_check_time[sens_idx] != []:
+                if (T - ndns_fns.sm.last_config_check_time[sens_idx]).seconds > 15*60:
+                    ndns_fns.message_pipeline.config_check(mqttData['addr'])
+                else:
+                    nodens.logger.warning(f"TIME: {(T - ndns_fns.sm.last_config_check_time[sens_idx]).seconds}")
 
         # except:
         #     pass
