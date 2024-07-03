@@ -606,7 +606,7 @@ class SensorMesh:
                 keys = self.sensor_config[sens_idx].keys()
                 for key in keys:
                     if key in json_payload["client"]:
-                        tb_saved_config = json_payload["client"][key]
+                        tb_saved_config = str(json_payload["client"][key])
 
                         # Remove trailing \n
                         if (tb_saved_config[-2:] == "\n"):
@@ -620,10 +620,10 @@ class SensorMesh:
                         sensor_current_config = self.sensor_config[sens_idx][key].strip()
                         nodens.logger.info(f"SensorMesh. Received config from server. {key}. sensor:{sensor_current_config}. tb:{tb_saved_config}")
                         if sensor_current_config != tb_saved_config:
-                            sensor_current_config = tb_saved_config
                             if key != "sensorID":
                                 nodens.logger.warning(f"SensorMesh. Cloud config differs from current sensor config {addr}!\n\t{key}. \n\tsensor: {sensor_current_config}. \n\ttb: {tb_saved_config}.")
                                 config_changed_flag = 1
+                            sensor_current_config = tb_saved_config
             except Exception as e:
                 nodens.logger.error(f"SM update_with_received_config. Check rx config: {e}. addr: {addr}. {key} {json_payload['client'][key]}")
                             
