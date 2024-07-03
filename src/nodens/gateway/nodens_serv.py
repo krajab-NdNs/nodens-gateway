@@ -639,8 +639,10 @@ def on_message_sensorN(client, userdata, msg):
             sens_idx = ndns_fns.sm.sensor_id.index(mqttData['addr'])
             if ndns_fns.sm.last_config_check_time[sens_idx] != []:
                 if (T - ndns_fns.sm.last_config_check_time[sens_idx]).seconds > 15*60:
-                    ndns_fns.message_pipeline.config_check(mqttData['addr'])
-                    ndns_fns.sm.last_config_check_time[sens_idx] = T
+                    sen_idx_s = ndns_fns.si.connected_sensors.index(mqttData['addr'])
+                    if (ndns_fns.si.num_occ[sen_idx_s] == 0):
+                        ndns_fns.message_pipeline.config_check(mqttData['addr'])
+                        ndns_fns.sm.last_config_check_time[sens_idx] = T
 
         # except:
         #     pass
