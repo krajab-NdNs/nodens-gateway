@@ -427,12 +427,16 @@ class SensorMesh:
     # data - top level json data received via mqtt. Already checked that it's not the full data stream
     def update(self, data):
         addr = data["addr"]
-        data_data = json.loads(base64.b64decode(data['data']))
+        try:
+            data_data = json.loads(base64.b64decode(data['data']))
+        except:
+            data_data = []
 
         if addr in self.sensor_id:
             sens_idx = self.sensor_id.index(addr)
             self.sensor_id[sens_idx] = addr
-            self.last_time_connected[sens_idx] = data_data["timestamp"]
+            if "timestamp" in data_data:
+                self.last_time_connected[sens_idx] = data_data["timestamp"]
             if "type" in data_data:
                 self.root_id[sens_idx] = data_data["root"]
                 self.layer_number[sens_idx] = data_data["layer"]
@@ -440,7 +444,10 @@ class SensorMesh:
         else:
             try:
                 self.sensor_id.append(addr)
-                self.last_time_connected.append(data_data["timestamp"])
+                if "timestamp" in data_data:
+                    self.last_time_connected.append(data_data["timestamp"])
+                else:
+                    self.last_time_connected.append("")
                 if "type" in data_data:
                     self.root_id.append(data_data["root"])
                     self.layer_number.append(data_data["layer"])
@@ -486,7 +493,7 @@ class SensorMesh:
                 addr = data["addr"][0]
             except:
                 addr = data["addr"]
-        
+
         if "data" in data:
             msg_data = data["data"]
         else:
@@ -509,15 +516,23 @@ class SensorMesh:
             if cmd_num == 0: #
                 nodens.logger.info ("SensorMesh. CMD REQUEST VERSION")
             elif cmd_num == 2:
-                self.sensor_publish_rate[sens_idx] = str(payload.split()[2])
-                nodens.logger.warning(f"SensorMesh pub rate: {self.sensor_publish_rate[sens_idx]}. payload: {payload}")
+                try:
+                    self.sensor_publish_rate[sens_idx] = str(payload.split()[2])
+                    nodens.logger.warning(f"SensorMesh pub rate: {self.sensor_publish_rate[sens_idx]}. payload: {payload}")
+                except Exception as e:
+                    nodens.logger.error(f"SensorMesh update_config. {e}")
             elif cmd_num == 3:
-                if payload.split()[2][:2] == "ON":
-                    self.sensor_full_data[sens_idx] = "ON"
-                    self.sensor_full_data_rate[sens_idx] = payload.split()[4]
-                    nodens.logger.warning(f"SensorMesh full rate: {self.sensor_full_data_rate[sens_idx]}. payload: {payload}")
-                else:
-                    self.sensor_full_data[sens_idx] = "OFF"
+                try:
+                    if payload.split()[2][:2] == "ON":
+                        self.sensor_full_data[sens_idx] = "ON"
+                        self.sensor_full_data_rate[sens_idx] = payload.split()[4]
+                        nodens.logger.warning(f"SensorMesh full rate: {self.sensor_full_data_rate[sens_idx]}. payload: {payload}")
+                    else:
+                        self.sensor_full_data[sens_idx] = "OFF"
+                except Exception as e:
+                    nodens.logger.error(f"SensorMesh update_config. {e}")
+
+                    
         
         # Current sensor version number
         elif msg_data[:7] == "VERSION":
@@ -531,13 +546,16 @@ class SensorMesh:
             #self.sensor_version[sens_idx] = payload
 
             # Parse and populate current sensor config
-            token = payload.split()[0]
-            if token in self.sensor_config[sens_idx]:
-                self.sensor_config[sens_idx][token] = payload[len(token)+1:]
-                nodens.logger.info(f"SensorMesh. Received config from sensor {addr}. token: {token} / {self.sensor_config[sens_idx][token]}")
+            try:
+                token = payload.split()[0]
+                if token in self.sensor_config[sens_idx]:
+                    self.sensor_config[sens_idx][token] = payload[len(token)+1:]
+                    nodens.logger.info(f"SensorMesh. Received config from sensor {addr}. token: {token} / {self.sensor_config[sens_idx][token]}")
 
-            if payload.split()[0] == "sensorStart":
-                self.sensorStart_flag[sens_idx] = 1
+                if payload.split()[0] == "sensorStart":
+                    self.sensorStart_flag[sens_idx] = 1
+            except Exception as e:
+                nodens.logger.error(f"SensorMesh update_config CONFIG. {e}. payload: {msg_data}")
         
         # Typically used to parse config sent to sensor, or type: json
         else:
