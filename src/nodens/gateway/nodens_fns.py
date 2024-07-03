@@ -427,12 +427,16 @@ class SensorMesh:
     # data - top level json data received via mqtt. Already checked that it's not the full data stream
     def update(self, data):
         addr = data["addr"]
-        data_data = json.loads(base64.b64decode(data['data']))
+        try:
+            data_data = json.loads(base64.b64decode(data['data']))
+        except:
+            data_data = []
 
         if addr in self.sensor_id:
             sens_idx = self.sensor_id.index(addr)
             self.sensor_id[sens_idx] = addr
-            self.last_time_connected[sens_idx] = data_data["timestamp"]
+            if "timestamp" in data_data:
+                self.last_time_connected[sens_idx] = data_data["timestamp"]
             if "type" in data_data:
                 self.root_id[sens_idx] = data_data["root"]
                 self.layer_number[sens_idx] = data_data["layer"]
@@ -440,7 +444,10 @@ class SensorMesh:
         else:
             try:
                 self.sensor_id.append(addr)
-                self.last_time_connected.append(data_data["timestamp"])
+                if "timestamp" in data_data:
+                    self.last_time_connected.append(data_data["timestamp"])
+                else:
+                    self.last_time_connected.append("")
                 if "type" in data_data:
                     self.root_id.append(data_data["root"])
                     self.layer_number.append(data_data["layer"])
