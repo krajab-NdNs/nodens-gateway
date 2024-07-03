@@ -248,11 +248,22 @@ class tb:
         # payload = ""
         # for config in config_payload:
         #     payload += config
+        self.connect()
 
         json_message = json.dumps(config_payload)
 
-        nodens.logger.info(f"THINGSBOARD PUBLISH CONFIG: {json_message} to {sensor_id}")
-        self.client.publish(nodens.cp.TB_ATTRIBUTES_TOPIC, json_message, qos=1)
+        nodens.logger.info(f"THINGSBOARD PUBLISH CONFIG: {json_message} to {sensor_id} with {username}")
+        ## Publish payload  then close connection ##
+        flag = 0
+        while flag == 0:
+            try:
+                self.client.publish(nodens.cp.TB_ATTRIBUTES_TOPIC, json_message, qos=1)
+                flag = 1
+            except Exception as e:
+                nodens.logger.error(f"THINGSBOARD: multiline payload publish error: {e.args}")
+                sleep(1)
+
+        self.end()
 
     def get_config(self, sensor_id):
         global TB_CONNECT
