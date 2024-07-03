@@ -622,10 +622,12 @@ class SensorMesh:
                         if sensor_current_config != tb_saved_config:
                             sensor_current_config = tb_saved_config
                             if key != "sensorID":
-                                nodens.logger.warning(f"SensorMesh. Cloud config differs from current sensor config!\n\t{key}. \n\tsensor: {sensor_current_config}. \n\ttb: {tb_saved_config}.")
+                                nodens.logger.warning(f"SensorMesh. Cloud config differs from current sensor config {addr}!\n\t{key}. \n\tsensor: {sensor_current_config}. \n\ttb: {tb_saved_config}.")
                                 config_changed_flag = 1
+            except Exception as e:
+                nodens.logger.error(f"SM update_with_received_config. Check rx config: {e}. addr: {addr}. {key} {json_payload['client'][key]}")
                             
-
+            try:
                 # Update publish rate
                 if "publishRate" in json_payload["client"]:
                     if json_payload["client"]["publishRate"] != "":
@@ -637,7 +639,7 @@ class SensorMesh:
                         self.sensor_full_data[sens_idx] = json_payload["client"]["fullData"]
                         self.sensor_full_data_rate[sens_idx] = str(json_payload["client"]["fullDataRate"])
             except Exception as e:
-                nodens.logger.error(f"SM update_with_received_config. Check rx config: {e}. addr: {addr}. {key} {json_payload['client'][key]}")
+                nodens.logger.error(f"SM update_with_received_config 2. Check rx config: {e}. addr: {addr}. {key} {json_payload['client'][key]}")
 
             # If the config has changed, update the sensor with the Cloud config
             try:
