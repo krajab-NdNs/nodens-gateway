@@ -534,7 +534,7 @@ class SensorMesh:
             token = payload.split()[0]
             if token in self.sensor_config[sens_idx]:
                 self.sensor_config[sens_idx][token] = payload[len(token)+1:]
-                nodens.logger.info(f"SensorMesh. Received config from sensor. token: {token} / {self.sensor_config[sens_idx][token]}")
+                nodens.logger.info(f"SensorMesh. Received config from sensor {addr}. token: {token} / {self.sensor_config[sens_idx][token]}")
 
             if payload.split()[0] == "sensorStart":
                 self.sensorStart_flag[sens_idx] = 1
@@ -637,7 +637,7 @@ class SensorMesh:
                         self.sensor_full_data[sens_idx] = json_payload["client"]["fullData"]
                         self.sensor_full_data_rate[sens_idx] = json_payload["client"]["fullDataRate"]
             except Exception as e:
-                nodens.logger.error(f"SM update_with_received_config. Check rx config: {e}")
+                nodens.logger.error(f"SM update_with_received_config. Check rx config: {e}. addr: {addr}. payload: {json_payload["client"]}. {key}")
 
             # If the config has changed, update the sensor with the Cloud config
             try:
