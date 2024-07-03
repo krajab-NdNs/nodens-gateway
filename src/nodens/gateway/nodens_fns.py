@@ -637,7 +637,7 @@ class SensorMesh:
                         self.sensor_full_data[sens_idx] = json_payload["client"]["fullData"]
                         self.sensor_full_data_rate[sens_idx] = json_payload["client"]["fullDataRate"]
             except Exception as e:
-                nodens.logger.error(f"SM update_with_received_config. Check rx config: {e}. addr: {addr}. payload: {json_payload["client"]}. {key}")
+                nodens.logger.error(f"SM update_with_received_config. Check rx config: {e}. addr: {addr}. payload: {json_payload['client']}. {key}")
 
             # If the config has changed, update the sensor with the Cloud config
             try:
