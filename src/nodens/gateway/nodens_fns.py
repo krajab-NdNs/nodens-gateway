@@ -509,7 +509,7 @@ class SensorMesh:
             if cmd_num == 0: #
                 nodens.logger.info ("SensorMesh. CMD REQUEST VERSION")
             elif cmd_num == 2:
-                self.sensor_publish_rate[sens_idx] = payload.split()[2]
+                self.sensor_publish_rate[sens_idx] = str(payload.split()[2])
                 nodens.logger.warning(f"SensorMesh pub rate: {self.sensor_publish_rate[sens_idx]}. payload: {payload}")
             elif cmd_num == 3:
                 if payload.split()[2][:2] == "ON":
@@ -629,15 +629,15 @@ class SensorMesh:
                 # Update publish rate
                 if "publishRate" in json_payload["client"]:
                     if json_payload["client"]["publishRate"] != "":
-                        self.sensor_publish_rate[sens_idx] = json_payload["client"]["publishRate"]
+                        self.sensor_publish_rate[sens_idx] = str(json_payload["client"]["publishRate"])
                 
                 # Update full data
                 if "fullData" in json_payload["client"]:
                     if json_payload["client"]["fullData"] != "":
                         self.sensor_full_data[sens_idx] = json_payload["client"]["fullData"]
-                        self.sensor_full_data_rate[sens_idx] = json_payload["client"]["fullDataRate"]
+                        self.sensor_full_data_rate[sens_idx] = str(json_payload["client"]["fullDataRate"])
             except Exception as e:
-                nodens.logger.error(f"SM update_with_received_config. Check rx config: {e}. addr: {addr}. payload: {json_payload['client']}. {key}")
+                nodens.logger.error(f"SM update_with_received_config. Check rx config: {e}. addr: {addr}. {key} {json_payload["client"][key]}")
 
             # If the config has changed, update the sensor with the Cloud config
             try:
