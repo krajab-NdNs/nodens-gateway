@@ -493,9 +493,6 @@ class SensorMesh:
                 addr = data["addr"][0]
             except:
                 addr = data["addr"]
-
-        self.update(data)
-        
         if "data" in data:
             msg_data = data["data"]
         else:
