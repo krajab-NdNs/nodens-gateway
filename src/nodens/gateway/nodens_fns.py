@@ -546,13 +546,16 @@ class SensorMesh:
             #self.sensor_version[sens_idx] = payload
 
             # Parse and populate current sensor config
-            token = payload.split()[0]
-            if token in self.sensor_config[sens_idx]:
-                self.sensor_config[sens_idx][token] = payload[len(token)+1:]
-                nodens.logger.info(f"SensorMesh. Received config from sensor {addr}. token: {token} / {self.sensor_config[sens_idx][token]}")
+            try:
+                token = payload.split()[0]
+                if token in self.sensor_config[sens_idx]:
+                    self.sensor_config[sens_idx][token] = payload[len(token)+1:]
+                    nodens.logger.info(f"SensorMesh. Received config from sensor {addr}. token: {token} / {self.sensor_config[sens_idx][token]}")
 
-            if payload.split()[0] == "sensorStart":
-                self.sensorStart_flag[sens_idx] = 1
+                if payload.split()[0] == "sensorStart":
+                    self.sensorStart_flag[sens_idx] = 1
+            except:
+                nodens.logger.error(f"SensorMesh update_config CONFIG. {e}. payload: {msg_data}")
         
         # Typically used to parse config sent to sensor, or type: json
         else:
