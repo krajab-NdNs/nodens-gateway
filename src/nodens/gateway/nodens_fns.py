@@ -554,7 +554,7 @@ class SensorMesh:
 
                 if payload.split()[0] == "sensorStart":
                     self.sensorStart_flag[sens_idx] = 1
-            except:
+            except Exception as e:
                 nodens.logger.error(f"SensorMesh update_config CONFIG. {e}. payload: {msg_data}")
         
         # Typically used to parse config sent to sensor, or type: json
