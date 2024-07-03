@@ -509,8 +509,11 @@ class SensorMesh:
             if cmd_num == 0: #
                 nodens.logger.info ("SensorMesh. CMD REQUEST VERSION")
             elif cmd_num == 2:
-                self.sensor_publish_rate[sens_idx] = str(payload.split()[2])
-                nodens.logger.warning(f"SensorMesh pub rate: {self.sensor_publish_rate[sens_idx]}. payload: {payload}")
+                try:
+                    self.sensor_publish_rate[sens_idx] = str(payload.split()[2])
+                    nodens.logger.warning(f"SensorMesh pub rate: {self.sensor_publish_rate[sens_idx]}. payload: {payload}")
+                except Exception as e:
+                    nodens.logger.error(f"SensorMesh update. {e}")
             elif cmd_num == 3:
                 if payload.split()[2][:2] == "ON":
                     self.sensor_full_data[sens_idx] = "ON"
