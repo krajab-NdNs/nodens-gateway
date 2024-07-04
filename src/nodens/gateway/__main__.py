@@ -137,7 +137,8 @@ def thingsboard_thread(pipeline):
             # Check if the message to send is a config (attribute)
             if "type" in message:
                 if message["type"] == "CONFIG_TX":
-                    nodens_thingsboard.TB.publish_config(message["addr"], message["payload"])
+                    if nodens.cp.TB_CONFIG_UPDATE == 1:
+                        nodens_thingsboard.TB.publish_config(message["addr"], message["payload"])
                 elif message["type"] == "CONFIG_RX":
                     nodens_thingsboard.TB.get_config(message["addr"])
                 else:

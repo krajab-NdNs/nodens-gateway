@@ -21,7 +21,7 @@ global CWD
 
 # Some information
 __title__ = "nodens-gateway"
-__version__ = "24.7.0a"
+__version__ = "24.7.0B"
 __author__ = "Khalid Z Rajab"
 __author_email__ = "khalid@nodens.eu"
 __copyright__ = "Copyright (c) 2024 " + __author__
@@ -105,6 +105,7 @@ class config_program:
         self.TB_ATTRIBUTES_REQUEST_PUB_TOPIC = "v1/devices/me/attributes/request/"
         self.TB_ACCESS_TOKEN_FOLDER = ""
         self.TB_ACCESS_TOKEN_FILENAME = "thingsboard_access.json"
+        self.TB_CONFIG_UPDATE = 0
 
 
         #_cfg = tomllib.loads(resources.read_text("nodens.gateway", "config.toml"))
@@ -158,6 +159,7 @@ class config_program:
                     "TB_ATTRIBUTES_TOPIC": self.TB_ATTRIBUTES_TOPIC,
                     "TB_ACCESS_TOKEN_FOLDER": self.TB_ACCESS_TOKEN_FOLDER,
                     "TB_ACCESS_TOKEN_FILENAME": self.TB_ACCESS_TOKEN_FILENAME,
+                    "TB_CONFIG_UPDATE": self.TB_CONFIG_UPDATE,
                 }
             }
 
@@ -215,6 +217,11 @@ class config_program:
                 self.TB_ACCESS_TOKEN_FILENAME = "thingsboard_access.json"
         else:
             self.TB_ACCESS_TOKEN_FILENAME = "thingsboard_access.json"
+        if "TB_CONFIG_UPDATE" in _cfg["THINGSBOARD"]:
+            self.TB_CONFIG_UPDATE = _cfg["THINGSBOARD"]["TB_CONFIG_UPDATE"]
+            if self.TB_CONFIG_UPDATE == "" or self.TB_CONFIG_UPDATE == None:
+                self.TB_CONFIG_UPDATE = 0
+
 
 # Search folders
 search_folders_configs = [user_config_dir(APPNAME, APPAUTHOR)+"/",
