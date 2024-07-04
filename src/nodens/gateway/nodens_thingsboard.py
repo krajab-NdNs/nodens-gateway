@@ -68,6 +68,8 @@ class tb:
 
         self.message = []
 
+        self.req_id = []
+
         FLAG_TX_IN_PROGRESS = 0
 
     def get_sensors(self, file):
@@ -77,6 +79,7 @@ class tb:
         for i in range(len(json_data)):
             self.sensor_id.append(json_data[i]["sensor_id"])
             self.access_token.append(json_data[i]["access_token"])
+            self.req_id.append(0)
     
     def end(self):
         flag = 0
@@ -324,20 +327,20 @@ class tb:
             sleep(1)
         client_config.subscribe(nodens.cp.TB_ATTRIBUTES_REQUEST_TOPIC, qos=1)
         
-        req_id = 1
+        
         while TB_MSG_RX == 0:
-            while req_id < 10:
+            while 1:
                 j = 0 # check no
-                client_config.publish(f"v1/devices/me/attributes/request/{req_id}", json_payload)
+                client_config.publish(f"v1/devices/me/attributes/request/{self.req_id[s_idx]}", json_payload)
                 while j < 3:
-                    nodens.logger.warning(f"TB request req_id: {req_id} j: {j} TB_MSG_RX: {TB_MSG_RX}")
+                    nodens.logger.warning(f"TB request req_id: {self.req_id[s_idx]} j: {j} TB_MSG_RX: {TB_MSG_RX}")
                     time.sleep(0.3)
                     if TB_MSG_RX == 1:
                         break
                     j+=1
                 if TB_MSG_RX == 1:
                     break
-                req_id+=1
+                self.req_id[s_idx]+=1
         nodens.logger.warning("TB get_config unsub")
         client_config.unsubscribe("#")
         client_config.loop_stop()
