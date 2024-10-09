@@ -1543,8 +1543,11 @@ class point_cloud:
 class point_cloud_3D_new:
     """Point cloud 3D TLV, parsed based on firmware version."""
     def __init__(self,raw,radar_version='R3D001B'):
+
         # Version check: is SNR in TLV
         if radar_version == 'R3D002A':
+            flag_snr = True
+        elif radar_version == 'R4':
             flag_snr = True
         else:
             flag_snr = False
@@ -1553,7 +1556,10 @@ class point_cloud_3D_new:
             self.num_obj = 0
         else:
             if flag_snr:
-                self.num_obj = int((np.uint8(raw[4:8]).view(np.uint32) - 8 - 20)/8)
+                if radar_version == 'R4':
+                    self.num_obj = int((np.uint8(raw[4:8]).view(np.uint32) - 20)/8)
+                else:
+                    self.num_obj = int((np.uint8(raw[4:8]).view(np.uint32) - 8 - 20)/8)
             else:
                 self.num_obj = int((np.uint8(raw[4:8]).view(np.uint32) - 8 - 16)/6)
 
@@ -1630,8 +1636,9 @@ class track:
         self.X = []
         self.Y = []
 
-        if np.floor(version) == 3:
+        if np.floor(version) >= 3:
             self.Z = []
+        
         if len(raw) == 0:
             self.num_tracks = 0
         else:
@@ -1641,13 +1648,19 @@ class track:
                 tlv_len = 40
             elif version == 3.112:
                 tlv_len = 112
-            self.num_tracks = int((np.uint8(raw[4:8]).view(np.uint32) - 8)/tlv_len)
+            elif version == 4.112:
+                tlv_len = 112
+            if version == 4.112:  
+                self.num_tracks = int((np.uint8(raw[4:8]).view(np.uint32))/tlv_len)
+
+            else:
+                self.num_tracks = int((np.uint8(raw[4:8]).view(np.uint32) - 8)/tlv_len)
 
             for i in range(self.num_tracks):
                 self.tid.append(np.uint8(raw[(8+tlv_len*i):(12+tlv_len*i)]).view(np.uint32)[0])
                 self.X.append(np.uint8(raw[(12+tlv_len*i):(16+tlv_len*i)]).view('<f4')[0])
                 self.Y.append(np.array(raw[(16+tlv_len*i):(20+tlv_len*i)], dtype='uint8').view('<f4')[0])
-                if int(np.floor(version)) == 3:
+                if int(np.floor(version)) >= 3:
                     self.Z.append(np.uint8(raw[(20+tlv_len*i):(24+tlv_len*i)]).view('<f4')[0])
 
 class PresenceDetect:
@@ -2119,6 +2132,8 @@ class parseTLV:
     def __init__(self, version):
         if (version == 3):
             hl = 48
+        elif (version == 4):
+            hl = 40
         self.packet_len = 0
         self.num_tlv = 0
         self.frame = 0
@@ -2134,43 +2149,75 @@ class parseTLV:
     def update(self, version, data, Nud):
         if (version == 3):
             hl = 48
+        elif (version == 4):
+            hl = 40
         self.packet_len = data[12] + 256*data[13]
         if len(data) < self.packet_len:
             nodens.logger.debug("Rx data size is smaller than expected. Expected: {}. Received: {}.".format(self.packet_len, len(data)))
             self.packet_len = len(data)
-        self.num_tlv = data[44]
+        if (version == 4):
+            self.num_tlv = data[32]
+        else:
+            self.num_tlv = data[44]
+            
         self.frame = convert_4_to_1(data[20:24])
         j = hl
         flag_track = False
         flag_pc = False
         self.message = []
+
+        tlv_code = [
+            [[6,0,0,0], [252,3,0,0]],   # Point cloud
+            [[7,0,0,0], [242,3,0,0]],   # Track
+            [[8,0,0,0], [243,3,0,0]],   # Target index info
+            [[10,0,0,0], [10,0,0,0]],   # Vital signs
+            [[11,0,0,0], [253,3,0,0]],  # Presence
+            [[12,0,0,0], [12,0,0,0]],   # UD signature
+            [[13,0,0,0], [13,0,0,0]],   # UD parameters
+            [[244,3,0,0], [244,3,0,0]] # Target height
+        ]
+        if version == 4:
+            tlv_version = 1
+        else:
+            tlv_version = 0
+
         while (j < self.packet_len):
-            if (data[j:j+4] == [6,0,0,0]):
+            # Point cloud
+            if (data[j:j+4] == tlv_code[0][tlv_version]):
                 flag_pc = True
-                j,self.len6,self.data6 = self.tlvN(data,j)
+                j,self.len6,self.data6 = self.tlvN(data,j,version)
                 if (j <= self.packet_len):
-                    self.pc = point_cloud_3D_new(self.data6, sv.radar_version)
+                    if tlv_version == 0:
+                        self.pc = point_cloud_3D_new(self.data6, sv.radar_version)
+                    else:
+                        self.pc = point_cloud_3D_new(self.data6, 'R4')
                     self.pc_history.update_history(self.pc)
 
-                # Enter the rest of the TLVs
-            elif (data[j:j+4] == [7,0,0,0]): 
+            # Tracks
+            elif (data[j:j+4] == tlv_code[1][tlv_version]): 
                 flag_track = True
-                j,self.len7,self.data7 = self.tlvN(data,j)
+                j,self.len7,self.data7 = self.tlvN(data,j,version)
                 if (j <= self.packet_len):
-                    self.track = track(self.data7,3.112)
-            elif (data[j:j+4] == [10,0,0,0]):
-                j,self.len10,self.data10 = self.tlvN(data,j)
+                    if tlv_version == 0:
+                        self.track = track(self.data7,3.112)
+                    else:
+                        self.track = track(self.data7,4.112)
+            # Vital signs
+            elif (data[j:j+4] == tlv_code[3][tlv_version]):
+                j,self.len10,self.data10 = self.tlvN(data,j,version)
                 print(f"TLV10. len:{self.len10}. data:{self.data10[0:12]} ")
                 if (j <= self.packet_len):
                     self.vs.update(self.data10)
                     nodens.logger.debug("(X,Y): ({:.1f},{:.1f}). HR:{:.1f}. BR: {:.1f}.".format(self.vs.X, self.vs.Y,  self.vs.heart_rate, self.vs.breathing_rate))
                     nodens.logger.debug(" B dev: {}".format(self.vs.breathing_deviation[0:3]))
                     nodens.logger.debug(" B vote: {}".format(self.vs.breathing_vote[0:3]))
-            elif (data[j:j+4] == [11,0,0,0]):
-                j,self.len11,self.data11 = self.tlvN(data,j)
+            # Presence
+            elif (data[j:j+4] == tlv_code[4][tlv_version]):
+                j,self.len11,self.data11 = self.tlvN(data,j,version)
                 self.presence.process(self.data11)
-            elif (data[j:j+4] == [12,0,0,0]):   # UD signature 12
-                j,self.len12,self.data12 = self.tlvN(data,j)
+            # UD signature
+            elif (data[j:j+4] == tlv_code[5][tlv_version]):   # UD signature 12
+                j,self.len12,self.data12 = self.tlvN(data,j,version)
                 #print(f"TLV12. len:{self.len12}. data:{self.data12[0:12]} ")
                 if (j <= self.packet_len):
                     ud_sig_out = self.ud.signature(self.data12, Nud, 128, 64)
@@ -2179,8 +2226,9 @@ class parseTLV:
                     for i in range(64):
                         for k in range(Nud):
                             self.ud_sig[i,k+40-Nud] = ud_sig_out[i,k]
-            elif (data[j:j+4] == [13,0,0,0]):   # UD parameters 13
-                j,self.len13,self.data13 = self.tlvN(data,j)
+            # UD parameters
+            elif (data[j:j+4] == tlv_code[6][tlv_version]):   # UD parameters 13
+                j,self.len13,self.data13 = self.tlvN(data,j,version)
                 #print(f"TLV13. len:{self.len13}. data:{self.data13[0:12]} ")
                 if (j <= self.packet_len):
                     #UD = ud()
@@ -2188,16 +2236,19 @@ class parseTLV:
                 #    self.elev = np.roll(self.elev,-1)
                 #    self.elev[49] = UD.elev.mean
             else:
-                j,lenN,dataN = self.tlvN(data,j)
+                j,lenN,dataN = self.tlvN(data,j,version)
         if flag_track is False:
             self.track = track([])
         if flag_pc is False:
             self.pc = point_cloud_3D_new([], sv.radar_version)
             self.pc_history.update_history(self.pc)
 
-    def tlvN(self, data, j):
+    def tlvN(self, data, j, version = 3):
         if len(data) > j+8:
-            lenN = convert_4_to_1(data[j+4:j+8])
+            if version == 3:
+                lenN = convert_4_to_1(data[j+4:j+8])
+            elif version == 4:
+                lenN = convert_4_to_1(data[j+4:j+8]) + 8
             if (lenN == 65536):
                 nodens.logger.warning("Data packet TLV length error. j: {}. len: {}.".format(j,len(data)))
             dataN = data[j:j+lenN]

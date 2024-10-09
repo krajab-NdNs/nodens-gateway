@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nodens-gateway"
-version = "24.7.0b"
+version = "24.10.1a"
 description = "Run the NodeNs gateway"
 readme = "README.md"
 authors = [{ name = "Khalid Z Rajab", email = "khalid@nodens.eu" }]
@@ -18,7 +18,7 @@ classifiers = [
 ]
 keywords = ["nodens", "gateway", "radar"]
 dependencies = [
-    "paho-mqtt",
+    "paho-mqtt==1.6.1",
     'tomli; python_version < "3.11"',
     "pyyaml",
     "numpy",

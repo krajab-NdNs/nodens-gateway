@@ -21,7 +21,7 @@ global CWD
 
 # Some information
 __title__ = "nodens-gateway"
-__version__ = "24.7.0B"
+__version__ = "24.10.1a"
 __author__ = "Khalid Z Rajab"
 __author_email__ = "khalid@nodens.eu"
 __copyright__ = "Copyright (c) 2024 " + __author__
@@ -82,6 +82,7 @@ class config_program:
         self.SENSOR_TOPIC = '#'
         self.SENSOR_IP = '10.3.141.1'
         self.SENSOR_PORT = 1883
+        self.SENSOR_VERSION = 3
 
         # SIEMENS INSIGHTS HUB config #
         self.ENABLE_SIEMENS_IH = 0
@@ -138,6 +139,7 @@ class config_program:
                     "SENSOR_TOPIC": self.SENSOR_TOPIC,
                     "SENSOR_IP": self.SENSOR_IP,
                     "SENSOR_PORT": self.SENSOR_PORT,
+                    "SENSOR_VERSION": self.SENSOR_VERSION,
                 },
                 "INSIGHTS_HUB": {
                     "ENABLE_SIEMENS_IH": self.ENABLE_SIEMENS_IH,
@@ -181,6 +183,8 @@ class config_program:
             self.SENSOR_TOPIC = '#'
         self.SENSOR_IP = _cfg["Sensor"]["SENSOR_IP"]
         self.SENSOR_PORT = int(_cfg["Sensor"]["SENSOR_PORT"])
+        if "SENSOR_VERSION" in _cfg["Sensor"]:
+            self.SENSOR_VERSION = _cfg["Sensor"]["SENSOR_VERSION"]
 
         # INSIGHTS_HUB config #
         if "INSIGHTS_HUB" in _cfg:

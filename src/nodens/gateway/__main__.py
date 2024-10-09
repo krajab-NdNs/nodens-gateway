@@ -44,6 +44,7 @@ def sensor_thread(pipeline_thingsboard,pipeline_insight_hub):
         for s_idx in idx:
 
             if nodens.cp.ENABLE_THINGSBOARD:
+                nodens.logger.info("Set TB")    # TEMP KZR
                 pipeline_thingsboard.set_message(ndns_fns.message_pipeline.message[s_idx], "Producer")
 
             if nodens.cp.ENABLE_SIEMENS_IH:
@@ -131,8 +132,10 @@ def thingsboard_thread(pipeline):
     while 1:
         try:
             message = pipeline.get_message("Consumer")
+            # nodens.logger.info(f"TB. GET")       # TEMP KZR
         #sleep(0.1)
             nodens_thingsboard.TB.subscribe_to_attributes(ndns_fns.si.connected_sensors)
+            # nodens.logger.info(f"TB. sub")  
 
             # Check if the message to send is a config (attribute)
             if "type" in message:
@@ -142,8 +145,10 @@ def thingsboard_thread(pipeline):
                 elif message["type"] == "CONFIG_RX":
                     nodens_thingsboard.TB.get_config(message["addr"])
                 else:
+                    # nodens.logger.info(f"TB. prepare: {message}")       # TEMP KZR
                     nodens_thingsboard.TB.prepare_data(message)
                     nodens_thingsboard.TB.multiline_payload(message['addr'])
+            # nodens.logger.info(f"TB. client_sub")   # TEMP KZR
 
             for i in range(len(nodens_thingsboard.TB.client_sub)):
                 if nodens_thingsboard.TB.client_sub[i]._userdata != []:

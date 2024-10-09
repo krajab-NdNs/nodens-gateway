@@ -234,6 +234,8 @@ class tb:
                 self.payload["data_diagnostics"] = input_data['data'] 
         except Exception as e:
             nodens.logger.error(f"THINGSBOARD: diagnostics error: {e.args} for sensor: {input_data['addr']}")   
+
+        nodens.logger.info(f"TB payload: {self.payload}")      # TEMP KZR
         
     def prepare_log(self, log_msg):
         # Initialize payload
@@ -394,6 +396,7 @@ class tb:
         flag = 0
         while flag == 0:
             try:
+                # nodens.logger.info(f"TB publish. {nodens.cp.TB_PUB_TOPIC} {json_message}")     # TEMP KZR
                 self.client.publish(nodens.cp.TB_PUB_TOPIC, json_message, qos=1)
                 flag = 1
             except Exception as e:
