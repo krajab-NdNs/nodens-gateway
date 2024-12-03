@@ -93,13 +93,9 @@ def on_message_sensorN(client, userdata, msg):
 
     #getting data from mqtt
     mqttDataN = (msg.payload)
-    print(f"msg.payload: {msg.payload}")
-    nodens.logger.info(f"msg.payload: {msg.payload}")
 
     try:
         mqttData = json.loads(mqttDataN)
-        print(f"mqttData: {mqttData}")
-        print(f"mqttData['rawData']: {mqttData['rawData']}")
 
         # --- Temporarily handle V3 (new sensor) data --- #
         if nodens.cp.SENSOR_VERSION == 4:
@@ -108,7 +104,6 @@ def on_message_sensorN(client, userdata, msg):
                 mqttData['addr'] = mqttData['sensorID']
             if 'rawData' in mqttData:
                 mqttData['data'] = mqttData['rawData']
-                print(f"mqttData['data']: {mqttData['data']}")
                 
                 data_len = len(mqttData['data'])
                 if data_len % 4 != 0:
