@@ -44,7 +44,7 @@ def sensor_thread(pipeline_thingsboard,pipeline_insight_hub):
         for s_idx in idx:
 
             if nodens.cp.ENABLE_THINGSBOARD:
-                nodens.logger.info("Set TB")    # TEMP KZR
+                #nodens.logger.info("Set TB")    # TEMP KZR
                 pipeline_thingsboard.set_message(ndns_fns.message_pipeline.message[s_idx], "Producer")
 
             if nodens.cp.ENABLE_SIEMENS_IH:

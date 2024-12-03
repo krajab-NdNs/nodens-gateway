@@ -21,7 +21,7 @@ global CWD
 
 # Some information
 __title__ = "nodens-gateway"
-__version__ = "24.10.1a"
+__version__ = "24.12.1a"
 __author__ = "Khalid Z Rajab"
 __author_email__ = "khalid@nodens.eu"
 __copyright__ = "Copyright (c) 2024 " + __author__
@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 # Create handlers
-log_file = user_log_dir(APPNAME, APPAUTHOR)+'/nodens_gateway.log'
+log_file = user_log_dir(APPNAME, APPAUTHOR)+'/nodens-gateway.log'
 Path(user_log_dir(APPNAME, APPAUTHOR)).mkdir(parents=True, exist_ok=True)
 c_handler = logging.StreamHandler()
 f_handler = logging.FileHandler(log_file, mode='w')

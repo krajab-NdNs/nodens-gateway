@@ -235,7 +235,7 @@ class tb:
         except Exception as e:
             nodens.logger.error(f"THINGSBOARD: diagnostics error: {e.args} for sensor: {input_data['addr']}")   
 
-        nodens.logger.info(f"TB payload: {self.payload}")      # TEMP KZR
+        #nodens.logger.info(f"TB payload: {self.payload}")      # TEMP KZR
         
     def prepare_log(self, log_msg):
         # Initialize payload

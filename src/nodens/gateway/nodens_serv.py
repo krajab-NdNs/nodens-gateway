@@ -150,7 +150,7 @@ def on_message_sensorN(client, userdata, msg):
             # Parse data 
             try:
                 data = base64.b64decode(mqttData['data'])
-                #print(f"data: {data}")     # Temp KZR
+                print(f"data: {data}")     # Temp KZR
             except Exception as e:
                 data = mqttData['data']
                 print(f"data e: {e.args} {data}")  
@@ -224,6 +224,7 @@ def on_message_sensorN(client, userdata, msg):
 
 
                     #TODO: check cloud update
+                    print(f"T:{T}. {ndns_fns.si.period_t[sen_idx].total_seconds()}. CLOUD_WRITE_TIME: {nodens.cp.CLOUD_WRITE_TIME}.")
                     if ((T - ndns_fns.si.period_t[sen_idx]).total_seconds() > nodens.cp.CLOUD_WRITE_TIME):
                         # Mark for deletion tracks which have left
                         ndns_fns.oh.delete_track(mqttData['addr'], temp_current_occupants, mark_to_delete=1)
