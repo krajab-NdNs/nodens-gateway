@@ -93,9 +93,12 @@ def on_message_sensorN(client, userdata, msg):
 
     #getting data from mqtt
     mqttDataN = (msg.payload)
+    print(f"msg.payload: {msg.payload}")
+    nodens.logger.info(f"msg.payload: {msg.payload}")
 
     try:
         mqttData = json.loads(mqttDataN)
+        print(f"mqttData: {mqttData}")
 
         # --- Temporarily handle V3 (new sensor) data --- #
         if nodens.cp.SENSOR_VERSION == 4:
