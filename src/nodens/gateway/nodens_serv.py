@@ -224,7 +224,6 @@ def on_message_sensorN(client, userdata, msg):
 
 
                     #TODO: check cloud update
-                    print(f"T:{T}. {(T - ndns_fns.si.period_t[sen_idx]).total_seconds()}. CLOUD_WRITE_TIME: {nodens.cp.CLOUD_WRITE_TIME}.")
                     if ((T - ndns_fns.si.period_t[sen_idx]).total_seconds() > nodens.cp.CLOUD_WRITE_TIME):
                         # Mark for deletion tracks which have left
                         ndns_fns.oh.delete_track(mqttData['addr'], temp_current_occupants, mark_to_delete=1)
