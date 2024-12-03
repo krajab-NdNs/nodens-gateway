@@ -104,6 +104,7 @@ def on_message_sensorN(client, userdata, msg):
                 mqttData['addr'] = mqttData['sensorID']
             if 'rawData' in mqttData:
                 mqttData['data'] = mqttData['rawData']
+                print(f"mqttData['data']: {mqttData['data']}")
                 
                 data_len = len(mqttData['data'])
                 if data_len % 4 != 0:
