@@ -375,11 +375,6 @@ def on_message_sensorN(client, userdata, msg):
                         if ('occupancyInfo' in mqttData):
                             print(f"here3: {mqttData['occupancyInfo'][0]}")
                             mqttOccInfo = mqttData['occupancyInfo']
-                            for i in range(min(ndns_fns.si.num_occ[sen_idx],2)):
-                                mqttDataTemp.append(mqttOccInfo[i]['trackID'])
-                                mqttDataTemp.append(mqttOccInfo[i]['X'])
-                                mqttDataTemp.append(mqttOccInfo[i]['Y'])
-                                mqttDataTemp.append(mqttOccInfo[i]['Z'])
 
                             for i in range(len(mqttData['occupancyInfo'])):
                                 if 'trackID' in mqttData['occupancyInfo'][i]:
