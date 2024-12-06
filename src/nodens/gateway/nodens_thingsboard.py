@@ -168,7 +168,10 @@ class tb:
                 self.payload["occupant_id"] = f"{input_data['Track id']}"
                 self.payload["X"] = f"{input_data['X']:.2f}"
                 self.payload["Y"] = f"{input_data['Y']:.2f}"
+            except Exception as e:
+                nodens.logger.error(f"THINGSBOARD: occupant error: {e.args} for sensor: {input_data['addr']}")
 
+            try:
                 # ~~~~~~~~~~~ ACTIVITY ~~~~~~~~~~~~~ #
                 self.payload["dist_moved"] = f"{input_data['Distance moved']:.2f}"
                 self.payload["was_active_this_period"] = input_data['Was active']
@@ -180,9 +183,22 @@ class tb:
 
                 # ~~~~~~~~~~~ GAIT ~~~~~~~~~~~~~ #
                 self.payload["gait_distribution"] = f"{input_data['Gait distribution']}"
-
             except Exception as e:
                 nodens.logger.error(f"THINGSBOARD: occupant error: {e.args} for sensor: {input_data['addr']}")
+                try:
+                    # ~~~~~~~~~~~ ACTIVITY ~~~~~~~~~~~~~ #
+                    self.payload["dist_moved"] = f"{input_data['Distance moved']}"
+                    self.payload["was_active_this_period"] = input_data['Was active']
+
+                    # ~~~~~~~~~~~ SLEEP ~~~~~~~~~~~~~ #
+                    self.payload["rest_zone_presence"] = f"{input_data['Presence detected']}"
+
+                    # ~~~~~~~~~~~ GAIT ~~~~~~~~~~~~~ #
+                    self.payload["gait_distribution"] = f"{input_data['Gait distribution']}"
+                except Exception as e:
+                    nodens.logger.error(f"THINGSBOARD: occupant error: {e.args} for sensor: {input_data['addr']}")
+
+            
 
         # ~~~~~~~~~~~ ENERGY ~~~~~~~~~~~~~ #
         try:
@@ -191,6 +207,8 @@ class tb:
         except Exception as e:
             nodens.logger.error(f"THINGSBOARD: energy error: {e.args} for sensor: {input_data['addr']}")
             try:
+                self.payload["track_ud_energy"] = f"{input_data['UD energy']}"
+                self.payload["pc_energy"] = f"{input_data['PC energy']}"
                 nodens.logger.error(f"THINGSBOARD. track energy data: {input_data['UD energy']}. pc data: {input_data['PC energy']}. occupancy: {input_data['Average period occupancy']}")
             except:
                 pass
