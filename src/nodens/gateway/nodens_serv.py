@@ -96,7 +96,11 @@ def on_message_sensorN(client, userdata, msg):
 
     try:
         mqttData = json.loads(mqttDataN)
+    except Exception as e:
+        nodens.logger.error(f"Error {e.args}.")
+        mqttData = {}
 
+    try:
         # --- Temporarily handle V3 (new sensor) data --- #
         if nodens.cp.SENSOR_VERSION == 4:
             mqttData['type'] = 'v4'
@@ -112,11 +116,11 @@ def on_message_sensorN(client, userdata, msg):
 
             else:
                 mqttData['data'] = mqttData
-                print(f"mqttData: {mqttData}")
+                print(f"mqttData['data']: {mqttData['data']}")
                 
                 # print(f"LEN: {data_len} {len(mqttData['data'])} {len(mqttData['data']) % 4} mqttData['data']: {mqttData['data']}")
     except Exception as e:
-        nodens.logger.error(f"Error {e.args}. msg: {mqttDataN}")
+        nodens.logger.error(f"Error {e.args}.")
         mqttData = {}
     #print(f"mqttData: {mqttData}")
     # Get time
@@ -146,7 +150,14 @@ def on_message_sensorN(client, userdata, msg):
             ndns_fns.ew.count.append(0)
 
         # Check if command is received
-        if mqttData['data'][0:3] == "CMD":
+        try:
+            if mqttData['data'][0:3] == "CMD":
+                cmd_check = 1
+            else:
+                cmd_check = 0
+        except:
+            cmd_check = 0
+        if cmd_check == 1:
             nodens.logger.warning("receive_cmd")
             ndns_mesh.MESH.status.receive_cmd(mqttData['data'], T, mqttData['addr'])
             ndns_fns.sm.update_config(mqttData)
