@@ -168,16 +168,20 @@ def on_message_sensorN(client, userdata, msg):
                 #print(f"data: {data}")     # Temp KZR
             except Exception as e:
                 data = mqttData['data']
-                print(f"data e: {e.args} {data}")  
-            str_data = str(data[0])
-            data_int = [data[0]]
+                print(f"data e: {e.args} {data}")
 
-            if len(data) > 6:
-                for i in range(7):
-                    str_data = str_data + str(data[i+1])
-                    data_int.append(data[i+1])
-            else:
-                nodens.logger.warning("Data below length 8. Rx: {}".format(data))
+            try:  
+                str_data = str(data[0])
+                data_int = [data[0]]
+
+                if len(data) > 6:
+                    for i in range(7):
+                        str_data = str_data + str(data[i+1])
+                        data_int.append(data[i+1])
+                else:
+                    nodens.logger.warning("Data below length 8. Rx: {}".format(data))
+            except Exception as e:
+                str_data = ''
 
             # Check if full data packet received
             try:
