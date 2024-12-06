@@ -97,7 +97,7 @@ def on_message_sensorN(client, userdata, msg):
     try:
         mqttData = json.loads(mqttDataN)
     except Exception as e:
-        nodens.logger.error(f"Error {e.args}.")
+        nodens.logger.error(f"Error with json loads {e.args}.")
         mqttData = {}
 
     try:
@@ -106,10 +106,6 @@ def on_message_sensorN(client, userdata, msg):
             mqttData['type'] = 'v4'
             if 'sensorID' in mqttData:
                 mqttData['addr'] = mqttData['sensorID']
-            if 'numOccupants' in mqttData:
-                mqttData['Number of Occupants'] = mqttData['numOccupants']
-            if 'occupancyInfo' in mqttData:
-                mqttData['Occupancy Info'] = mqttData['occupancyInfo']
             if 'rawData' in mqttData:
                 mqttData['data'] = mqttData['rawData']
                 
@@ -123,7 +119,7 @@ def on_message_sensorN(client, userdata, msg):
                 
                 # print(f"LEN: {data_len} {len(mqttData['data'])} {len(mqttData['data']) % 4} mqttData['data']: {mqttData['data']}")
     except Exception as e:
-        nodens.logger.error(f"Error {e.args}.")
+        nodens.logger.error(f"Error at start {e.args}.")
         mqttData = {}
     #print(f"mqttData: {mqttData}")
     # Get time
@@ -355,15 +351,17 @@ def on_message_sensorN(client, userdata, msg):
                 elif mqttData['type'] == 'v4':
                     print(f"V4")
                     ndns_fns.counts.update(mqttData['addr'], 'basic')
-                    print(f"here")
+
                     ndns_fns.sm.update(mqttData)
                     # mqttOcc = json.loads(data)
                     # mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
                     # mqttDataFinal = {**mqttTime, **mqttData, **mqttOcc}
-                    print(f"here2")
                     ndns_fns.si.update_short(sen_idx, T, mqttData)
-                    print(f"here3")
                     
+                    # Temp variables
+                    temp_dist_moved = ''
+                    temp_gait_distr = ''
+                    temp_pc_energy = ''
 
                     if ('numOccupants' in mqttData):
                         mqttDataTemp = [T.strftime("%Y-%m-%dZ%H:%M:%S")]
@@ -378,7 +376,120 @@ def on_message_sensorN(client, userdata, msg):
                                 mqttDataTemp.append(mqttOccInfo[i]['X'])
                                 mqttDataTemp.append(mqttOccInfo[i]['Y'])
                                 mqttDataTemp.append(mqttOccInfo[i]['Z'])
-                    print(f"here4")
+
+                            for i in range(len(mqttData['occupancyInfo'])):
+                                if 'distance' in mqttData['occupancyInfo'][i]:
+                                    if i == 0:
+                                        temp_dist_moved = str(mqttData['occupancyInfo'][i]['distance'])
+                                    else:
+                                        temp_dist_moved = temp_dist_moved + ';' + str(mqttData['occupancyInfo'][i]['distance'])
+                                if 'gaitDistr' in mqttData['occupancyInfo'][i]:
+                                    if i == 0:
+                                        temp_gait_distr = str(mqttData['occupancyInfo'][i]['gaitDistr'])
+                                    else:
+                                        temp_gait_distr = temp_gait_distr + ';' + str(mqttData['occupancyInfo'][i]['gaitDistr'])
+                                if 'pcEnergy' in mqttData['occupancyInfo'][i]:
+                                    if i == 0:
+                                        temp_pc_energy = str(mqttData['occupancyInfo'][i]['pcEnergy'])
+                                    else:
+                                        temp_pc_energy = temp_pc_energy + ';' + str(mqttData['occupancyInfo'][i]['pcEnergy'])
+                            
+                    print(f"here")
+
+                    ## ~~~~~~~~~~~ SEND TO CLOUD ~~~~~~~~~ ##
+                    if ((T - ndns_fns.si.period_t[sen_idx]).total_seconds() > nodens.cp.CLOUD_WRITE_TIME):
+                        # Mark for deletion tracks which have left
+                        ndns_fns.oh.delete_track(mqttData['addr'], temp_current_occupants, mark_to_delete=1)
+
+                        # Calculate occupant history outputs
+                        ind_s = ndns_fns.oh.calculate_outputs(mqttData['addr'])
+
+                        # diag_info = (f"SERV Cloud. sensor: {mqttData['addr']}.",
+                        #              f"Counts (heartbeat,full,basic): {ndns_fns.counts.print_counts(mqttData['addr'])}", 
+                        #              f"N frames: {ndns_fns.si.period_N[sen_idx]}. Avg rate: {nodens.cp.CLOUD_WRITE_TIME/ndns_fns.si.period_N[sen_idx]:.2f}")
+                        # nodens.logger.info(diag_info)
+                        ndns_fns.counts.initialise(mqttData['addr'])
+
+                        
+                        mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
+                        # mqttClass = json.loads("{\"Activity detected\": \"" + str(int(ndns_fns.class_eng.activity_alert))
+                        #                     + "\", \"Activity type\": \"" + str(int(ndns_fns.class_eng.classification))
+                        #                     + "\"}")
+                        mqttDataFinal = {**mqttData, 
+                                        'Sensor timestamp' : mqttData['timestamp'],
+                                        'Average period occupancy' : mqttData['numOccupants'], 
+                                        'Maximum period occupancy' : '',
+                                        'Average entryway occupancy' : '', 
+                                        'Maximum entryway occupancy' : '',
+                                        'Full data flag' : 0}
+                        try:
+                            mqttDataFinal = {**mqttDataFinal,
+                                        'Track id' : mqttData['occupancyInfo'][0]['trackID'],
+                                        'X' : mqttData['occupancyInfo'][0]['X'],
+                                        'Y' : mqttData['occupancyInfo'][0]['Y']
+                            }
+                        except Exception as e:
+                            nodens.logger.error(f"SERV mqttDataFinal INITIAL {e}. sensor: {mqttData['addr']}. ind_s: {ind_s} sen_idx: {sen_idx}. len oh: {len(ndns_fns.oh.outputs)}.")
+                        try:
+                            mqttDataFinal = {**mqttDataFinal,
+                                        'Distance moved' : temp_dist_moved,
+                                        'Was active' : ndns_fns.oh.outputs[ind_s].was_active,
+                                        'Presence detected' : ndns_fns.sd.presence.present
+                                        }
+                        except Exception as e:
+                            nodens.logger.error(f"SERV mqttDataFinal SUPP {e}. sensor: {mqttData['addr']}. ind_s: {ind_s} sen_idx: {sen_idx}. len oh: {len(ndns_fns.oh.outputs)}.")
+                            
+                        try:
+                            mqttDataFinal = {**mqttDataFinal,
+                                        'UD energy' : 0,
+                                        'PC energy' : temp_pc_energy
+                                        }
+                        except Exception as e:
+                            nodens.logger.error(f"SERV mqttDataFinal ENERGY {e}. sensor: {mqttData['addr']}. ind_s: {ind_s} sen_idx: {sen_idx}. len oh: {len(ndns_fns.oh.outputs)}.")
+                            
+                        try:
+                            mqttDataFinal = {**mqttDataFinal,
+                                        'Occupancy heatmap' : mqttData['heatmap'],
+                                        'Gait distribution' : temp_gait_distr
+                                        }
+                        except Exception as e:
+                            nodens.logger.error(f"SERV mqttDataFinal NEW {e}. sensor: {mqttData['addr']}. ind_s: {ind_s} sen_idx: {sen_idx}. len oh: {len(ndns_fns.oh.outputs)}.")
+                        
+                        ndns_fns.class_eng.activity_alert = 0
+                        try:
+                            send_idx_o = ndns_fns.oh.sens_idx.index(mqttData['addr'])
+                            mqttDataFinal = {**mqttDataFinal, 
+                                        'Most inactive track' : ndns_fns.oh.most_inactive_track[send_idx_o],
+                                        'Most inactive time' : str(ndns_fns.oh.most_inactive_time[send_idx_o]),
+                                        }
+                        except:
+                            send_idx_o = None
+                            mqttDataFinal = {**mqttDataFinal, 
+                                        'Most inactive track' : "-",
+                                        'Most inactive time' : "-",
+                                        }
+
+                        # Log some occupancy statistics
+                        print_text = ('Occupancy at timestamp: {} \n'.format(T) +
+                                    '\t Current : {}\n'.format(mqttDataFinal['Number of Occupants']) +
+                                    '\t Average.\tDirect: {},\tEntryway: {}\n'.format(mqttDataFinal['Average period occupancy'], mqttDataFinal['Average entryway occupancy']) +
+                                    '\t Max.\t\tDirect: {},\tEntryway: {}\n'.format(mqttDataFinal['Maximum period occupancy'], mqttDataFinal['Maximum entryway occupancy']))
+
+                        # Record message to send, if requested by Cloud service
+                        ndns_fns.message_pipeline.update(mqttDataFinal)
+
+                        # if nodens.cp.ENABLE_THINGSBOARD:
+                        #     ndns_tb.TB.prepare_data(mqttDataFinal)
+                        #     ndns_tb.TB.multiline_payload(mqttData['addr'])
+
+
+                        ndns_fns.si.cloud_send_refresh(sen_idx, send_idx_e, T, ndns_fns.ew)
+                        heartbeat = ""
+
+                        # Refresh occupancy histories for next Cloud transmission frame
+                        ndns_fns.oh.refresh(mqttData['addr'])
+
+
 
                 # Otherwise process occupancy info
                 elif "type" not in json.loads(data):
