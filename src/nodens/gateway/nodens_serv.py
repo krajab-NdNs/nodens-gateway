@@ -351,6 +351,10 @@ def on_message_sensorN(client, userdata, msg):
                         ndns_fns.message_pipeline.config_update(ndns_fns.sm.sensor_id[idx], ndns_fns.sm.sensor_config[idx])
                         ndns_fns.sm.sensorStart_flag[idx] = 0
 
+                # Process for new sensor version
+                elif mqttData['type'] == 'v4':
+                    print(f"V4")
+
                 # Otherwise process occupancy info
                 elif "type" not in json.loads(data):
                     ndns_fns.counts.update(mqttData['addr'], 'basic')
@@ -611,8 +615,7 @@ def on_message_sensorN(client, userdata, msg):
                         #print(heartbeat, end='')
                     else:
                         nodens.logger.warning("Another type: {}".format(mqttDataFinal))
-                elif mqttData['type'] == 'v4':
-                    print(f"V4")
+                
                 else:
                     if json.loads(data)["type"] == 'heartbeat':
                         ndns_fns.counts.update(mqttData['addr'], 'heartbeat')
