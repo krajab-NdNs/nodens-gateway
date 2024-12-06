@@ -102,7 +102,7 @@ def on_message_sensorN(client, userdata, msg):
 
     try:
          # Attempt to decode the data as UTF-8
-        mqttDataN = mqttDataN.decode('utf-8')
+        mqttDataN = mqttDataN.decode('utf-8', errors='ignore')
         # Clean the data to remove invalid control characters
         mqttDataN = clean_data(mqttDataN)
         mqttData = json.loads(mqttDataN)
