@@ -74,6 +74,11 @@ if (nodens.cp.WRITE_FLAG == 1):
 
 ######## ~~~~~~~~~~~~~~~~~~~~~~ ###############
 
+# Function to clean invalid control characters
+def clean_data(data):
+    # Remove control characters except for allowed ones (e.g., newline, tab)
+    return re.sub(r'[\x00-\x1F\x7F]', '', data)
+
 
 # MQTT Message callback function #
 def on_message_sensorN(client, userdata, msg):
@@ -95,6 +100,10 @@ def on_message_sensorN(client, userdata, msg):
     mqttDataN = (msg.payload)
 
     try:
+         # Attempt to decode the data as UTF-8
+        mqttDataN = mqttDataN.decode('utf-8')
+        # Clean the data to remove invalid control characters
+        mqttDataN = clean_data(mqttDataN)
         mqttData = json.loads(mqttDataN)
     except UnicodeDecodeError as e:
         nodens.logger.error(f"Unicode decode error: {e}. Raw data: {mqttDataN}")
