@@ -409,12 +409,13 @@ def on_message_sensorN(client, userdata, msg):
                     ## ~~~~~~~~~~~ SEND TO CLOUD ~~~~~~~~~ ##
                     if ((T - ndns_fns.si.period_t[sen_idx]).total_seconds() > nodens.cp.CLOUD_WRITE_TIME):
                         # Mark for deletion tracks which have left
+                        print(f"here2. {mqttData['addr']} {temp_current_occupants} {ndns_fns.oh.sensor_id}")
                         ndns_fns.oh.delete_track(mqttData['addr'], temp_current_occupants, mark_to_delete=1)
-                        print(f"here2")
+                        print(f"here3")
 
                         # Calculate occupant history outputs
                         ind_s = ndns_fns.oh.calculate_outputs(mqttData['addr'])
-                        print(f"here3")
+                        print(f"here4")
 
                         # diag_info = (f"SERV Cloud. sensor: {mqttData['addr']}.",
                         #              f"Counts (heartbeat,full,basic): {ndns_fns.counts.print_counts(mqttData['addr'])}", 
