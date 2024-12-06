@@ -106,6 +106,10 @@ def on_message_sensorN(client, userdata, msg):
             mqttData['type'] = 'v4'
             if 'sensorID' in mqttData:
                 mqttData['addr'] = mqttData['sensorID']
+            if 'numOccupants' in mqttData:
+                mqttData['Number of Occupants'] = mqttData['numOccupants']
+            if 'occupancyInfo' in mqttData:
+                mqttData['Occupancy Info'] = mqttData['occupancyInfo']
             if 'rawData' in mqttData:
                 mqttData['data'] = mqttData['rawData']
                 
@@ -116,7 +120,6 @@ def on_message_sensorN(client, userdata, msg):
 
             else:
                 mqttData['data'] = mqttData
-                print(f"mqttData['data']: {mqttData['data']}")
                 
                 # print(f"LEN: {data_len} {len(mqttData['data'])} {len(mqttData['data']) % 4} mqttData['data']: {mqttData['data']}")
     except Exception as e:
@@ -168,7 +171,6 @@ def on_message_sensorN(client, userdata, msg):
                 #print(f"data: {data}")     # Temp KZR
             except Exception as e:
                 data = mqttData['data']
-                print(f"data e: {e.args} {data}")
 
             try:  
                 str_data = str(data[0])
