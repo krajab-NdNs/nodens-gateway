@@ -374,6 +374,7 @@ def on_message_sensorN(client, userdata, msg):
 
                         if ('occupancyInfo' in mqttData):
                             print(f"here3: {mqttData['occupancyInfo'][0]}")
+                            print(f"here4: {len(mqttData['occupancyInfo'])}")
                             mqttOccInfo = mqttData['occupancyInfo']
 
                             for i in range(len(mqttData['occupancyInfo'])):
