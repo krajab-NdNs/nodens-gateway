@@ -365,7 +365,7 @@ def on_message_sensorN(client, userdata, msg):
                     print(f"here3")
                     
 
-                    if ('numOccupants' in mqttDataFinal):
+                    if ('numOccupants' in mqttData):
                         mqttDataTemp = [T.strftime("%Y-%m-%dZ%H:%M:%S")]
                         mqttDataTemp.append(mqttData['addr'])
                         #ndns_fns.si.num_occ[sen_idx] = mqttDataFinal['Number of Occupants']
