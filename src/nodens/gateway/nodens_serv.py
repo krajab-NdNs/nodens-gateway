@@ -378,8 +378,9 @@ def on_message_sensorN(client, userdata, msg):
                             mqttOccInfo = mqttData['occupancyInfo']
 
                             for i in range(len(mqttData['occupancyInfo'])):
+                                print(f"here5: {i}")
                                 if 'trackID' in mqttData['occupancyInfo'][i]:
-                                    temp_current_occupants.append(int(mqttData['occupancyInfo']['trackID']))
+                                    temp_current_occupants.append(int(mqttData['occupancyInfo'][i]['trackID']))
                                 if 'distance' in mqttData['occupancyInfo'][i]:
                                     if i == 0:
                                         temp_dist_moved = str(mqttData['occupancyInfo'][i]['distance'])
