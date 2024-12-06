@@ -355,28 +355,30 @@ def on_message_sensorN(client, userdata, msg):
                 elif mqttData['type'] == 'v4':
                     print(f"V4")
                     ndns_fns.counts.update(mqttData['addr'], 'basic')
-                    ndns_fns.sm.update(mqttData)
-                    mqttOcc = json.loads(data)
-                    mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
-                    mqttDataFinal = {**mqttTime, **mqttData, **mqttOcc}
-
-                    ndns_fns.si.update_short(sen_idx, T, mqttDataFinal)
                     print(f"here")
+                    ndns_fns.sm.update(mqttData)
+                    # mqttOcc = json.loads(data)
+                    # mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
+                    # mqttDataFinal = {**mqttTime, **mqttData, **mqttOcc}
+                    print(f"here2")
+                    ndns_fns.si.update_short(sen_idx, T, mqttData)
+                    print(f"here3")
+                    
 
                     if ('numOccupants' in mqttDataFinal):
                         mqttDataTemp = [T.strftime("%Y-%m-%dZ%H:%M:%S")]
                         mqttDataTemp.append(mqttData['addr'])
                         #ndns_fns.si.num_occ[sen_idx] = mqttDataFinal['Number of Occupants']
-                        mqttDataTemp.append(mqttDataFinal['numOccupants'])
+                        mqttDataTemp.append(mqttData['numOccupants'])
 
-                        if ('occupancyInfo' in mqttDataFinal):
-                            mqttOccInfo = mqttDataFinal['occupancyInfo']
+                        if ('occupancyInfo' in mqttData):
+                            mqttOccInfo = mqttData['occupancyInfo']
                             for i in range(min(ndns_fns.si.num_occ[sen_idx],2)):
                                 mqttDataTemp.append(mqttOccInfo[i]['trackID'])
                                 mqttDataTemp.append(mqttOccInfo[i]['X'])
                                 mqttDataTemp.append(mqttOccInfo[i]['Y'])
                                 mqttDataTemp.append(mqttOccInfo[i]['Z'])
-                    print(f"here2")
+                    print(f"here4")
 
                 # Otherwise process occupancy info
                 elif "type" not in json.loads(data):
