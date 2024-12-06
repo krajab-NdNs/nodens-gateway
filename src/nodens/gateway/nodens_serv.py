@@ -391,7 +391,7 @@ def on_message_sensorN(client, userdata, msg):
                                     mqttDataTemp.append(0)
                                     mqttDataTemp.append('')
                             except Exception as e:
-                                nodens.logger.warning(f"{e}")
+                                nodens.logger.warning(f"Heatmap {e}")
                         else:
                             for i in range(8):
                                 mqttDataTemp.append('')
@@ -611,7 +611,8 @@ def on_message_sensorN(client, userdata, msg):
                         #print(heartbeat, end='')
                     else:
                         nodens.logger.warning("Another type: {}".format(mqttDataFinal))
-
+                elif mqttData['type'] == 'v4':
+                    print(f"V4")
                 else:
                     if json.loads(data)["type"] == 'heartbeat':
                         ndns_fns.counts.update(mqttData['addr'], 'heartbeat')
