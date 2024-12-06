@@ -385,7 +385,9 @@ def on_message_sensorN(client, userdata, msg):
                     temp_gait_distr = ''
                     temp_pc_energy = ''
                     temp_current_occupants = []
-                    print(f"here")
+
+                    ndns_fns.oh.update(mqttData['addr'],[],[],[],ndns_fns.sd)
+                    
 
                     if ('numOccupants' in mqttData):
                         mqttDataTemp = [T.strftime("%Y-%m-%dZ%H:%M:%S")]
@@ -414,7 +416,7 @@ def on_message_sensorN(client, userdata, msg):
                                         temp_pc_energy = str(mqttData['occupancyInfo'][i]['pcEnergy'])
                                     else:
                                         temp_pc_energy = temp_pc_energy + ';' + str(mqttData['occupancyInfo'][i]['pcEnergy'])
-                            
+                    print(f"here")        
 
                     ## ~~~~~~~~~~~ SEND TO CLOUD ~~~~~~~~~ ##
                     if ((T - ndns_fns.si.period_t[sen_idx]).total_seconds() > nodens.cp.CLOUD_WRITE_TIME):
