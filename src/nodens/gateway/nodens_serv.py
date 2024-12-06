@@ -387,6 +387,11 @@ def on_message_sensorN(client, userdata, msg):
                     temp_current_occupants = []
 
                     ndns_fns.oh.update(mqttData['addr'],[],[],[],ndns_fns.sd)
+
+                    # Update time period occupancy data
+                    if mqttData['addr'] not in ndns_fns.ew.id:
+                        ndns_fns.ew.update(mqttData['addr'])
+                    send_idx_e = ndns_fns.ew.id.index(mqttData['addr'])
                     
 
                     if ('numOccupants' in mqttData):
