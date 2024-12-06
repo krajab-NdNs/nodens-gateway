@@ -109,6 +109,9 @@ def on_message_sensorN(client, userdata, msg):
                 if data_len % 4 != 0:
                     pad = (4 - (data_len % 4)) * "A"
                     mqttData['data'] += pad
+
+            else:
+                mqttData['data'] = mqttData
                 
                 # print(f"LEN: {data_len} {len(mqttData['data'])} {len(mqttData['data']) % 4} mqttData['data']: {mqttData['data']}")
     except Exception as e:
