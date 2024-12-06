@@ -354,6 +354,27 @@ def on_message_sensorN(client, userdata, msg):
                 # Process for new sensor version
                 elif mqttData['type'] == 'v4':
                     print(f"V4")
+                    ndns_fns.counts.update(mqttData['addr'], 'basic')
+                    ndns_fns.sm.update(mqttData)
+                    mqttOcc = json.loads(data)
+                    mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
+                    mqttDataFinal = {**mqttTime, **mqttData, **mqttOcc}
+
+                    ndns_fns.si.update_short(sen_idx, T, mqttDataFinal)
+
+                    if ('numOccupants' in mqttDataFinal):
+                        mqttDataTemp = [T.strftime("%Y-%m-%dZ%H:%M:%S")]
+                        mqttDataTemp.append(mqttData['addr'])
+                        #ndns_fns.si.num_occ[sen_idx] = mqttDataFinal['Number of Occupants']
+                        mqttDataTemp.append(mqttDataFinal['numOccupants'])
+
+                        if ('occupancyInfo' in mqttDataFinal):
+                            mqttOccInfo = mqttDataFinal['occupancyInfo']
+                            for i in range(min(ndns_fns.si.num_occ[sen_idx],2)):
+                                mqttDataTemp.append(mqttOccInfo[i]['trackID'])
+                                mqttDataTemp.append(mqttOccInfo[i]['X'])
+                                mqttDataTemp.append(mqttOccInfo[i]['Y'])
+                                mqttDataTemp.append(mqttOccInfo[i]['Z'])
 
                 # Otherwise process occupancy info
                 elif "type" not in json.loads(data):
