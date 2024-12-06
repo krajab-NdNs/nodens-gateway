@@ -112,6 +112,7 @@ def on_message_sensorN(client, userdata, msg):
 
             else:
                 mqttData['data'] = mqttData
+                print(f"mqttData: {mqttData}")
                 
                 # print(f"LEN: {data_len} {len(mqttData['data'])} {len(mqttData['data']) % 4} mqttData['data']: {mqttData['data']}")
     except Exception as e:
