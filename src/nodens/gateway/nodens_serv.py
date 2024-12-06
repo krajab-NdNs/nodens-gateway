@@ -96,8 +96,20 @@ def on_message_sensorN(client, userdata, msg):
 
     try:
         mqttData = json.loads(mqttDataN)
+    except UnicodeDecodeError as e:
+        nodens.logger.error(f"Unicode decode error: {e}. Raw data: {mqttDataN}")
+        # Handle the error by ignoring invalid bytes or replacing them
+        mqttDataN = mqttDataN.decode('utf-8', errors='ignore')
+        try:
+            mqttData = json.loads(mqttDataN)
+        except Exception as e:
+            nodens.logger.error(f"{e.args}. Raw data: {mqttDataN}")
+            mqttData = {}
+    except json.JSONDecodeError as e:
+        nodens.logger.error(f"JSON decode error: {e}. Raw data: {mqttDataN}")
+        mqttData = {}
     except Exception as e:
-        nodens.logger.error(f"Error with json loads {e.args}.")
+        nodens.logger.error(f"Unexpected error: {e}. Raw data: {mqttDataN}")
         mqttData = {}
 
     try:
@@ -370,15 +382,11 @@ def on_message_sensorN(client, userdata, msg):
                         mqttDataTemp.append(mqttData['addr'])
                         #ndns_fns.si.num_occ[sen_idx] = mqttDataFinal['Number of Occupants']
                         mqttDataTemp.append(mqttData['numOccupants'])
-                        print(f"here2")
 
                         if ('occupancyInfo' in mqttData):
-                            print(f"here3: {mqttData['occupancyInfo'][0]}")
-                            print(f"here4: {len(mqttData['occupancyInfo'])}")
                             mqttOccInfo = mqttData['occupancyInfo']
 
                             for i in range(len(mqttData['occupancyInfo'])):
-                                print(f"here5: {i}")
                                 if 'trackID' in mqttData['occupancyInfo'][i]:
                                     temp_current_occupants.append(int(mqttData['occupancyInfo'][i]['trackID']))
                                 if 'distance' in mqttData['occupancyInfo'][i]:
@@ -397,21 +405,23 @@ def on_message_sensorN(client, userdata, msg):
                                     else:
                                         temp_pc_energy = temp_pc_energy + ';' + str(mqttData['occupancyInfo'][i]['pcEnergy'])
                             
-                    print(f"here")
 
                     ## ~~~~~~~~~~~ SEND TO CLOUD ~~~~~~~~~ ##
                     if ((T - ndns_fns.si.period_t[sen_idx]).total_seconds() > nodens.cp.CLOUD_WRITE_TIME):
                         # Mark for deletion tracks which have left
                         ndns_fns.oh.delete_track(mqttData['addr'], temp_current_occupants, mark_to_delete=1)
+                        print(f"here2")
 
                         # Calculate occupant history outputs
                         ind_s = ndns_fns.oh.calculate_outputs(mqttData['addr'])
+                        print(f"here3")
 
                         # diag_info = (f"SERV Cloud. sensor: {mqttData['addr']}.",
                         #              f"Counts (heartbeat,full,basic): {ndns_fns.counts.print_counts(mqttData['addr'])}", 
                         #              f"N frames: {ndns_fns.si.period_N[sen_idx]}. Avg rate: {nodens.cp.CLOUD_WRITE_TIME/ndns_fns.si.period_N[sen_idx]:.2f}")
                         # nodens.logger.info(diag_info)
                         ndns_fns.counts.initialise(mqttData['addr'])
+                        print(f"here4")
 
                         
                         mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
