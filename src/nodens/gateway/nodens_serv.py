@@ -361,6 +361,7 @@ def on_message_sensorN(client, userdata, msg):
                     mqttDataFinal = {**mqttTime, **mqttData, **mqttOcc}
 
                     ndns_fns.si.update_short(sen_idx, T, mqttDataFinal)
+                    print(f"here")
 
                     if ('numOccupants' in mqttDataFinal):
                         mqttDataTemp = [T.strftime("%Y-%m-%dZ%H:%M:%S")]
@@ -375,6 +376,7 @@ def on_message_sensorN(client, userdata, msg):
                                 mqttDataTemp.append(mqttOccInfo[i]['X'])
                                 mqttDataTemp.append(mqttOccInfo[i]['Y'])
                                 mqttDataTemp.append(mqttOccInfo[i]['Z'])
+                    print(f"here2")
 
                 # Otherwise process occupancy info
                 elif "type" not in json.loads(data):
@@ -647,7 +649,7 @@ def on_message_sensorN(client, userdata, msg):
                     else:
                         nodens.logger.info(f"Unrecognised type: {json.loads(mqttData)['type']}. data: {mqttData}")
             except Exception as e:
-                nodens.logger.error(f"TYPE. msg: {e}. data: {data}")
+                nodens.logger.error(f"TYPE. \n\tmsg: {e}. \n\tdata: {data}")
 
             ##~~~~~~~~ Print info to screen process ~~~~~~~##
 

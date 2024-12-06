@@ -42,7 +42,7 @@ Path(user_log_dir(APPNAME, APPAUTHOR)).mkdir(parents=True, exist_ok=True)
 c_handler = logging.StreamHandler()
 f_handler = logging.FileHandler(log_file, mode='w')
 
-c_handler.setLevel(logging.INFO)
+c_handler.setLevel(logging.DEBUG)
 f_handler.setLevel(logging.INFO)
 
 # Create formatters and add it to handlers
