@@ -363,14 +363,17 @@ def on_message_sensorN(client, userdata, msg):
                     temp_gait_distr = ''
                     temp_pc_energy = ''
                     temp_current_occupants = []
+                    print(f"here")
 
                     if ('numOccupants' in mqttData):
                         mqttDataTemp = [T.strftime("%Y-%m-%dZ%H:%M:%S")]
                         mqttDataTemp.append(mqttData['addr'])
                         #ndns_fns.si.num_occ[sen_idx] = mqttDataFinal['Number of Occupants']
                         mqttDataTemp.append(mqttData['numOccupants'])
+                        print(f"here2")
 
                         if ('occupancyInfo' in mqttData):
+                            print(f"here3: {mqttData['occupancyInfo'][0]}")
                             mqttOccInfo = mqttData['occupancyInfo']
                             for i in range(min(ndns_fns.si.num_occ[sen_idx],2)):
                                 mqttDataTemp.append(mqttOccInfo[i]['trackID'])
