@@ -496,10 +496,13 @@ def on_message_sensorN(client, userdata, msg):
                                         }
 
                         # Log some occupancy statistics
-                        print_text = ('Occupancy at timestamp: {} \n'.format(T) +
-                                    '\t Current : {}\n'.format(mqttDataFinal['Number of Occupants']) +
-                                    '\t Average.\tDirect: {},\tEntryway: {}\n'.format(mqttDataFinal['Average period occupancy'], mqttDataFinal['Average entryway occupancy']) +
-                                    '\t Max.\t\tDirect: {},\tEntryway: {}\n'.format(mqttDataFinal['Maximum period occupancy'], mqttDataFinal['Maximum entryway occupancy']))
+                        try:
+                            print_text = ('Occupancy at timestamp: {} \n'.format(T) +
+                                        '\t Current : {}\n'.format(mqttDataFinal['numOccupants']) +
+                                        '\t Average.\tDirect: {},\tEntryway: {}\n'.format(mqttDataFinal['Average period occupancy'], mqttDataFinal['Average entryway occupancy']) +
+                                        '\t Max.\t\tDirect: {},\tEntryway: {}\n'.format(mqttDataFinal['Maximum period occupancy'], mqttDataFinal['Maximum entryway occupancy']))
+                        except Exception as e:
+                            print(f"Error in print_text: {e}")
 
                         # Record message to send, if requested by Cloud service
                         ndns_fns.message_pipeline.update(mqttDataFinal)
