@@ -459,6 +459,11 @@ def on_message_sensorN(client, userdata, msg):
                             }
                         except Exception as e:
                             nodens.logger.error(f"SERV mqttDataFinal INITIAL {e}. sensor: {mqttData['addr']}. ind_s: {ind_s} sen_idx: {sen_idx}. len oh: {len(ndns_fns.oh.outputs)}.")
+                            mqttDataFinal = {**mqttDataFinal,
+                                        'Track id' : '',
+                                        'X' : '',
+                                        'Y' : ''
+                            }
                         try:
                             mqttDataFinal = {**mqttDataFinal,
                                         'Distance moved' : temp_dist_moved,
@@ -507,9 +512,10 @@ def on_message_sensorN(client, userdata, msg):
                         except Exception as e:
                             print(f"Error in print_text: {e}")
 
+                        print(f"here4")
                         # Record message to send, if requested by Cloud service
                         ndns_fns.message_pipeline.update(mqttDataFinal)
-
+                        print(f"here5")
                         # if nodens.cp.ENABLE_THINGSBOARD:
                         #     ndns_tb.TB.prepare_data(mqttDataFinal)
                         #     ndns_tb.TB.multiline_payload(mqttData['addr'])
@@ -517,10 +523,10 @@ def on_message_sensorN(client, userdata, msg):
 
                         ndns_fns.si.cloud_send_refresh(sen_idx, send_idx_e, T, ndns_fns.ew)
                         heartbeat = ""
-
+                        print(f"here6")
                         # Refresh occupancy histories for next Cloud transmission frame
                         ndns_fns.oh.refresh(mqttData['addr'])
-                        print(f"here4")
+                        print(f"here7")
 
 
 
