@@ -137,7 +137,6 @@ class tb:
         # Similar procedure for gateway?
 
     def prepare_data(self, input_data):
-        print(f"prepare_data: {input_data}")
         # Initialize payload
         self.payload = {}
 
@@ -254,7 +253,6 @@ class tb:
             nodens.logger.error(f"THINGSBOARD: diagnostics error: {e.args} for sensor: {input_data['addr']}")   
 
         #nodens.logger.info(f"TB payload: {self.payload}")      # TEMP KZR
-        print(f"prepare_data: done")
         
     def prepare_log(self, log_msg):
         # Initialize payload
@@ -378,7 +376,6 @@ class tb:
 
         ## Disconnect and unsub from all sensor attribute subscriptions
         #  Then connect to client for sensor to publish ##
-        print(f"multiline_payload: {self.payload}")
         try:
             while FLAG_TX_IN_PROGRESS == 1:
                 sleep(0.1)
@@ -442,7 +439,6 @@ class tb:
                 nodens.logger.error(f"THINGSBOARD: multiline payload finalise error: {e.args}. Topic: {nodens.cp.TB_ATTRIBUTES_TOPIC}. Sensor: {self.subscribed_sensors[i]}, {i}")
                 sleep(1)
 
-        print(f"multiline_payload: done")
 
 TB = tb()
 

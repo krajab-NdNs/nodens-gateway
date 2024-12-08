@@ -420,13 +420,11 @@ def on_message_sensorN(client, userdata, msg):
                                     if i == 0:
                                         temp_pc_energy = str(mqttData['occupancyInfo'][i]['pcEnergy'])
                                     else:
-                                        temp_pc_energy = temp_pc_energy + ';' + str(mqttData['occupancyInfo'][i]['pcEnergy'])
-                    print(f"here")        
+                                        temp_pc_energy = temp_pc_energy + ';' + str(mqttData['occupancyInfo'][i]['pcEnergy'])    
 
                     ## ~~~~~~~~~~~ SEND TO CLOUD ~~~~~~~~~ ##
                     if ((T - ndns_fns.si.period_t[sen_idx]).total_seconds() > nodens.cp.CLOUD_WRITE_TIME):
                         # Mark for deletion tracks which have left
-                        print(f"here2. {mqttData['addr']} {temp_current_occupants} {ndns_fns.oh.sensor_id}")
                         ndns_fns.oh.delete_track(mqttData['addr'], temp_current_occupants, mark_to_delete=1)
 
                         # Calculate occupant history outputs
@@ -437,7 +435,6 @@ def on_message_sensorN(client, userdata, msg):
                         #              f"N frames: {ndns_fns.si.period_N[sen_idx]}. Avg rate: {nodens.cp.CLOUD_WRITE_TIME/ndns_fns.si.period_N[sen_idx]:.2f}")
                         # nodens.logger.info(diag_info)
                         ndns_fns.counts.initialise(mqttData['addr'])
-                        print(f"here3")
 
                         
                         mqttTime = json.loads("{\"Time\": \"" + str(T) + "\"}")
@@ -525,7 +522,6 @@ def on_message_sensorN(client, userdata, msg):
                         heartbeat = ""
                         # Refresh occupancy histories for next Cloud transmission frame
                         ndns_fns.oh.refresh(mqttData['addr'])
-                        print(f"here4")
 
 
 

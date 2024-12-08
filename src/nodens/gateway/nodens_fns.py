@@ -2403,12 +2403,10 @@ class MessagePipeline:
 
 
     def update(self, message):
-        print(f"MessagePipeline update: {message['addr']} {self.sensor_id}")
         if message['addr'] in self.sensor_id:
             sens_idx = self.sensor_id.index(message['addr'])
             self.flag_send[sens_idx] = 1
             self.message[sens_idx] = message
-            print(f"MessagePipeline update: done")
         
         else:
             self.sensor_id.append(message['addr'])
