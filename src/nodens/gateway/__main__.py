@@ -145,7 +145,7 @@ def thingsboard_thread(pipeline):
                 elif message["type"] == "CONFIG_RX":
                     nodens_thingsboard.TB.get_config(message["addr"])
                 else:
-                    # nodens.logger.info(f"TB. prepare: {message}")       # TEMP KZR
+                    nodens.logger.info(f"TB. prepare: {message}")       # TEMP KZR
                     nodens_thingsboard.TB.prepare_data(message)
                     nodens_thingsboard.TB.multiline_payload(message['addr'])
             # nodens.logger.info(f"TB. client_sub")   # TEMP KZR

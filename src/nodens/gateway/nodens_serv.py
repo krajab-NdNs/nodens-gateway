@@ -446,6 +446,7 @@ def on_message_sensorN(client, userdata, msg):
                         #                     + "\"}")
                         mqttDataFinal = {#**mqttData, 
                                         'addr' : mqttData['addr'],
+                                        'type' : mqttData['type'],
                                         'Sensor timestamp' : mqttData['timestamp'],
                                         'Average period occupancy' : mqttData['numOccupants'], 
                                         'Maximum period occupancy' : '',
@@ -513,10 +514,8 @@ def on_message_sensorN(client, userdata, msg):
                         except Exception as e:
                             print(f"Error in print_text: {e}")
 
-                        print(f"here4. {mqttDataFinal}")
                         # Record message to send, if requested by Cloud service
                         ndns_fns.message_pipeline.update(mqttDataFinal)
-                        print(f"here5")
                         # if nodens.cp.ENABLE_THINGSBOARD:
                         #     ndns_tb.TB.prepare_data(mqttDataFinal)
                         #     ndns_tb.TB.multiline_payload(mqttData['addr'])
@@ -524,10 +523,9 @@ def on_message_sensorN(client, userdata, msg):
 
                         ndns_fns.si.cloud_send_refresh(sen_idx, send_idx_e, T, ndns_fns.ew)
                         heartbeat = ""
-                        print(f"here6")
                         # Refresh occupancy histories for next Cloud transmission frame
                         ndns_fns.oh.refresh(mqttData['addr'])
-                        print(f"here7")
+                        print(f"here4")
 
 
 
