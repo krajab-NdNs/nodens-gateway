@@ -503,7 +503,7 @@ def on_message_sensorN(client, userdata, msg):
                         # Log some occupancy statistics
                         try:
                             print_text = ('Occupancy at timestamp: {} \n'.format(T) +
-                                        '\t Current : {}\n'.format(mqttDataFinal['numOccupants']) +
+                                        '\t Current : {}\n'.format(mqttData['numOccupants']) +
                                         '\t Average.\tDirect: {},\tEntryway: {}\n'.format(mqttDataFinal['Average period occupancy'], mqttDataFinal['Average entryway occupancy']) +
                                         '\t Max.\t\tDirect: {},\tEntryway: {}\n'.format(mqttDataFinal['Maximum period occupancy'], mqttDataFinal['Maximum entryway occupancy']))
                         except Exception as e:
@@ -796,7 +796,7 @@ def on_message_sensorN(client, userdata, msg):
                     else:
                         nodens.logger.info(f"Unrecognised type: {json.loads(mqttData)['type']}. data: {mqttData}")
             except Exception as e:
-                nodens.logger.error(f"TYPE. \n\tmsg: {e}. \n\tdata: {data}")
+                nodens.logger.error(f"TYPE. \n\tmsg: {e.args}. \n\tdata: {data}")
 
             ##~~~~~~~~ Print info to screen process ~~~~~~~##
 
