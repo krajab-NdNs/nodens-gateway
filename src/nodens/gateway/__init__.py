@@ -34,7 +34,7 @@ CWD = os.getcwd() + '/'
 
 # Create a custom logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 # Create handlers
 log_file = user_log_dir(APPNAME, APPAUTHOR)+'/nodens-gateway.log'

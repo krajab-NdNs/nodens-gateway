@@ -159,7 +159,7 @@ class tb:
         # Track ID - select tid with highest energy.
         
         # Occupant positions
-        if int(self.payload["max_occupancy"]) > 0:
+        if int(self.payload["avg_occupancy"]) > 0:
             try:
                 self.payload["sensor_timestamp"] = f"{input_data['Sensor timestamp']}"
 
