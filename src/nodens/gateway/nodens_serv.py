@@ -445,6 +445,7 @@ def on_message_sensorN(client, userdata, msg):
                         #                     + "\", \"Activity type\": \"" + str(int(ndns_fns.class_eng.classification))
                         #                     + "\"}")
                         mqttDataFinal = {#**mqttData, 
+                                        'addr' : mqttData['addr'],
                                         'Sensor timestamp' : mqttData['timestamp'],
                                         'Average period occupancy' : mqttData['numOccupants'], 
                                         'Maximum period occupancy' : '',
