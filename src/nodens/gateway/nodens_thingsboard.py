@@ -169,7 +169,7 @@ class tb:
                 self.payload["X"] = f"{input_data['X']:.2f}"
                 self.payload["Y"] = f"{input_data['Y']:.2f}"
             except Exception as e:
-                nodens.logger.error(f"THINGSBOARD: occupant error: {e.args} for sensor: {input_data['addr']}")
+                nodens.logger.error(f"THINGSBOARD: occupant error: {e.args} for sensor: {input_data['addr']}\ndata: {input_data}")
 
             try:
                 # ~~~~~~~~~~~ ACTIVITY ~~~~~~~~~~~~~ #
@@ -184,7 +184,7 @@ class tb:
                 # ~~~~~~~~~~~ GAIT ~~~~~~~~~~~~~ #
                 self.payload["gait_distribution"] = f"{input_data['Gait distribution']}"
             except Exception as e:
-                nodens.logger.error(f"THINGSBOARD: occupant error: {e.args} for sensor: {input_data['addr']}")
+                pass
                 try:
                     # ~~~~~~~~~~~ ACTIVITY ~~~~~~~~~~~~~ #
                     self.payload["dist_moved"] = f"{input_data['Distance moved']}"
@@ -196,7 +196,7 @@ class tb:
                     # ~~~~~~~~~~~ GAIT ~~~~~~~~~~~~~ #
                     self.payload["gait_distribution"] = f"{input_data['Gait distribution']}"
                 except Exception as e:
-                    nodens.logger.error(f"THINGSBOARD: occupant error: {e.args} for sensor: {input_data['addr']}")
+                    nodens.logger.error(f"THINGSBOARD: activity error: {e.args} for sensor: {input_data['addr']}\ndata: {input_data}")
 
             
 
@@ -205,13 +205,12 @@ class tb:
             self.payload["track_ud_energy"] = f"{input_data['UD energy']:.2f}"
             self.payload["pc_energy"] = f"{input_data['PC energy']:.2f}"
         except Exception as e:
-            nodens.logger.error(f"THINGSBOARD: energy error: {e.args} for sensor: {input_data['addr']}")
+            pass
             try:
                 self.payload["track_ud_energy"] = f"{input_data['UD energy']}"
                 self.payload["pc_energy"] = f"{input_data['PC energy']}"
-                nodens.logger.error(f"THINGSBOARD. track energy data: {input_data['UD energy']}. pc data: {input_data['PC energy']}. occupancy: {input_data['Average period occupancy']}")
             except:
-                pass
+                nodens.logger.error(f"THINGSBOARD. energy error: {e.args} for sensor: {input_data['addr']}\n{input_data['UD energy']}. pc data: {input_data['PC energy']}. occupancy: {input_data['Average period occupancy']}")
         
         # ~~~~~~~~~~~ HEATMAP ~~~~~~~~~~~~~ #
         try:

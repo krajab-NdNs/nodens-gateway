@@ -446,7 +446,7 @@ def on_message_sensorN(client, userdata, msg):
                         # mqttClass = json.loads("{\"Activity detected\": \"" + str(int(ndns_fns.class_eng.activity_alert))
                         #                     + "\", \"Activity type\": \"" + str(int(ndns_fns.class_eng.classification))
                         #                     + "\"}")
-                        mqttDataFinal = {**mqttData, 
+                        mqttDataFinal = {#**mqttData, 
                                         'Sensor timestamp' : mqttData['timestamp'],
                                         'Average period occupancy' : mqttData['numOccupants'], 
                                         'Maximum period occupancy' : '',
