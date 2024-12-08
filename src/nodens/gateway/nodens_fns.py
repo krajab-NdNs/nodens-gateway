@@ -2403,6 +2403,7 @@ class MessagePipeline:
 
 
     def update(self, message):
+        print(f"MessagePipeline update: {message} {self.sensor_id}")
         if message['addr'] in self.sensor_id:
             sens_idx = self.sensor_id.index(message['addr'])
             self.flag_send[sens_idx] = 1

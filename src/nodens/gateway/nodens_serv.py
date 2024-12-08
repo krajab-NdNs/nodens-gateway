@@ -512,7 +512,7 @@ def on_message_sensorN(client, userdata, msg):
                         except Exception as e:
                             print(f"Error in print_text: {e}")
 
-                        print(f"here4")
+                        print(f"here4. {mqttDataFinal}")
                         # Record message to send, if requested by Cloud service
                         ndns_fns.message_pipeline.update(mqttDataFinal)
                         print(f"here5")
