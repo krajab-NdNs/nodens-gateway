@@ -159,7 +159,7 @@ class tb:
         # Track ID - select tid with highest energy.
         
         # Occupant positions
-        if self.payload["avg_occupancy"] > 0:
+        if self.payload["max_occupancy"] > 0:
             try:
                 self.payload["sensor_timestamp"] = f"{input_data['Sensor timestamp']}"
 
@@ -418,7 +418,10 @@ class tb:
                 self.client.publish(nodens.cp.TB_PUB_TOPIC, json_message, qos=1)
                 flag = 1
             except Exception as e:
-                nodens.logger.error(f"THINGSBOARD: multiline payload publish error: {e.args}")
+                try:
+                    nodens.logger.error(f"THINGSBOARD: multiline payload publish error: {e.args}. json_message:{json_message}")
+                except Exception as e:
+                    nodens.logger.error(f"THINGSBOARD: multiline payload publish error: {e.args}")
                 sleep(1)
 
         self.end()
