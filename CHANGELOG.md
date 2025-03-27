@@ -1,5 +1,8 @@
 ## Changelog
 
+### Version 25.3.0 (2025-03-21)
+- Added functionality: read data from new sensor
+
 ### Version 24.6.0 (2024-06-20)
 - Added functionality: publish/read sensor configs to/from Thingsboard
 

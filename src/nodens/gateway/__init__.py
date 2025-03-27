@@ -21,10 +21,10 @@ global CWD
 
 # Some information
 __title__ = "nodens-gateway"
-__version__ = "24.12.2"
+__version__ = "25.3.1"
 __author__ = "Khalid Z Rajab"
 __author_email__ = "khalid@nodens.eu"
-__copyright__ = "Copyright (c) 2024 " + __author__
+__copyright__ = "Copyright (c) 2025 " + __author__
 __license__ = "MIT"
 
 APPNAME = "Gateway"

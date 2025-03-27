@@ -2126,6 +2126,136 @@ def convert_uint_to_int(arg1):
     return x if x < 2**(num_bits-1) else x - 2**num_bits
 
 
+class captureV4Packet:
+    """Capture a V4 packets and parse the data"""
+    def __init__(self):
+        self.sensor_id = []
+        
+        self.current_packet = []
+        self.total_packets = []
+        self.timestamp = []
+        self.sensor_id = []
+        self.frame_number = []
+        self.packet_len = []
+        self.num_occupants = []
+        self.max_occupants = []
+
+        self.ready_to_send = []
+
+        # Occupancy info
+        self.track_ID = []
+        self.track_X = []
+        self.track_Y = []
+        self.track_Z = []
+        self.track_distance = []
+        self.pc_energy = []
+        self.gait_distr = []
+
+        # Heatmap
+        self.heatmap = []
+
+    def check_sensor_idx(self, data):
+        if data['sensorID'] not in self.sensor_id:
+            self.new_sensor(data)
+        
+        return self.sensor_id.index(data['sensorID'])
+    
+    def check_packet(self, data):
+        sensor_idx = self.check_sensor_idx(data)
+
+        # Check if first packet
+        if data['packetNumber'] == 1:
+            self.new_packet(data, sensor_idx)
+        # Otherwise check if it's the last packet
+        elif data['packetNumber'] == self.total_packets[sensor_idx]:
+            self.heatmap_update(data, sensor_idx)
+        else:
+            self.occupancy_update(data, sensor_idx)
+
+    def new_sensor(self, data):
+        print(f"New sensor...")
+        self.sensor_id.append(data['sensorID'])
+
+        self.current_packet.append(data['packetNumber']) 
+        self.total_packets.append(data['totalPackets'])
+        self.timestamp.append(data['timestamp'])
+        self.frame_number.append(data['frameNumber'])
+        self.packet_len.append(data['packetLength'])
+        self.num_occupants.append(data['numOccupants'])
+        self.max_occupants.append(data['maxOccupants'])
+
+        self.ready_to_send.append(0)
+        print(f"\t...continue...")
+
+        # Occupancy info
+        self.track_ID.append('')
+        self.track_X.append('')
+        self.track_Y.append('')
+        self.track_Z.append('')
+        self.track_distance.append('')
+        self.pc_energy.append('')
+        self.gait_distr.append('')
+
+        # Heatmap
+        self.heatmap.append('')
+        print(f"\t...DONE")
+
+    def new_packet(self, data, sensor_idx):
+        self.current_packet[sensor_idx] = data['packetNumber']
+        self.total_packets[sensor_idx] = data['totalPackets']
+        self.timestamp[sensor_idx] = data['timestamp']
+        self.frame_number[sensor_idx] = data['frameNumber']
+        self.packet_len[sensor_idx] = data['packetLength']
+        self.num_occupants[sensor_idx] = data['numOccupants']
+        self.max_occupants[sensor_idx] = data['maxOccupants']
+
+        self.ready_to_send[sensor_idx] = 0
+
+        # Occupancy info
+        self.track_ID[sensor_idx] = ''
+        self.track_X[sensor_idx] = ''
+        self.track_Y[sensor_idx] = ''
+        self.track_Z[sensor_idx] = ''
+        self.track_distance[sensor_idx] = ''
+        self.pc_energy[sensor_idx] = ''
+        self.gait_distr[sensor_idx] = ''
+
+        # Heatmap
+        self.heatmap[sensor_idx] = ''
+
+    def occupancy_update(self, data, sensor_idx):
+        # Check frame number
+        if data['frameNumber'] != self.frame_number[sensor_idx]:
+            nodens.logger.warning("Frame number mismatch. Expected: {}. Received: {}.".format(self.frame_number[sensor_idx], data['frameNumber']))
+            self.frame_number[sensor_idx] = data['frameNumber']
+        
+        # Occupancy info
+        self.track_ID[sensor_idx] += str(data['occupancyInfo'][0]['trackID']) + ';'
+        self.track_X[sensor_idx] += str(data['occupancyInfo'][0]['X']) + ';'
+        self.track_Y[sensor_idx] += str(data['occupancyInfo'][0]['Y']) + ';'
+        self.track_Z[sensor_idx] += str(data['occupancyInfo'][0]['Z']) + ';'
+        self.track_distance[sensor_idx] += str(data['occupancyInfo'][0]['distance']) + ';'
+        self.pc_energy[sensor_idx] += str(data['occupancyInfo'][0]['pcEnergy']) + ';'
+        self.gait_distr[sensor_idx] += str(data['occupancyInfo'][0]['gaitDistr']) + ';'
+
+    def heatmap_update(self, data, sensor_idx):
+        # Check frame number
+        if data['frameNumber'] != self.frame_number[sensor_idx]:
+            nodens.logger.warning("Frame number mismatch. Expected: {}. Received: {}.".format(self.frame_number[sensor_idx], data['frameNumber']))
+            self.frame_number[sensor_idx] = data['frameNumber']
+
+        # Tidy up occupancy (if present)
+        if self.track_ID[sensor_idx] != '':
+            self.track_ID[sensor_idx] = self.track_ID[sensor_idx][:-1]
+            self.track_X[sensor_idx] = self.track_X[sensor_idx][:-1]
+            self.track_Y[sensor_idx] = self.track_Y[sensor_idx][:-1]
+            self.track_Z[sensor_idx] = self.track_Z[sensor_idx][:-1]
+            self.track_distance[sensor_idx] = self.track_distance[sensor_idx][:-1]
+            self.pc_energy[sensor_idx] = self.pc_energy[sensor_idx][:-1]
+            self.gait_distr[sensor_idx] = self.gait_distr[sensor_idx][:-1]
+
+        self.heatmap[sensor_idx] = data['heatmap']
+        self.ready_to_send[sensor_idx] = 1
 
 class parseTLV:
     """Parse TLVs coming from the radar chip."""
@@ -2594,3 +2724,4 @@ class_eng = classifierEngine(11,5,100,3200)
 sd = parseTLV(3)
 counts = Counts()
 #sts = sensorTimeSeries()
+capture_v4_packet = captureV4Packet()
