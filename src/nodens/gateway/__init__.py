@@ -21,7 +21,7 @@ global CWD
 
 # Some information
 __title__ = "nodens-gateway"
-__version__ = "25.3.1"
+__version__ = "25.3.2a"
 __author__ = "Khalid Z Rajab"
 __author_email__ = "khalid@nodens.eu"
 __copyright__ = "Copyright (c) 2025 " + __author__

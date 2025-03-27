@@ -577,7 +577,7 @@ def on_message_sensorN(client, userdata, msg):
                     ndns_fns.si.update_short(sen_idx, T, mqttDataFinal)
                     
                     if ('Number of Occupants' in mqttDataFinal):
-                        mqttDataTemp = [T.strftime("%Y-%m-%dZ%H:%M:%S")  + f"{T.microsecond // 1000:03d}"]
+                        mqttDataTemp = [T.strftime("%Y-%m-%dZ%H:%M:%S.")  + f"{T.microsecond // 1000:03d}"]
                         mqttDataTemp.append(mqttData['addr'])
                         #ndns_fns.si.num_occ[sen_idx] = mqttDataFinal['Number of Occupants']
                         mqttDataTemp.append(mqttDataFinal['Number of Occupants'])
@@ -590,7 +590,7 @@ def on_message_sensorN(client, userdata, msg):
                                 mqttDataTemp.append(mqttOccInfo[i]['Y'])
                                 mqttDataTemp.append(mqttOccInfo[i]['Z'])
                             while 1:
-                                if i < 1:
+                                if i < 9:
                                     for j in range(4):
                                         mqttDataTemp.append('')
                                     i += 1
